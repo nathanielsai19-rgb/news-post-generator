@@ -137,8 +137,11 @@
     background: var(--elev); border: 1px solid var(--line); border-bottom: none;
     border-radius: 22px 22px 0 0; padding: 22px 20px calc(22px + env(safe-area-inset-bottom));
     transform: translateY(102%); transition: transform .26s cubic-bezier(.2,.8,.25,1);
-    max-width: 540px; margin: 0 auto;
+    max-width: 540px; margin: 0 auto; max-height: 86vh; overflow-y: auto;
   }
+  .sheet .field + .field { margin-top: 12px; }
+  .modes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .modes .pill { padding: 8px 14px; font-size: 13.5px; }
   .sheet.open { transform: none; }
   .sheet h2 { font-size: 17px; font-weight: 750; margin-bottom: 4px; }
   .sheet p { color: var(--dim); font-size: 13.5px; line-height: 1.6; margin-bottom: 16px; }
@@ -225,9 +228,20 @@
 <div class="backdrop" id="backdrop"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Settings">
   <h2>Settings</h2>
-  <p>Optional: add a free <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq API key</a> for AI-written posts. Without it, InkDrop uses its own writing styles. Your key never leaves this device — it is stored only in this browser.</p>
-  <label for="keyInput">Groq API key</label>
-  <input type="password" id="keyInput" placeholder="gsk_…" autocomplete="off" spellcheck="false">
+  <p>Optional: add your <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq</a> and <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek</a> keys for AI-written posts. In <b>Team-up</b> mode, Groq drafts and DeepSeek improves it — two writers checking each other. Without keys, InkDrop uses its own writing styles. Keys never leave this device.</p>
+  <div class="field">
+    <label for="keyInput">Groq API key</label>
+    <input type="password" id="keyInput" placeholder="gsk_…" autocomplete="off" spellcheck="false">
+  </div>
+  <div class="field">
+    <label for="dsKeyInput">DeepSeek API key</label>
+    <input type="password" id="dsKeyInput" placeholder="sk-…" autocomplete="off" spellcheck="false">
+  </div>
+  <div class="field">
+    <label for="dsModelInput">DeepSeek model (optional)</label>
+    <input type="text" id="dsModelInput" placeholder="deepseek-chat" autocomplete="off" spellcheck="false">
+  </div>
+  <div class="modes" id="modes" role="group" aria-label="Writing mode"></div>
   <div class="row">
     <button class="btn primary" id="saveKey">Save</button>
     <button class="btn" id="clearKey">Clear</button>
@@ -272,30 +286,56 @@
   }
 
   /* ---------- settings ---------- */
+  const MODES = { auto: "Auto", groq: "Groq only", deepseek: "DeepSeek only", team: "Team-up" };
   function keyStatusText() {
-    const has = !!load("inkdrop_groq_key");
+    const g = !!load("inkdrop_groq_key");
+    const d = !!load("inkdrop_deepseek_key");
+    const mode = MODES[load("inkdrop_mode") || "auto"] || "Auto";
     const el = $("keyStatus");
-    el.textContent = has
-      ? "AI writing: on — llama-3.3-70b on Groq"
-      : "AI writing: off — using built-in styles";
-    el.className = "status" + (has ? " on" : "");
+    el.textContent = "Groq: " + (g ? "on" : "off") + " · DeepSeek: " + (d ? "on" : "off") + " · mode: " + mode;
+    el.className = "status" + (g || d ? " on" : "");
   }
-  function openSheet() { $("backdrop").classList.add("open"); $("sheet").classList.add("open"); }
+  function paintModes() {
+    const active = load("inkdrop_mode") || "auto";
+    for (const el of $("modes").children) el.classList.toggle("active", el.dataset.mode === active);
+  }
+  function buildModes() {
+    const wrap = $("modes");
+    for (const [id, label] of Object.entries(MODES)) {
+      const b = document.createElement("button");
+      b.className = "pill";
+      b.dataset.mode = id;
+      b.textContent = label;
+      b.addEventListener("click", () => { save("inkdrop_mode", id); paintModes(); keyStatusText(); });
+      wrap.appendChild(b);
+    }
+  }
+  function openSheet() {
+    $("keyInput").value = load("inkdrop_groq_key") || "";
+    $("dsKeyInput").value = load("inkdrop_deepseek_key") || "";
+    $("dsModelInput").value = load("inkdrop_ds_model") || "";
+    paintModes();
+    $("backdrop").classList.add("open"); $("sheet").classList.add("open");
+  }
   function closeSheet() { $("backdrop").classList.remove("open"); $("sheet").classList.remove("open"); }
-  $("settingsBtn").addEventListener("click", () => { $("keyInput").value = load("inkdrop_groq_key") || ""; openSheet(); });
+  $("settingsBtn").addEventListener("click", openSheet);
   $("backdrop").addEventListener("click", closeSheet);
   $("closeSheet").addEventListener("click", closeSheet);
   $("saveKey").addEventListener("click", () => {
-    const v = $("keyInput").value.trim();
-    if (v) { save("inkdrop_groq_key", v); toast("Key saved on this device"); }
-    else { save("inkdrop_groq_key", ""); toast("Key removed"); }
+    save("inkdrop_groq_key", $("keyInput").value.trim());
+    save("inkdrop_deepseek_key", $("dsKeyInput").value.trim());
+    save("inkdrop_ds_model", $("dsModelInput").value.trim());
+    toast("Keys saved on this device");
     keyStatusText(); closeSheet();
   });
   $("clearKey").addEventListener("click", () => {
-    save("inkdrop_groq_key", ""); $("keyInput").value = "";
-    keyStatusText(); toast("AI writing off");
+    save("inkdrop_groq_key", "");
+    save("inkdrop_deepseek_key", "");
+    $("keyInput").value = ""; $("dsKeyInput").value = "";
+    keyStatusText(); toast("Keys removed — built-in styles on");
   });
   keyStatusText();
+  buildModes();
 
   /* ---------- news ---------- */
   async function loadNews() {
@@ -328,7 +368,7 @@
     return pool[Math.min(idx, pool.length - 1)];
   }
 
-  /* ---------- AI writing (Groq, optional) ---------- */
+  /* ---------- AI writing (Groq + DeepSeek, optional) ---------- */
   const SYSTEM_PROMPT =
     "You ghostwrite social media posts for a normal person sharing news they just read. " +
     "Rewrite the item below as a post of 2-4 sentences. Rules: sound like a real person, not a " +
@@ -337,41 +377,87 @@
     "\"breaking\"); no \"BREAKING:\" style openers; vary sentence length; end naturally. " +
     "Return only the post text.";
 
-  async function aiPost(story) {
-    const key = load("inkdrop_groq_key");
-    if (!key) return null;
-    const userMsg =
-      "Outlet: " + story.outlet + "\n" +
+  const IMPROVER_PROMPT =
+    "You are the final writer on a two-writer team. Your teammate drafted a post about the news " +
+    "item below. Improve the draft: 2-4 sentences, sound like a real person sharing news — no " +
+    "clichés, no emojis, no hashtags, no bot or PR phrasing. Keep every fact from the item and fix " +
+    "anything in the draft that drifts from it. Never invent details. Return only the improved post text.";
+
+  function storyToUser(story, tail) {
+    return "Outlet: " + story.outlet + "\n" +
       "Headline: " + story.title + "\n" +
       (story.summary ? "Summary: " + story.summary + "\n" : "") +
-      "\nWrite the post:";
-    const models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
-    let lastErr = null;
-    for (const model of models) {
+      "\n" + tail;
+  }
+
+  async function chat(baseUrl, key, model, messages, temperature, maxTokens) {
+    const res = await fetch(baseUrl + "/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key },
+      body: JSON.stringify({ model, temperature, max_tokens: maxTokens, messages }),
+    });
+    if (!res.ok) throw new Error("api " + res.status);
+    const data = await res.json();
+    const text = ((data.choices && data.choices[0] && data.choices[0].message.content) || "").trim();
+    if (!text) throw new Error("empty reply");
+    return text;
+  }
+
+  const GROQ_MODELS = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
+  const GROQ_URL = "https://api.groq.com/openai/v1";
+  const DEEPSEEK_URL = "https://api.deepseek.com";
+  const dsModel = () => load("inkdrop_ds_model") || "deepseek-chat";
+
+  async function draftWithGroq(story) {
+    const key = load("inkdrop_groq_key");
+    if (!key) return null;
+    for (const model of GROQ_MODELS) {
       try {
-        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key },
-          body: JSON.stringify({
-            model,
-            temperature: 0.85,
-            max_tokens: 260,
-            messages: [
-              { role: "system", content: SYSTEM_PROMPT },
-              { role: "user", content: userMsg },
-            ],
-          }),
-        });
-        if (res.status === 404) { lastErr = new Error("model missing"); continue; }
-        if (!res.ok) { lastErr = new Error("groq " + res.status); continue; }
-        const data = await res.json();
-        const text = (data.choices && data.choices[0] && data.choices[0].message.content || "").trim();
-        if (text) return text;
-        lastErr = new Error("empty reply");
-      } catch (e) { lastErr = e; }
+        return await chat(GROQ_URL, key, model, [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: storyToUser(story, "Write the post:") },
+        ], 0.85, 260);
+      } catch (e) { console.warn("groq draft:", e); }
     }
-    console.warn("AI post failed:", lastErr);
     return null;
+  }
+
+  async function draftWithDeepSeek(story) {
+    const key = load("inkdrop_deepseek_key");
+    if (!key) return null;
+    try {
+      return await chat(DEEPSEEK_URL, key, dsModel(), [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: storyToUser(story, "Write the post:") },
+      ], 0.9, 300);
+    } catch (e) { console.warn("deepseek draft:", e); return null; }
+  }
+
+  async function improveWithDeepSeek(story, draft) {
+    const key = load("inkdrop_deepseek_key");
+    if (!key) return null;
+    try {
+      return await chat(DEEPSEEK_URL, key, dsModel(), [
+        { role: "system", content: IMPROVER_PROMPT },
+        { role: "user", content: storyToUser(story, "Teammate's draft:\n\n" + draft + "\n\nImprove it:") },
+      ], 0.8, 300);
+    } catch (e) { console.warn("deepseek improve:", e); return null; }
+  }
+
+  async function writePost(story) {
+    const g = !!load("inkdrop_groq_key");
+    const d = !!load("inkdrop_deepseek_key");
+    let mode = load("inkdrop_mode") || "auto";
+    if (mode === "auto") mode = (g && d) ? "team" : g ? "groq" : d ? "deepseek" : "template";
+
+    if (mode === "groq") return (await draftWithGroq(story)) || templatePost(story);
+    if (mode === "deepseek") return (await draftWithDeepSeek(story)) || templatePost(story);
+    if (mode === "team") {
+      const draft = (await draftWithGroq(story)) || (await draftWithDeepSeek(story));
+      if (!draft) return templatePost(story);
+      return (await improveWithDeepSeek(story, draft)) || draft;
+    }
+    return templatePost(story);
   }
 
   /* ---------- built-in writing styles ---------- */
@@ -516,7 +602,7 @@
       if (!story) { toast("No fresh stories in this category yet", true); return; }
 
       label.textContent = stages[1];
-      const body = (await aiPost(story)) || templatePost(story);
+      const body = await writePost(story);
 
       label.textContent = stages[2];
       const fact = await fetchFact();
