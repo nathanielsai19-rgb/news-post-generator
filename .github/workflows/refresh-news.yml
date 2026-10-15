@@ -1,0 +1,45 @@
+name: refresh-news
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+  push:
+    paths:
+      - ".github/workflows/refresh-news.yml"
+      - "scripts/fetch_news.py"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-news
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install feedparser
+        run: pip install feedparser
+
+      - name: Fetch news
+        run: python scripts/fetch_news.py
+
+      - name: Commit news.json
+        run: |
+          git config user.name "inkdrop-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add news.json
+          if git diff --cached --quiet; then
+            echo "no changes to commit"
+          else
+            git commit -m "chore: refresh news data"
+            git push
+          fi

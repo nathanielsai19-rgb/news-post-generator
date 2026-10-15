@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0e12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="InkDrop — tap once, get a ready-to-post text from today's headlines with source credits, plus a true random fact.">
+<title>InkDrop</title>
+<style>
+  :root {
+    --bg: #0d0e12;
+    --elev: #15161d;
+    --elev2: #1e2029;
+    --ink: #f2f1ec;
+    --dim: #9b9aa3;
+    --line: rgba(242, 241, 236, .09);
+    --accent: #ff4d2e;
+    --accent-soft: rgba(255, 77, 46, .14);
+    --amber: #ffb13d;
+    --ok: #3ddc84;
+    --warn: #ffb13d;
+    --danger: #ff5c5c;
+    --radius: 18px;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f5f4ef;
+      --elev: #ffffff;
+      --elev2: #ecebe4;
+      --ink: #18181d;
+      --dim: #6f6e77;
+      --line: rgba(24, 24, 29, .09);
+      --accent-soft: rgba(226, 58, 30, .1);
+      color-scheme: light;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: calc(14px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom));
+    touch-action: manipulation;
+  }
+  .wrap { max-width: 540px; margin: 0 auto; }
+
+  /* header */
+  header { display: flex; align-items: center; gap: 10px; padding: 4px 2px 18px; }
+  .logo {
+    width: 34px; height: 34px; border-radius: 10px; flex: none;
+    background: linear-gradient(135deg, var(--accent), #ff7a3d);
+    display: grid; place-items: center;
+  }
+  .logo svg { width: 18px; height: 18px; fill: #fff; }
+  .brand { font-size: 20px; font-weight: 750; letter-spacing: -.3px; }
+  .brand small { font-weight: 500; color: var(--dim); font-size: 13px; letter-spacing: 0; }
+  .spacer { flex: 1; }
+  .iconbtn {
+    width: 42px; height: 42px; border-radius: 13px; border: 1px solid var(--line);
+    background: var(--elev); color: var(--dim); display: grid; place-items: center;
+    cursor: pointer; font-size: 18px;
+  }
+  .iconbtn:active { transform: scale(.94); }
+
+  /* category pills */
+  .pills { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 16px; scrollbar-width: none; }
+  .pills::-webkit-scrollbar { display: none; }
+  .pill {
+    flex: none; padding: 10px 16px; border-radius: 999px; font-size: 14.5px; font-weight: 600;
+    border: 1px solid var(--line); background: var(--elev); color: var(--dim); cursor: pointer;
+  }
+  .pill.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  /* generate */
+  .generate {
+    width: 100%; height: 60px; border: none; border-radius: var(--radius); cursor: pointer;
+    background: linear-gradient(120deg, var(--accent), #ff7a3d);
+    color: #fff; font-size: 17.5px; font-weight: 750; letter-spacing: -.2px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    box-shadow: 0 8px 28px rgba(255, 77, 46, .25);
+  }
+  .generate svg { width: 19px; height: 19px; fill: #fff; }
+  .generate:active { transform: scale(.985); }
+  .generate[disabled] { opacity: .55; cursor: default; transform: none; box-shadow: none; }
+  .hint { text-align: center; color: var(--dim); font-size: 13px; margin-top: 12px; min-height: 18px; }
+
+  /* cards */
+  .card {
+    margin-top: 18px; border: 1px solid var(--line); border-radius: var(--radius);
+    background: var(--elev); padding: 18px; animation: rise .28s ease;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .card-label {
+    font-size: 11px; font-weight: 750; letter-spacing: 2.2px; text-transform: uppercase;
+    color: var(--dim); display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+  }
+  .card-label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .factcard .card-label::before { background: var(--amber); }
+  .post-body { font-size: 16px; line-height: 1.62; white-space: pre-wrap; word-wrap: break-word; }
+  .post-credit { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); color: var(--dim); font-size: 13.5px; line-height: 1.6; }
+  .post-credit a { color: var(--dim); word-break: break-all; }
+  .fact-body { font-size: 15.5px; line-height: 1.6; }
+  .fact-source { margin-top: 12px; color: var(--dim); font-size: 12.5px; }
+  .meta-row { margin-top: 12px; display: flex; align-items: center; gap: 8px; color: var(--dim); font-size: 12.5px; }
+  .chip {
+    padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 650;
+    background: var(--accent-soft); color: var(--accent);
+  }
+  .actions { display: flex; gap: 10px; margin-top: 16px; }
+  .btn {
+    flex: 1; height: 46px; border-radius: 14px; border: 1px solid var(--line);
+    background: var(--elev2); color: var(--ink); font-size: 15px; font-weight: 650; cursor: pointer;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.ghost { flex: none; padding: 0 18px; }
+
+  /* footer */
+  footer { margin-top: 26px; text-align: center; color: var(--dim); font-size: 12.5px; line-height: 1.8; }
+  .fresh { display: inline-flex; align-items: center; gap: 6px; }
+  .fresh::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+  .fresh.stale::before { background: var(--warn); }
+
+  /* settings sheet */
+  .backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.55); opacity: 0; pointer-events: none;
+    transition: opacity .22s ease; z-index: 20;
+  }
+  .backdrop.open { opacity: 1; pointer-events: auto; }
+  .sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 21;
+    background: var(--elev); border: 1px solid var(--line); border-bottom: none;
+    border-radius: 22px 22px 0 0; padding: 22px 20px calc(22px + env(safe-area-inset-bottom));
+    transform: translateY(102%); transition: transform .26s cubic-bezier(.2,.8,.25,1);
+    max-width: 540px; margin: 0 auto;
+  }
+  .sheet.open { transform: none; }
+  .sheet h2 { font-size: 17px; font-weight: 750; margin-bottom: 4px; }
+  .sheet p { color: var(--dim); font-size: 13.5px; line-height: 1.6; margin-bottom: 16px; }
+  .sheet p a { color: var(--accent); }
+  .sheet label { display: block; font-size: 12.5px; font-weight: 650; color: var(--dim); margin-bottom: 7px; text-transform: uppercase; letter-spacing: 1.2px; }
+  .sheet input {
+    width: 100%; height: 50px; border-radius: 14px; border: 1px solid var(--line);
+    background: var(--bg); color: var(--ink); font-size: 16px; padding: 0 14px; outline: none;
+  }
+  .sheet input:focus { border-color: var(--accent); }
+  .sheet .row { display: flex; gap: 10px; margin-top: 14px; }
+  .status { margin-top: 14px; font-size: 13px; display: flex; align-items: center; gap: 8px; color: var(--dim); }
+  .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--dim); flex: none; }
+  .status.on { color: var(--ok); } .status.on::before { background: var(--ok); }
+  .close-sheet { margin-top: 18px; width: 100%; }
+
+  /* toast */
+  .toast {
+    position: fixed; left: 50%; bottom: calc(30px + env(safe-area-inset-bottom));
+    transform: translate(-50%, 16px); background: var(--elev2); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 999px; padding: 11px 22px; font-size: 14px;
+    opacity: 0; pointer-events: none; transition: all .22s ease; z-index: 30; max-width: 88vw;
+    text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast.err { border-color: rgba(255, 92, 92, .5); color: var(--danger); }
+
+  .hidden { display: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11L9.5 22 19 10h-6.5L13 2z"/></svg>
+    </div>
+    <div class="brand">InkDrop <small>· news to post</small></div>
+    <div class="spacer"></div>
+    <button class="iconbtn" id="settingsBtn" aria-label="Settings" title="Settings">⚙</button>
+  </header>
+
+  <div class="pills" id="pills" role="tablist" aria-label="News category"></div>
+
+  <button class="generate" id="generate" aria-label="Generate a post">
+    <svg viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11L9.5 22 19 10h-6.5L13 2z"/></svg>
+    <span id="genLabel">Generate a post</span>
+  </button>
+  <div class="hint" id="hint">Pulls a fresh story from today's headlines</div>
+
+  <section class="card hidden" id="postCard" aria-live="polite">
+    <div class="card-label">Your post</div>
+    <div class="post-body" id="postBody"></div>
+    <div class="post-credit" id="postCredit"></div>
+    <div class="meta-row">
+      <span class="chip" id="postCat"></span>
+      <span id="postAge"></span>
+    </div>
+    <div class="actions">
+      <button class="btn" id="copyBtn">Copy</button>
+      <button class="btn" id="shareBtn">Share</button>
+      <button class="btn ghost" id="againBtn" aria-label="Generate another">↻</button>
+    </div>
+  </section>
+
+  <section class="card factcard hidden" id="factCard" aria-live="polite">
+    <div class="card-label">True fact</div>
+    <div class="fact-body" id="factBody"></div>
+    <div class="fact-source" id="factSource"></div>
+    <div class="actions">
+      <button class="btn ghost" id="factBtn">Another fact</button>
+    </div>
+  </section>
+
+  <footer>
+    <div class="fresh" id="freshness">news: checking…</div><br>
+    Auto-refreshes every 30&nbsp;min on GitHub · Facts sourced from Wikipedia
+  </footer>
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Settings">
+  <h2>Settings</h2>
+  <p>Optional: add a free <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq API key</a> for AI-written posts. Without it, InkDrop uses its own writing styles. Your key never leaves this device — it is stored only in this browser.</p>
+  <label for="keyInput">Groq API key</label>
+  <input type="password" id="keyInput" placeholder="gsk_…" autocomplete="off" spellcheck="false">
+  <div class="row">
+    <button class="btn primary" id="saveKey">Save</button>
+    <button class="btn" id="clearKey">Clear</button>
+  </div>
+  <div class="status" id="keyStatus">AI writing: off — using built-in styles</div>
+  <button class="btn close-sheet" id="closeSheet">Done</button>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- state ---------- */
+  const CATS = {
+    mixed: { label: "Mixed" },
+    world: { label: "World" },
+    tech: { label: "Tech" },
+    sports: { label: "Sports" },
+    business: { label: "Business" },
+    science: { label: "Science" },
+  };
+  let news = { updated: null, items: [] };
+  let activeCat = "mixed";
+  let busy = false;
+  let lastPost = null;
+
+  const $ = (id) => document.getElementById(id);
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const save = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  const load = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+
+  /* ---------- toast ---------- */
+  let toastTimer = null;
+  function toast(msg, isErr) {
+    const el = $("toast");
+    el.textContent = msg;
+    el.className = "toast show" + (isErr ? " err" : "");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.className = "toast"; }, 2600);
+  }
+
+  /* ---------- settings ---------- */
+  function keyStatusText() {
+    const has = !!load("inkdrop_groq_key");
+    const el = $("keyStatus");
+    el.textContent = has
+      ? "AI writing: on — llama-3.3-70b on Groq"
+      : "AI writing: off — using built-in styles";
+    el.className = "status" + (has ? " on" : "");
+  }
+  function openSheet() { $("backdrop").classList.add("open"); $("sheet").classList.add("open"); }
+  function closeSheet() { $("backdrop").classList.remove("open"); $("sheet").classList.remove("open"); }
+  $("settingsBtn").addEventListener("click", () => { $("keyInput").value = load("inkdrop_groq_key") || ""; openSheet(); });
+  $("backdrop").addEventListener("click", closeSheet);
+  $("closeSheet").addEventListener("click", closeSheet);
+  $("saveKey").addEventListener("click", () => {
+    const v = $("keyInput").value.trim();
+    if (v) { save("inkdrop_groq_key", v); toast("Key saved on this device"); }
+    else { save("inkdrop_groq_key", ""); toast("Key removed"); }
+    keyStatusText(); closeSheet();
+  });
+  $("clearKey").addEventListener("click", () => {
+    save("inkdrop_groq_key", ""); $("keyInput").value = "";
+    keyStatusText(); toast("AI writing off");
+  });
+  keyStatusText();
+
+  /* ---------- news ---------- */
+  async function loadNews() {
+    const url = "news.json?v=" + Date.now();
+    let res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error("news-fetch-failed");
+    const data = await res.json();
+    if (!data || !Array.isArray(data.items) || !data.items.length) throw new Error("news-empty");
+    news = data;
+  }
+
+  function freshness() {
+    const el = $("freshness");
+    if (!news.updated) { el.textContent = "news: warming up…"; el.className = "fresh stale"; return; }
+    const mins = Math.max(1, Math.round((Date.now() - new Date(news.updated).getTime()) / 60000));
+    const label = mins < 60 ? mins + " min ago" : Math.round(mins / 60) + "h ago";
+    el.textContent = "news updated " + label;
+    el.className = "fresh" + (mins > 1500 ? " stale" : "");
+  }
+
+  function itemsFor(cat) {
+    return cat === "mixed" ? news.items : news.items.filter((i) => i.category === cat);
+  }
+
+  function pickStory(cat) {
+    const list = itemsFor(cat);
+    if (!list.length) return null;
+    const pool = list.slice(0, Math.min(20, list.length)); // freshest first
+    const idx = Math.floor(Math.pow(Math.random(), 1.6) * pool.length);
+    return pool[Math.min(idx, pool.length - 1)];
+  }
+
+  /* ---------- AI writing (Groq, optional) ---------- */
+  const SYSTEM_PROMPT =
+    "You ghostwrite social media posts for a normal person sharing news they just read. " +
+    "Rewrite the item below as a post of 2-4 sentences. Rules: sound like a real person, not a " +
+    "journalist or a bot; keep every concrete fact; never invent details, numbers, quotes or names " +
+    "that are not given; no emojis, no hashtags, no clichés (no \"game changer\", \"you won't believe\", " +
+    "\"breaking\"); no \"BREAKING:\" style openers; vary sentence length; end naturally. " +
+    "Return only the post text.";
+
+  async function aiPost(story) {
+    const key = load("inkdrop_groq_key");
+    if (!key) return null;
+    const userMsg =
+      "Outlet: " + story.outlet + "\n" +
+      "Headline: " + story.title + "\n" +
+      (story.summary ? "Summary: " + story.summary + "\n" : "") +
+      "\nWrite the post:";
+    const models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
+    let lastErr = null;
+    for (const model of models) {
+      try {
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key },
+          body: JSON.stringify({
+            model,
+            temperature: 0.85,
+            max_tokens: 260,
+            messages: [
+              { role: "system", content: SYSTEM_PROMPT },
+              { role: "user", content: userMsg },
+            ],
+          }),
+        });
+        if (res.status === 404) { lastErr = new Error("model missing"); continue; }
+        if (!res.ok) { lastErr = new Error("groq " + res.status); continue; }
+        const data = await res.json();
+        const text = (data.choices && data.choices[0] && data.choices[0].message.content || "").trim();
+        if (text) return text;
+        lastErr = new Error("empty reply");
+      } catch (e) { lastErr = e; }
+    }
+    console.warn("AI post failed:", lastErr);
+    return null;
+  }
+
+  /* ---------- built-in writing styles ---------- */
+  const HOOKS_A = ["Quick catch-up:", "Worth a minute:", "Just seen:", "Heads up:", "Today's read:"];
+  const TEMPLATES = [
+    (s) => pick(HOOKS_A) + " " + s.title + (s.summary ? ". " + s.summary : ""),
+    (s) => s.title + " — " + s.summary,
+    (s) => "Reading this from " + s.outlet + ": " + s.title + (s.summary ? " — " + s.summary : ""),
+    (s) => s.title + (s.summary ? "\n\n" + s.summary : ""),
+    (s) => (s.summary ? s.summary + " (" + s.title + ")" : s.title),
+  ];
+  function templatePost(story) {
+    let text = pick(TEMPLATES)(story).trim();
+    if (!/[.!?…]$/.test(text)) text += ".";
+    return text;
+  }
+
+  /* ---------- credit ---------- */
+  function creditLine(story) {
+    let line = "— via " + story.outlet;
+    if (story.author) line += ", by " + story.author;
+    return line + "\n" + story.link;
+  }
+
+  /* ---------- true facts ---------- */
+  // Last-resort facts: widely documented, verifiable statements.
+  const SAFE_FACTS = [
+    "Octopuses have three hearts, and two of them stop beating when they swim.",
+    "Honey never spoils — 3,000-year-old honey found in Egyptian tombs was still edible.",
+    "A day on Venus lasts longer than a year on Venus.",
+    "Sharks existed before trees: sharks date back ~450 million years, trees ~350 million.",
+    "The Eiffel Tower grows about 15 cm taller in summer because of thermal expansion.",
+    "Bananas are berries, but strawberries are not.",
+    "Wombat poop is cube-shaped.",
+    "Lightning is about five times hotter than the surface of the Sun.",
+    "The human nose can detect over a trillion distinct scents.",
+    "There are more possible chess games than atoms in the observable universe.",
+    "Oxford University is older than the Aztec Empire.",
+    "Your stomach lining replaces itself roughly every few days, so acid does not digest it.",
+  ];
+
+  function cleanWiki(text) {
+    return text.replace(/<[^>]+>/g, "");
+  }
+
+  async function onThisDay() {
+    const now = new Date();
+    const url = "https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/events/" +
+      (now.getMonth() + 1) + "/" + now.getDate();
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("wiki " + res.status);
+    const data = await res.json();
+    const events = (data.events || []).filter((e) => e.text && e.year);
+    if (!events.length) throw new Error("no events");
+    const ev = pick(events);
+    const dateLabel = now.toLocaleDateString(undefined, { month: "long", day: "numeric" });
+    return {
+      text: "On this day in " + ev.year + " — " + cleanWiki(ev.text),
+      credit: "Source: Wikipedia · On this day, " + dateLabel,
+    };
+  }
+
+  async function randomArticle() {
+    const url = "https://en.wikipedia.org/w/api.php?action=query&generator=random&grnnamespace=0" +
+      "&prop=extracts&exintro=1&explaintext=1&format=json&origin=*";
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("wiki " + res.status);
+    const data = await res.json();
+    const pages = Object.values(data.query.pages);
+    const page = pages[0];
+    const text = (page.extract || "").trim();
+    if (!text) throw new Error("empty page");
+    return {
+      text: "Did you know? " + text,
+      credit: "Source: Wikipedia · “" + page.title + "”",
+    };
+  }
+
+  async function fetchFact() {
+    const attempts = [Math.random() < 0.6 ? onThisDay : randomArticle,
+                      Math.random() < 0.5 ? randomArticle : onThisDay];
+    for (const fn of attempts) {
+      try { return await fn(); } catch (e) { console.warn("fact source failed:", e); }
+    }
+    const f = pick(SAFE_FACTS);
+    return { text: f, credit: "Fact check: widely documented" };
+  }
+
+  /* ---------- render ---------- */
+  function ageLabel(iso) {
+    const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return mins + " min ago";
+    return Math.round(mins / 60) + "h ago";
+  }
+
+  function renderPost(story, body) {
+    lastPost = { body, credit: creditLine(story) };
+    $("postBody").textContent = body;
+    $("postCredit").textContent = "";
+    const parts = lastPost.credit.split("\n");
+    const via = document.createElement("div");
+    via.textContent = parts[0];
+    $("postCredit").appendChild(via);
+    if (parts[1]) {
+      const a = document.createElement("a");
+      a.href = parts[1]; a.textContent = parts[1];
+      a.target = "_blank"; a.rel = "noopener";
+      $("postCredit").appendChild(a);
+    }
+    $("postCat").textContent = (CATS[story.category] || {}).label || story.category;
+    $("postAge").textContent = ageLabel(story.published);
+    $("postCard").classList.remove("hidden");
+  }
+
+  function renderFact(fact) {
+    $("factBody").textContent = fact.text;
+    $("factSource").textContent = fact.credit;
+    $("factCard").classList.remove("hidden");
+  }
+
+  /* ---------- generate flow ---------- */
+  async function generate() {
+    if (busy) return;
+    busy = true;
+    const btn = $("generate");
+    btn.disabled = true;
+    const label = $("genLabel");
+    const stages = ["Grabbing headlines…", "Writing your post…", "Finding a true fact…"];
+    let stageIdx = 0;
+    const stageTimer = setInterval(() => {
+      stageIdx = Math.min(stageIdx + 1, stages.length - 1);
+      label.textContent = stages[stageIdx];
+    }, 1400);
+    try {
+      if (!news.items.length) {
+        label.textContent = stages[0];
+        await loadNews();
+        freshness();
+      }
+      const story = pickStory(activeCat);
+      if (!story) { toast("No fresh stories in this category yet", true); return; }
+
+      label.textContent = stages[1];
+      const body = (await aiPost(story)) || templatePost(story);
+
+      label.textContent = stages[2];
+      const fact = await fetchFact();
+
+      renderPost(story, body);
+      renderFact(fact);
+      toast("Post ready — credit included");
+    } catch (e) {
+      console.error(e);
+      toast("Could not load news. First sync may still be running on GitHub — try again shortly.", true);
+    } finally {
+      clearInterval(stageTimer);
+      label.textContent = "Generate a post";
+      btn.disabled = false;
+      busy = false;
+    }
+  }
+
+  /* ---------- copy / share ---------- */
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (e) {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.cssText = "position:fixed;opacity:0";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        return ok;
+      } catch (e2) { return false; }
+    }
+  }
+
+  $("copyBtn").addEventListener("click", async () => {
+    if (!lastPost) return;
+    const full = lastPost.body + "\n\n" + lastPost.credit;
+    (await copyText(full)) ? toast("Copied — paste it anywhere") : toast("Copy failed", true);
+  });
+
+  $("shareBtn").addEventListener("click", async () => {
+    if (!lastPost) return;
+    const full = lastPost.body + "\n\n" + lastPost.credit;
+    if (navigator.share) {
+      try { await navigator.share({ text: full }); return; } catch (e) { /* cancelled */ }
+    }
+    (await copyText(full)) ? toast("Share not supported here — copied instead") : toast("Copy failed", true);
+  });
+
+  /* ---------- events ---------- */
+  function buildPills() {
+    const wrap = $("pills");
+    for (const [id, cat] of Object.entries(CATS)) {
+      const b = document.createElement("button");
+      b.className = "pill" + (id === activeCat ? " active" : "");
+      b.textContent = cat.label;
+      b.setAttribute("role", "tab");
+      b.addEventListener("click", () => {
+        activeCat = id;
+        for (const el of wrap.children) el.classList.remove("active");
+        b.classList.add("active");
+      });
+      wrap.appendChild(b);
+    }
+  }
+
+  $("generate").addEventListener("click", generate);
+  $("againBtn").addEventListener("click", generate);
+  $("factBtn").addEventListener("click", async () => {
+    $("factBtn").disabled = true;
+    $("factBtn").textContent = "…";
+    try { renderFact(await fetchFact()); }
+    catch (e) { toast("Could not fetch a fact", true); }
+    finally { $("factBtn").disabled = false; $("factBtn").textContent = "Another fact"; }
+  });
+
+  /* ---------- boot ---------- */
+  buildPills();
+  (async () => {
+    try { await loadNews(); } catch (e) { console.warn("initial news load:", e); }
+    freshness();
+  })();
+})();
+</script>
+</body>
+</html>
