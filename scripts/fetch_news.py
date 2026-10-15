@@ -24,25 +24,30 @@ FEEDS = {
         ("France 24", "https://www.france24.com/en/rss"),
         ("DW", "https://rss.dw.com/rdf/rss-en-world"),
         ("NPR", "https://feeds.npr.org/1004/rss.xml"),
+        ("Google News", "https://news.google.com/rss/headlines/section/topic/WORLD?hl=en-US&gl=US&ceid=US:en"),
     ],
     "tech": [
         ("TechCrunch", "https://techcrunch.com/feed/"),
         ("Ars Technica", "https://feeds.arstechnica.com/arstechnica/index"),
         ("Engadget", "https://www.engadget.com/rss.xml"),
+        ("Google News", "https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=en-US&gl=US&ceid=US:en"),
     ],
     "sports": [
         ("BBC Sport", "http://feeds.bbci.co.uk/sport/rss.xml"),
         ("Sky Sports", "https://www.skysports.com/rss/12040"),
+        ("Google News", "https://news.google.com/rss/headlines/section/topic/SPORTS?hl=en-US&gl=US&ceid=US:en"),
     ],
     "business": [
         ("BBC Business", "http://feeds.bbci.co.uk/news/business/rss.xml"),
         ("The Guardian", "https://www.theguardian.com/uk/business/rss"),
         ("CNBC", "https://www.cnbc.com/id/100003114/device/rss/rss.html"),
+        ("Google News", "https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US&ceid=US:en"),
     ],
     "science": [
         ("BBC Science", "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml"),
         ("NASA", "https://www.nasa.gov/rss/dyn/breaking_news.rss"),
         ("ScienceDaily", "https://www.sciencedaily.com/rss/top/science.xml"),
+        ("Google News", "https://news.google.com/rss/headlines/section/topic/SCIENCE?hl=en-US&gl=US&ceid=US:en"),
     ],
 }
 
@@ -75,6 +80,20 @@ def clean_author(raw: str) -> str:
     return text[:60]
 
 
+def gn_item_outlet(entry, fallback: str) -> str:
+    """Google News carries the real publisher in <source> — prefer it for credit."""
+    src = entry.get("source") or {}
+    src_title = clean_text(src.get("title", ""), 60)
+    return src_title or fallback
+
+
+def gn_item_title(title: str, outlet: str) -> str:
+    """Google News titles end with ' - Publisher'; strip the suffix."""
+    if outlet == "Google News" and " - " in title:
+        return title.rsplit(" - ", 1)[0].rstrip()[:220]
+    return title[:220]
+
+
 def fetch_one(outlet: str, url: str) -> list[dict]:
     try:
         req = urllib.request.Request(url, headers={"User-Agent": UA})
@@ -105,13 +124,13 @@ def fetch_one(outlet: str, url: str) -> list[dict]:
 
         out.append(
             {
-                "title": title[:220],
+                "title": gn_item_title(title, outlet),
                 "link": link[:500],
-                "summary": clean_text(
+                "summary": "" if outlet == "Google News" else clean_text(
                     entry.get("summary") or entry.get("description"), SUMMARY_LEN
                 ),
                 "author": clean_author(entry.get("author") or parsed.feed.get("author")),
-                "outlet": outlet,
+                "outlet": gn_item_outlet(entry, outlet),
                 "published": published.isoformat(timespec="seconds").replace("+00:00", "Z"),
             }
         )

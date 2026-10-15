@@ -204,6 +204,7 @@
       <span class="chip" id="postCat"></span>
       <span id="postAge"></span>
       <span id="postVotes" class="hidden"></span>
+      <span id="postFreshNote" class="hidden">freshest available</span>
     </div>
     <div class="actions">
       <button class="btn" id="copyBtn">Copy</button>
@@ -658,7 +659,7 @@
     return Math.round(mins / 60) + "h ago";
   }
 
-  function renderPost(story, body, votes) {
+  function renderPost(story, body, votes, fromLastHour) {
     lastPost = { body, credit: creditLine(story) };
     $("postBody").textContent = body;
     $("postCredit").textContent = "";
@@ -681,6 +682,7 @@
     } else {
       votesEl.classList.add("hidden");
     }
+    $("postFreshNote").classList.toggle("hidden", fromLastHour !== false);
     $("postCard").classList.remove("hidden");
   }
 
@@ -714,7 +716,7 @@
       setStage("Finding a true fact…");
       const fact = await fetchFact();
 
-      renderPost(story, result.text, result.votes);
+      renderPost(story, result.text, result.votes, picked.fromLastHour);
       renderFact(fact);
       if (!picked.fromLastHour) {
         toast("No story from the last hour in " + CATS[activeCat].label + " — showing the freshest one");
