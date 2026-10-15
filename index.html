@@ -140,6 +140,7 @@
     max-width: 540px; margin: 0 auto; max-height: 86vh; overflow-y: auto;
   }
   .sheet .field + .field { margin-top: 12px; }
+  .field-hint { margin-top: 6px; font-size: 12px; color: var(--dim); }
   .modes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
   .modes .pill { padding: 8px 14px; font-size: 13.5px; }
   .sheet.open { transform: none; }
@@ -240,7 +241,8 @@
   </div>
   <div class="field">
     <label for="dsModelInput">DeepSeek model (optional)</label>
-    <input type="text" id="dsModelInput" placeholder="deepseek-chat" autocomplete="off" spellcheck="false">
+    <input type="text" id="dsModelInput" placeholder="deepseek-flash" autocomplete="off" spellcheck="false">
+    <div class="field-hint">deepseek-flash (fast, cheap) · deepseek-v4-pro (strongest)</div>
   </div>
   <div class="modes" id="modes" role="group" aria-label="Writing mode"></div>
   <div class="row">
@@ -407,7 +409,7 @@
   const GROQ_MODELS = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
   const GROQ_URL = "https://api.groq.com/openai/v1";
   const DEEPSEEK_URL = "https://api.deepseek.com";
-  const dsModel = () => load("inkdrop_ds_model") || "deepseek-chat";
+  const dsModel = () => load("inkdrop_ds_model") || "deepseek-flash";
 
   async function draftWithGroq(story) {
     const key = load("inkdrop_groq_key");
