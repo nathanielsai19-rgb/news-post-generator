@@ -2,7 +2,12 @@ name: refresh-news
 
 on:
   schedule:
+    # GitHub's scheduler is unreliable (delays of hours), so several
+    # overlapping crons multiply the chances one actually fires.
     - cron: "*/30 * * * *"
+    - cron: "*/10 * * * *"
+    - cron: "7-59/30 * * * *"
+    - cron: "13-59/30 * * * *"
   workflow_dispatch: {}
   push:
     paths:
