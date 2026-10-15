@@ -194,7 +194,7 @@
     <svg viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11L9.5 22 19 10h-6.5L13 2z"/></svg>
     <span id="genLabel">Generate a post</span>
   </button>
-  <div class="hint" id="hint">Pulls a fresh story from today's headlines</div>
+  <div class="hint" id="hint">Prefers stories from the last hour</div>
 
   <section class="card hidden" id="postCard" aria-live="polite">
     <div class="card-label">Your post</div>
@@ -363,12 +363,18 @@
     return cat === "mixed" ? news.items : news.items.filter((i) => i.category === cat);
   }
 
+  const FRESH_WINDOW_MS = 60 * 60 * 1000; // prefer stories under an hour old
   function pickStory(cat) {
-    const list = itemsFor(cat);
+    const list = itemsFor(cat).slice().sort((a, b) => new Date(b.published) - new Date(a.published));
     if (!list.length) return null;
-    const pool = list.slice(0, Math.min(20, list.length)); // freshest first
+    const now = Date.now();
+    const fresh = list.filter((i) => now - new Date(i.published).getTime() <= FRESH_WINDOW_MS);
+    const pool = (fresh.length ? fresh : list).slice(0, 20);
     const idx = Math.floor(Math.pow(Math.random(), 1.6) * pool.length);
-    return pool[Math.min(idx, pool.length - 1)];
+    return {
+      story: pool[Math.min(idx, pool.length - 1)],
+      fromLastHour: fresh.length > 0,
+    };
   }
 
   /* ---------- AI writing (Groq + DeepSeek, optional) ---------- */
@@ -698,8 +704,9 @@
         await loadNews();
         freshness();
       }
-      const story = pickStory(activeCat);
-      if (!story) { toast("No fresh stories in this category yet", true); return; }
+      const picked = pickStory(activeCat);
+      if (!picked) { toast("No fresh stories in this category yet", true); return; }
+      const story = picked.story;
 
       setStage("Writing your post…");
       const result = await writePost(story, setStage);
@@ -709,9 +716,13 @@
 
       renderPost(story, result.text, result.votes);
       renderFact(fact);
-      toast(result.forced
-        ? "Editors couldn't fully agree — showing their best take"
-        : "Post ready — credit included");
+      if (!picked.fromLastHour) {
+        toast("No story from the last hour in " + CATS[activeCat].label + " — showing the freshest one");
+      } else if (result.forced) {
+        toast("Editors couldn't fully agree — showing their best take");
+      } else {
+        toast("Post ready — credit included");
+      }
     } catch (e) {
       console.error(e);
       toast("Could not load news. First sync may still be running on GitHub — try again shortly.", true);
