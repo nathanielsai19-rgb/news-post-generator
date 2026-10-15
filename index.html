@@ -202,6 +202,7 @@
     <div class="meta-row">
       <span class="chip" id="postCat"></span>
       <span id="postAge"></span>
+      <span id="postVotes" class="hidden"></span>
     </div>
     <div class="actions">
       <button class="btn" id="copyBtn">Copy</button>
@@ -228,7 +229,7 @@
 <div class="backdrop" id="backdrop"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Settings">
   <h2>Settings</h2>
-  <p>Optional: add your <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq</a> and <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek</a> keys for AI-written posts. In <b>Team-up</b> mode, Groq drafts and DeepSeek improves it — two writers checking each other. Without keys, InkDrop uses its own writing styles. Keys never leave this device.</p>
+  <p>Optional: add your <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq</a> and <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek</a> keys for AI-written posts. <b>Team-up</b>: Groq drafts, DeepSeek improves. <b>Consensus</b>: both act as editors and must agree the post is worth publishing — otherwise they swap notes and rewrite until they do. Without keys, InkDrop uses its own writing styles. Keys never leave this device.</p>
   <div class="field">
     <label for="keyInput">Groq API key</label>
     <input type="password" id="keyInput" placeholder="gsk_…" autocomplete="off" spellcheck="false">
@@ -286,7 +287,7 @@
   }
 
   /* ---------- settings ---------- */
-  const MODES = { auto: "Auto", groq: "Groq only", deepseek: "DeepSeek only", team: "Team-up" };
+  const MODES = { auto: "Auto", groq: "Groq only", deepseek: "DeepSeek only", team: "Team-up", consensus: "Consensus" };
   function keyStatusText() {
     const g = !!load("inkdrop_groq_key");
     const d = !!load("inkdrop_deepseek_key");
@@ -444,20 +445,115 @@
     } catch (e) { console.warn("deepseek improve:", e); return null; }
   }
 
-  async function writePost(story) {
+  /* ---------- consensus editing: both models must agree ---------- */
+  const REVIEWER_PROMPT =
+    "You are a tough social media editor deciding whether a draft post is worth publishing. " +
+    "You are shown the original news item and the draft. Judge: does it sound like a real person " +
+    "(no clichés, no bot phrasing, no emojis/hashtags), is it accurate to the item, and would a " +
+    "reader care? Reply ONLY with JSON: {\"score\": <integer 1-10>, \"verdict\": \"post\" or \"fix\", " +
+    "\"reason\": \"one short sentence\"}. Use \"post\" when score is 7 or higher, otherwise \"fix\".";
+
+  const REVISER_PROMPT =
+    "You are the final writer on an editorial team. The editors rejected your draft and left notes. " +
+    "Rewrite the post: 2-4 sentences, real-person voice, no clichés, no emojis, no hashtags, " +
+    "keep every fact from the item, and address the editors' notes. " +
+    "Return only the new post text.";
+
+  function parseVerdict(text) {
+    try {
+      const j = JSON.parse(text);
+      return {
+        score: Number(j.score) || 0,
+        verdict: String(j.verdict || "").toLowerCase() === "post" ? "post" : "fix",
+        reason: String(j.reason || ""),
+      };
+    } catch (e) { /* not strict JSON — try regex */ }
+    const s = text.match(/"score"\s*:\s*(\d+)/);
+    const v = text.match(/"verdict"\s*:\s*"?(\w+)/);
+    const r = text.match(/"reason"\s*:\s*"([^"]+)"/);
+    return {
+      score: s ? Number(s[1]) : 0,
+      verdict: v && v[1].toLowerCase() === "post" ? "post" : "fix",
+      reason: r ? r[1] : "",
+    };
+  }
+
+  async function reviewWith(baseUrl, key, model, story, text) {
+    const content = await chat(baseUrl, key, model, [
+      { role: "system", content: REVIEWER_PROMPT },
+      { role: "user", content: storyToUser(story, "Draft:\n\n" + text) },
+    ], 0.3, 120);
+    return parseVerdict(content);
+  }
+
+  async function reviewPost(story, text) {
+    const gk = load("inkdrop_groq_key");
+    const dk = load("inkdrop_deepseek_key");
+    const jobs = [];
+    if (gk) jobs.push(reviewWith(GROQ_URL, gk, GROQ_MODELS[0], story, text).catch(() => null));
+    if (dk) jobs.push(reviewWith(DEEPSEEK_URL, dk, dsModel(), story, text).catch(() => null));
+    const out = await Promise.all(jobs);
+    return out.filter(Boolean);
+  }
+
+  async function reviseWithDeepSeek(story, text, notes) {
+    const key = load("inkdrop_deepseek_key");
+    if (!key) return null;
+    try {
+      return await chat(DEEPSEEK_URL, key, dsModel(), [
+        { role: "system", content: REVISER_PROMPT },
+        { role: "user", content: storyToUser(story, "Draft:\n\n" + text + "\n\nEditor notes: " + notes + "\n\nRewrite it:") },
+      ], 0.8, 300);
+    } catch (e) { console.warn("deepseek revise:", e); return null; }
+  }
+
+  async function consensusPost(story, onStage) {
+    let candidate = (await draftWithGroq(story)) || (await draftWithDeepSeek(story));
+    if (!candidate) return { text: templatePost(story), votes: null, forced: false };
+    candidate = (await improveWithDeepSeek(story, candidate)) || candidate;
+
+    const MAX_REVIEWS = 3;
+    let best = { text: candidate, votes: null, avg: -1 };
+    let reviewsDone = 0;
+
+    while (reviewsDone < MAX_REVIEWS) {
+      reviewsDone++;
+      onStage("Editors reviewing · " + reviewsDone + "/" + MAX_REVIEWS);
+      const reviews = await reviewPost(story, candidate);
+      if (!reviews.length) return { text: candidate, votes: null, forced: false };
+
+      const avg = reviews.reduce((s, r) => s + r.score, 0) / reviews.length;
+      if (avg > best.avg) best = { text: candidate, votes: reviews, avg };
+
+      const approvals = reviews.filter((r) => r.verdict === "post" && r.score >= 7).length;
+      if (approvals === reviews.length) return { text: candidate, votes: reviews, forced: false };
+
+      if (reviewsDone === MAX_REVIEWS) break;
+      onStage("Editors want a rewrite · " + reviewsDone + "/2");
+      const notes = reviews.map((r) => r.reason).filter(Boolean).join(" ");
+      const revised = await reviseWithDeepSeek(story, candidate, notes);
+      if (!revised) break;
+      candidate = revised;
+    }
+    return { text: best.text, votes: best.votes, forced: true };
+  }
+
+  async function writePost(story, onStage) {
     const g = !!load("inkdrop_groq_key");
     const d = !!load("inkdrop_deepseek_key");
     let mode = load("inkdrop_mode") || "auto";
     if (mode === "auto") mode = (g && d) ? "team" : g ? "groq" : d ? "deepseek" : "template";
+    if (mode === "consensus" && !(g && d)) mode = g ? "groq" : d ? "deepseek" : "template";
 
-    if (mode === "groq") return (await draftWithGroq(story)) || templatePost(story);
-    if (mode === "deepseek") return (await draftWithDeepSeek(story)) || templatePost(story);
+    if (mode === "groq") return { text: (await draftWithGroq(story)) || templatePost(story), votes: null, forced: false };
+    if (mode === "deepseek") return { text: (await draftWithDeepSeek(story)) || templatePost(story), votes: null, forced: false };
     if (mode === "team") {
       const draft = (await draftWithGroq(story)) || (await draftWithDeepSeek(story));
-      if (!draft) return templatePost(story);
-      return (await improveWithDeepSeek(story, draft)) || draft;
+      if (!draft) return { text: templatePost(story), votes: null, forced: false };
+      return { text: (await improveWithDeepSeek(story, draft)) || draft, votes: null, forced: false };
     }
-    return templatePost(story);
+    if (mode === "consensus") return consensusPost(story, onStage || function () {});
+    return { text: templatePost(story), votes: null, forced: false };
   }
 
   /* ---------- built-in writing styles ---------- */
@@ -554,7 +650,7 @@
     return Math.round(mins / 60) + "h ago";
   }
 
-  function renderPost(story, body) {
+  function renderPost(story, body, votes) {
     lastPost = { body, credit: creditLine(story) };
     $("postBody").textContent = body;
     $("postCredit").textContent = "";
@@ -570,6 +666,13 @@
     }
     $("postCat").textContent = (CATS[story.category] || {}).label || story.category;
     $("postAge").textContent = ageLabel(story.published);
+    const votesEl = $("postVotes");
+    if (votes && votes.length) {
+      votesEl.textContent = "· editors " + votes.map((v) => v.score + "/10").join(" · ");
+      votesEl.classList.remove("hidden");
+    } else {
+      votesEl.classList.add("hidden");
+    }
     $("postCard").classList.remove("hidden");
   }
 
@@ -580,42 +683,38 @@
   }
 
   /* ---------- generate flow ---------- */
+  function setStage(msg) { $("genLabel").textContent = msg; }
+
   async function generate() {
     if (busy) return;
     busy = true;
     const btn = $("generate");
     btn.disabled = true;
-    const label = $("genLabel");
-    const stages = ["Grabbing headlines…", "Writing your post…", "Finding a true fact…"];
-    let stageIdx = 0;
-    const stageTimer = setInterval(() => {
-      stageIdx = Math.min(stageIdx + 1, stages.length - 1);
-      label.textContent = stages[stageIdx];
-    }, 1400);
     try {
       if (!news.items.length) {
-        label.textContent = stages[0];
+        setStage("Grabbing headlines…");
         await loadNews();
         freshness();
       }
       const story = pickStory(activeCat);
       if (!story) { toast("No fresh stories in this category yet", true); return; }
 
-      label.textContent = stages[1];
-      const body = await writePost(story);
+      setStage("Writing your post…");
+      const result = await writePost(story, setStage);
 
-      label.textContent = stages[2];
+      setStage("Finding a true fact…");
       const fact = await fetchFact();
 
-      renderPost(story, body);
+      renderPost(story, result.text, result.votes);
       renderFact(fact);
-      toast("Post ready — credit included");
+      toast(result.forced
+        ? "Editors couldn't fully agree — showing their best take"
+        : "Post ready — credit included");
     } catch (e) {
       console.error(e);
       toast("Could not load news. First sync may still be running on GitHub — try again shortly.", true);
     } finally {
-      clearInterval(stageTimer);
-      label.textContent = "Generate a post";
+      setStage("Generate a post");
       btn.disabled = false;
       busy = false;
     }
