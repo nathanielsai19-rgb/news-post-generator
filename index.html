@@ -106,6 +106,12 @@
   .post-credit a { color: var(--dim); word-break: break-all; }
   .mini-label { font-size: 10.5px; font-weight: 750; letter-spacing: 1.8px; text-transform: uppercase; color: var(--dim); opacity: .8; margin-bottom: 6px; }
   .actions .btn { font-size: 14px; }
+  .page-modes { margin-bottom: 14px; }
+  .video-player { width: 100%; border-radius: 14px; background: #000; max-height: 62vh; }
+  .video-status { color: var(--dim); font-size: 14.5px; line-height: 1.65; margin-bottom: 12px; }
+  .prompt-details { margin-top: 12px; font-size: 13.5px; color: var(--dim); }
+  .prompt-details summary { cursor: pointer; color: var(--accent); font-weight: 650; }
+  .prompt-details div { margin-top: 6px; white-space: pre-wrap; line-height: 1.6; }
   .fact-body { font-size: 15.5px; line-height: 1.6; }
   .fact-source { margin-top: 12px; color: var(--dim); font-size: 12.5px; }
   .meta-row { margin-top: 12px; display: flex; align-items: center; gap: 8px; color: var(--dim); font-size: 12.5px; }
@@ -190,6 +196,8 @@
     <button class="iconbtn" id="settingsBtn" aria-label="Settings" title="Settings">⚙</button>
   </header>
 
+  <div class="modes page-modes" id="pageModes" role="group" aria-label="Mode"></div>
+
   <div class="pills" id="pills" role="tablist" aria-label="News category"></div>
 
   <button class="generate" id="generate" aria-label="Generate a post">
@@ -225,6 +233,22 @@
     <div class="fact-source" id="factSource"></div>
     <div class="actions">
       <button class="btn ghost" id="factBtn">Another fact</button>
+    </div>
+  </section>
+
+  <section class="card hidden" id="videoCard" aria-live="polite">
+    <div class="card-label">Your video</div>
+    <div class="video-status" id="videoStatus"></div>
+    <video id="videoPlayer" class="video-player hidden" controls playsinline preload="metadata"></video>
+    <div class="fact-source" id="videoMeta"></div>
+    <details class="prompt-details hidden" id="videoPromptWrap">
+      <summary>Prompt</summary>
+      <div id="videoPrompt"></div>
+    </details>
+    <div class="actions">
+      <button class="btn" id="videoBtn">Check for new video</button>
+      <button class="btn ghost" id="rateUp" aria-label="Good video">👍</button>
+      <button class="btn ghost" id="rateDown" aria-label="Bad video">👎</button>
     </div>
   </section>
 
@@ -841,7 +865,99 @@
     finally { $("factBtn").disabled = false; $("factBtn").textContent = "Another fact"; }
   });
 
+  /* ---------- video mode ---------- */
+  let pageMode = "post";
+  let lastVideo = null;
+  const POST_ELEMS = ["pills", "generate", "hint", "postCard", "factCard"];
+
+  function buildPageModes() {
+    const wrap = $("pageModes");
+    [["post", "📝 Post"], ["video", "🎬 Video"]].forEach(([id, label]) => {
+      const b = document.createElement("button");
+      b.className = "pill" + (id === pageMode ? " active" : "");
+      b.dataset.mode = id;
+      b.textContent = label;
+      b.addEventListener("click", () => setPageMode(id));
+      wrap.appendChild(b);
+    });
+  }
+
+  function setPageMode(mode) {
+    pageMode = mode;
+    for (const el of $("pageModes").children) el.classList.toggle("active", el.dataset.mode === mode);
+    POST_ELEMS.forEach((id) => $(id).classList.toggle("hidden", mode !== "post"));
+    $("videoCard").classList.toggle("hidden", mode !== "video");
+    if (mode === "video") fetchVideo();
+  }
+
+  async function fetchVideo() {
+    const btn = $("videoBtn");
+    btn.disabled = true;
+    try {
+      const res = await fetch("video.json?v=" + Date.now(), { cache: "no-store" });
+      if (!res.ok) throw new Error("no video.json");
+      renderVideo(await res.json());
+    } catch (e) {
+      lastVideo = null;
+      $("videoStatus").textContent = "No video yet — the video pipeline is still warming up.";
+      $("videoPlayer").classList.add("hidden");
+      $("videoPromptWrap").classList.add("hidden");
+      $("videoMeta").textContent = "";
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function renderVideo(v) {
+    lastVideo = v;
+    const status = $("videoStatus");
+    const player = $("videoPlayer");
+    const meta = $("videoMeta");
+    const pw = $("videoPromptWrap");
+    player.classList.add("hidden");
+    pw.classList.add("hidden");
+    meta.textContent = "";
+    if (v.status === "ready") {
+      player.src = v.video;
+      player.classList.remove("hidden");
+      status.textContent = v.title || "New video";
+      const bits = [v.outlet, v.model, (v.duration || 0) + "s", v.resolution, ageLabel(v.generated_at)]
+        .filter((x) => x && String(x).trim());
+      meta.textContent = bits.join(" · ");
+      if (v.story_link) {
+        const a = document.createElement("a");
+        a.href = v.story_link; a.textContent = v.story_link;
+        a.target = "_blank"; a.rel = "noopener";
+        meta.appendChild(document.createTextNode(" · "));
+        meta.appendChild(a);
+      }
+      if (v.prompt) {
+        $("videoPrompt").textContent = v.prompt;
+        pw.classList.remove("hidden");
+      }
+    } else if (v.status === "standby") {
+      status.textContent = "Video pipeline is on standby — top up your LTX balance and tell Claude to switch it on.";
+    } else if (v.status === "insufficient_funds") {
+      status.textContent = "LTX balance too low to generate — top up and check back.";
+    } else {
+      status.textContent = "Last generation " + (v.status || "failed") + " — the next run will retry.";
+    }
+  }
+
+  function rateVideo(rating) {
+    if (!lastVideo || !lastVideo.video) { toast("No video to rate yet", true); return; }
+    const rates = JSON.parse(load("inkdrop_video_rates") || "[]");
+    rates.push({ video: lastVideo.video, rating, ts: Date.now() });
+    save("inkdrop_video_rates", JSON.stringify(rates.slice(-50)));
+    toast("Saved on this device — thanks");
+  }
+
+  $("videoBtn").addEventListener("click", fetchVideo);
+  $("rateUp").addEventListener("click", () => rateVideo(1));
+  $("rateDown").addEventListener("click", () => rateVideo(0));
+
   /* ---------- boot ---------- */
+  buildPageModes();
   buildPills();
   (async () => {
     try { await loadNews(); } catch (e) { console.warn("initial news load:", e); }
