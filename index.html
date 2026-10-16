@@ -268,6 +268,7 @@
     sports: { label: "Sports" },
     business: { label: "Business" },
     science: { label: "Science" },
+    trending: { label: "Trending" },
   };
   let news = { updated: null, items: [] };
   let activeCat = "mixed";
@@ -396,6 +397,7 @@
   function storyToUser(story, tail) {
     return "Outlet: " + story.outlet + "\n" +
       "Headline: " + story.title + "\n" +
+      (story.trend ? "Trending topic this story is about: " + story.trend + "\n" : "") +
       (story.summary ? "Summary: " + story.summary + "\n" : "") +
       "\n" + tail;
   }
@@ -574,8 +576,13 @@
     (s) => s.title + (s.summary ? "\n\n" + s.summary : ""),
     (s) => (s.summary ? s.summary + " (" + s.title + ")" : s.title),
   ];
+  const TREND_TEMPLATES = [
+    (s) => "Trending right now: " + s.trend + ". Latest: " + s.title + (s.summary ? " " + s.summary : ""),
+    (s) => s.title + (s.summary ? " — " + s.summary : "") + " That's why \"" + s.trend + "\" is trending today.",
+  ];
   function templatePost(story) {
-    let text = pick(TEMPLATES)(story).trim();
+    const shapes = story.trend ? TEMPLATES.concat(TREND_TEMPLATES) : TEMPLATES;
+    let text = pick(shapes)(story).trim();
     if (!/[.!?…]$/.test(text)) text += ".";
     return text;
   }
