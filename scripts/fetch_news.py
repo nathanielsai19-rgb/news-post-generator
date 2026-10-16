@@ -58,12 +58,13 @@ SUMMARY_LEN = 210
 MIN_ITEMS = 15  # abort (and keep the previous news.json) if we can't do better
 
 # "Trending" category: chase today's trending Google searches into news stories.
-TRENDS_URL = "https://trends.google.com/trending/rss?geo=US"
+TRENDS_GEO = ["US", "GB"]  # two regions for topic variety
+TRENDS_URL = "https://trends.google.com/trending/rss?geo={}"
 TREND_NEWS_URL = "https://news.google.com/rss/search?q={}&hl=en-US&gl=US&ceid=US:en"
-MAX_TRENDS = 8      # how many trending terms to chase
-PER_TREND = 4       # stories to keep per term
+MAX_TRENDS_PER_GEO = 8
+PER_TREND = 3       # stories to keep per term
 MAX_TREND_AGE_HOURS = 24
-TRENDING_CAP = 30
+TRENDING_CAP = 45
 
 TAG_RE = re.compile(r"<[^>]+>")
 WS_RE = re.compile(r"\s+")
@@ -147,15 +148,24 @@ def fetch_one(outlet: str, url: str) -> list[dict]:
 
 
 def fetch_trending() -> list[dict]:
-    """Today's trending Google searches -> news stories about each term."""
-    try:
-        req = urllib.request.Request(TRENDS_URL, headers={"User-Agent": UA})
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            parsed = feedparser.parse(resp.read())
-    except Exception:
-        return []
-    terms = [clean_text(e.get("title")) for e in parsed.entries]
-    terms = [t for t in terms if t][:MAX_TRENDS]
+    """Today's trending Google searches (US + GB) -> news stories about each term."""
+    terms: list[str] = []
+    for geo in TRENDS_GEO:
+        try:
+            req = urllib.request.Request(TRENDS_URL.format(geo), headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                parsed = feedparser.parse(resp.read())
+        except Exception:
+            continue
+        for entry in parsed.entries:
+            term = clean_text(entry.get("title"))
+            if not term or term.lower() in {t.lower() for t in terms}:
+                continue
+            terms.append(term)
+            if len(terms) >= MAX_TRENDS_PER_GEO * len(TRENDS_GEO):
+                break
+        if len(terms) >= MAX_TRENDS_PER_GEO * len(TRENDS_GEO):
+            break
     if not terms:
         return []
 

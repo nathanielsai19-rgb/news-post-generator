@@ -366,12 +366,37 @@
   }
 
   const FRESH_WINDOW_MS = 60 * 60 * 1000; // prefer stories under an hour old
+  let recentTrendKeys = []; // avoid repeating the same trend on consecutive taps
+
+  function pickTrending(list, wasFresh) {
+    // group by trend so variety comes from the trend, not the story
+    const byTrend = new Map();
+    for (const item of list) {
+      const key = (item.trend || item.title).toLowerCase();
+      if (!byTrend.has(key)) byTrend.set(key, []);
+      byTrend.get(key).push(item);
+    }
+    let keys = [...byTrend.keys()].filter((k) => !recentTrendKeys.includes(k));
+    if (!keys.length) { keys = [...byTrend.keys()]; recentTrendKeys = []; }
+    const key = pick(keys);
+    recentTrendKeys.push(key);
+    if (recentTrendKeys.length > 5) recentTrendKeys.shift();
+    const stories = byTrend.get(key);
+    const idx = Math.floor(Math.pow(Math.random(), 1.6) * stories.length);
+    return {
+      story: stories[Math.min(idx, stories.length - 1)],
+      fromLastHour: wasFresh,
+    };
+  }
+
   function pickStory(cat) {
     const list = itemsFor(cat).slice().sort((a, b) => new Date(b.published) - new Date(a.published));
     if (!list.length) return null;
     const now = Date.now();
     const fresh = list.filter((i) => now - new Date(i.published).getTime() <= FRESH_WINDOW_MS);
-    const pool = (fresh.length ? fresh : list).slice(0, 20);
+    const basePool = fresh.length ? fresh : list;
+    if (cat === "trending") return pickTrending(basePool.slice(0, 60), fresh.length > 0);
+    const pool = basePool.slice(0, 20);
     const idx = Math.floor(Math.pow(Math.random(), 1.6) * pool.length);
     return {
       story: pool[Math.min(idx, pool.length - 1)],

@@ -6,7 +6,7 @@ A mobile-first page that turns today's headlines into ready-to-paste text posts,
 
 ## How it works
 
-- **Tap Generate** → a fresh story is picked from the latest headlines, turned into a short human-sounding post, and a credit block is appended (`— via Outlet, by Author` + link). A true fact (Wikipedia "On this day" or a random article intro) appears below it.
+- **Tap Generate** → a fresh story is picked from the latest headlines, turned into a short human-sounding post, and a credit block is appended (`— via Outlet, by Author` + link). A true fact (Wikipedia "On this day" or a random article intro) appears below it. Categories: Mixed / World / Tech / Sports / Business / Science / **Trending** — Trending chases today's Google Trends search terms into real news stories about each trend.
 - **News freshness** — a GitHub Action (`refresh-news.yml`) fetches 23 public RSS feeds (BBC, Guardian, Al Jazeera, TechCrunch, NASA, Google News per category, …) every 30 minutes and commits `news.json`, which this static page reads. Google News feeds update every few minutes, so fresh runs almost always contain stories under an hour old. No API keys, no CORS proxies.
 - **Optional AI writing** — open ⚙ Settings and paste [Groq](https://console.groq.com/keys) (free, llama-3.3-70b) and/or [DeepSeek](https://platform.deepseek.com/api_keys) keys. Five writing modes:
   - **Auto** — uses whatever is saved (both keys → Team-up)
