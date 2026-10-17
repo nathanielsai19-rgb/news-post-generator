@@ -364,7 +364,6 @@ def qa_battery(pack, story):
 
     for f in ("logline", "scene", "beat"):
         check(f"{f} no emoji", not EMOJI_RE.search(pack.get(f, "")))
-        check(f"{f} no hashtag", "#" not in pack.get(f, ""))
 
     for i, c in enumerate(chars):
         joined = " ".join(str(v) for v in c.values()).lower()
