@@ -23,12 +23,13 @@ jobs:
         with:
           python-version: "3.12"
 
+      # The ALLOW_VIDEO_GEN gate lives inside the script: when off, it only
+      # writes the production pack (zero LTX cost). secrets can't be used in
+      # `if` expressions, so the script is the gate.
       - name: Install ffmpeg (for vision QA frames)
-        if: ${{ secrets.ALLOW_VIDEO_GEN == 'true' }}
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
 
       - name: Generate video
-        if: ${{ secrets.ALLOW_VIDEO_GEN == 'true' }}
         env:
           LTX_API_KEY: ${{ secrets.LTX_API_KEY }}
           ALLOW_VIDEO_GEN: ${{ secrets.ALLOW_VIDEO_GEN }}
@@ -36,8 +37,7 @@ jobs:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: python scripts/generate_video.py
 
-      - name: Commit video
-        if: ${{ secrets.ALLOW_VIDEO_GEN == 'true' }}
+      - name: Commit results
         run: |
           git config user.name "inkdrop-bot"
           git config user.email "actions@users.noreply.github.com"
@@ -45,6 +45,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "no changes to commit"
           else
-            git commit -m "chore: generate video"
+            git commit -m "chore: video pipeline run"
             git push
           fi
