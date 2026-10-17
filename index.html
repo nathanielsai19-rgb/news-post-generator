@@ -423,25 +423,57 @@
 
   const FRESH_WINDOW_MS = 60 * 60 * 1000; // prefer stories under an hour old
   let recentTrendKeys = []; // avoid repeating the same trend on consecutive taps
+  let recentTopics = []; // avoid repeating the same topic (sports sports sports...)
 
-  function pickTrending(list, wasFresh) {
-    // group by trend so variety comes from the trend, not the story
+  const TOPIC_RULES = [
+    ["sports", /mlb|nfl|nba|nhl|soccer|football|rugby|basketball|baseball|hockey|playoff|world series|league|cup|derby|tournament|mariners|dodgers|yankees|brewers|arsenal|chelsea|manchester|liverpool|madrid|barcelona|juventus|warriors|glasgow|medvedev|tennis|nascar|f1\b|formula|golf|boxing|ufc|wwe|fifa|uefa|olympics|coach|manager|fc\b|\bcity\b/i],
+    ["entertainment", /movie|film|actor|actress|singer|song|album|show|series|netflix|hbo|network|music|trailer|celebrity|star trek|white lotus/i],
+    ["business", /stock|market|economy|bank|invest|crypto|bitcoin|trade|inflation|earnings|cathie wood/i],
+    ["politics", /trump|biden|president|senate|congress|election|government|minister|parliament|policy|white house/i],
+    ["tech", /\bai\b|apple|google|microsoft|nvidia|software|\bchip\b|phone|startup|cyber/i],
+    ["science", /space|nasa|study|research|disease|vaccine|climate|quantum|galaxy|stars/i],
+  ];
+
+  function topicOf(item) {
+    const text = ((item.trend || "") + " " + (item.title || "")).toLowerCase();
+    for (const [topic, re] of TOPIC_RULES) {
+      if (re.test(text)) return topic;
+    }
+    return "other";
+  }
+
+  function pickTrending(list) {
+    // group by trend, then by topic - variety comes from the TOPIC first
     const byTrend = new Map();
     for (const item of list) {
       const key = (item.trend || item.title).toLowerCase();
       if (!byTrend.has(key)) byTrend.set(key, []);
       byTrend.get(key).push(item);
     }
-    let keys = [...byTrend.keys()].filter((k) => !recentTrendKeys.includes(k));
-    if (!keys.length) { keys = [...byTrend.keys()]; recentTrendKeys = []; }
+    const byTopic = new Map();
+    for (const [key, stories] of byTrend) {
+      const topic = topicOf(stories[0]);
+      if (!byTopic.has(topic)) byTopic.set(topic, []);
+      byTopic.get(topic).push(key);
+    }
+    let candidates = [...byTopic.keys()].filter((t) => !recentTopics.includes(t));
+    if (!candidates.length) { candidates = [...byTopic.keys()]; recentTopics = []; }
+    const topic = pick(candidates);
+    recentTopics.push(topic);
+    if (recentTopics.length > 2) recentTopics.shift();
+
+    let keys = byTopic.get(topic).filter((k) => !recentTrendKeys.includes(k));
+    if (!keys.length) keys = byTopic.get(topic);
     const key = pick(keys);
     recentTrendKeys.push(key);
     if (recentTrendKeys.length > 5) recentTrendKeys.shift();
-    const stories = byTrend.get(key);
-    const idx = Math.floor(Math.pow(Math.random(), 1.6) * stories.length);
+
+    const stories = byTrend.get(key)
+      .slice().sort((a, b) => new Date(b.published) - new Date(a.published));
+    const story = stories[0];
     return {
-      story: stories[Math.min(idx, stories.length - 1)],
-      fromLastHour: wasFresh,
+      story,
+      fromLastHour: Date.now() - new Date(story.published).getTime() <= FRESH_WINDOW_MS,
     };
   }
 
@@ -451,7 +483,7 @@
     const now = Date.now();
     const fresh = list.filter((i) => now - new Date(i.published).getTime() <= FRESH_WINDOW_MS);
     const basePool = fresh.length ? fresh : list;
-    if (cat === "trending") return pickTrending(basePool.slice(0, 60), fresh.length > 0);
+    if (cat === "trending") return pickTrending(list.slice(0, 60));
     const pool = basePool.slice(0, 20);
     const idx = Math.floor(Math.pow(Math.random(), 1.6) * pool.length);
     return {
@@ -847,7 +879,9 @@
       renderPost(story, result.text, result.votes, picked.fromLastHour);
       renderFact(fact);
       if (!picked.fromLastHour) {
-        toast("No story from the last hour in " + CATS[activeCat].label + " — showing the freshest one");
+        toast(activeCat === "trending"
+          ? "Variety pick — the freshest trending stories are all sports right now"
+          : "No story from the last hour in " + CATS[activeCat].label + " — showing the freshest one");
       } else if (result.forced) {
         toast("Editors couldn't fully agree — showing their best take");
       } else {
