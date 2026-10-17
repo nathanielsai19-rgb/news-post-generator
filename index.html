@@ -985,10 +985,13 @@
     $("prodCharsWrap").classList.toggle("hidden", !(p && (p.characters || []).length));
     $("prodEnvWrap").classList.toggle("hidden", !p);
     if (!p) return;
+    const qa = prod.qa || {};
     $("prodScript").textContent = [
       "LOGLINE: " + (p.logline || ""),
       "BEAT: " + (p.beat || ""),
       "SCENE: " + (p.scene || ""),
+      (qa.checks ? "QA: " + qa.passed + "/" + qa.checks + " checks passed"
+        + (prod.ensemble ? " · ensemble of 3, critic pick" : "") : ""),
     ].join("\n\n");
     $("prodChars").textContent = (p.characters || []).map((c) =>
       c.name + " — " + c.role + "\n" +

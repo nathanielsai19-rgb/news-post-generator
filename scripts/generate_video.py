@@ -1,27 +1,35 @@
 #!/usr/bin/env python3
-"""InkDrop video production pipeline.
+"""InkDrop video production pipeline with a QA engine.
 
-Stage 1 (always): the PRODUCTION TEAM - a showrunner writes a production
-pack for the top news story: logline, scene, the single 5-second dramatic
-beat, photorealistic character sheets, environment and shot design. With
-Groq/DeepSeek secrets the team is the two-writer LLM crew; otherwise a
-template pack is assembled. The pack is written to production.json so the
-page shows it even while the pipeline is on standby (zero cost).
+Stage 1 (always, zero cost): the PRODUCTION TEAM writes a production pack
+(logline, scene, dramatic beat, photorealistic character sheets,
+environment, shot). With Groq/DeepSeek secrets the team is an ENSEMBLE:
+3 candidate packs, one critic call picks the best. A ~40-point automated
+QA battery validates structure, fact-faithfulness and photoreal specs on
+every pack.
 
-Stage 2 (when ALLOW_VIDEO_GEN=true): the pack's beat becomes the LTX
-text-to-video prompt, the video is generated, downloaded and committed.
-video_history.json stores packs + self-critiques so every production
-learns from the last.
+Stage 2 (when ALLOW_VIDEO_GEN=true): the pack becomes an LTX job -
+text-to-video, or image-to-video when keyframes/latest.png exists in the
+repo (Blender-rendered director's cut; served publicly via Pages).
+
+Stage 3 (learning): after rendering, a Groq VISION model inspects real
+frames of the video and writes a score + lesson for the next production.
+All lessons live in video_history.json.
 """
 
+import base64
 import datetime
 import json
 import os
 import random
+import re
+import subprocess
+import tempfile
 import time
 import urllib.request
 
 LTX = "https://api.ltx.io/v2/text-to-video"
+LTX_I2V = "https://api.ltx.io/v2/image-to-video"
 MODEL = os.environ.get("VIDEO_MODEL", "ltx-2-3-fast")
 DURATION = int(os.environ.get("VIDEO_DURATION", "5"))
 RESOLUTION = os.environ.get("VIDEO_RESOLUTION", "1280x720")
@@ -29,8 +37,10 @@ FPS = 24
 POLL_SECONDS = 10
 POLL_TIMEOUT = 480
 KEEP_VIDEOS = 3
-
 HISTORY_PATH = "video_history.json"
+KEYFRAME_PATH = "keyframes/latest.png"
+KEYFRAME_URL = ("https://nathanielsai19-rgb.github.io/news-post-generator/"
+                "keyframes/latest.png")
 
 STYLE_POOL = [
     "Photorealistic, shot on 35mm film with shallow depth of field and anamorphic lens flare",
@@ -49,6 +59,16 @@ MOMENT_RULES = [
 ]
 CAMERA_MOVES = ["dolly_in", "jib_up", "focus_shift"]
 
+STOPWORDS = {
+    "the", "a", "an", "and", "or", "but", "of", "to", "in", "on", "for", "with",
+    "is", "are", "was", "were", "be", "been", "has", "have", "had", "it", "its",
+    "this", "that", "as", "at", "by", "from", "their", "they", "he", "she", "his",
+    "her", "not", "no", "who", "what", "when", "how", "why", "after", "before",
+    "more", "most", "one", "two", "new", "say", "says", "said", "will", "would",
+}
+
+EMOJI_RE = re.compile(r"[\U0001F000-\U0001FAFF☀-➿]")
+
 
 def load_json(path, default):
     try:
@@ -63,7 +83,7 @@ def save_json(path, data):
         json.dump(data, fh, ensure_ascii=False, indent=1)
 
 
-def http(method, url, key=None, payload=None, timeout=30):
+def http(method, url, key=None, payload=None, timeout=60):
     req = urllib.request.Request(url, method=method)
     if key:
         req.add_header("Authorization", "Bearer " + key)
@@ -106,7 +126,6 @@ def llm_chat(base, key, model, messages, temperature=0.9, max_tokens=900):
 
 
 def parse_llm_json(text):
-    """Tolerant JSON extraction from LLM output (code fences, stray prose)."""
     text = (text or "").strip()
     if text.startswith("```"):
         text = text.split("```", 2)[1]
@@ -117,12 +136,19 @@ def parse_llm_json(text):
         pass
     start, end = text.find("{"), text.rfind("}")
     if start == -1 or end <= start:
+        try:
+            start, end = text.find("["), text.rfind("]")
+        except Exception:
+            return None
+    if start == -1 or end <= start:
         return None
     try:
         return json.loads(text[start:end + 1])
     except Exception:
         return None
 
+
+# ---------------------------------------------------------------- production
 
 def llm_production(story, history):
     groq_key = os.environ.get("GROQ_API_KEY")
@@ -192,6 +218,44 @@ def llm_production(story, history):
     return draft
 
 
+def critic_pick_best(drafts):
+    """One critic call scores all candidate packs; the best wins."""
+    ds_key = os.environ.get("DEEPSEEK_API_KEY")
+    if not ds_key:
+        return drafts[0]
+    try:
+        raw = llm_chat(
+            "https://api.deepseek.com", ds_key,
+            os.environ.get("VIDEO_DS_MODEL", "deepseek-flash"),
+            [{"role": "system", "content":
+                "You are a film critic. Score each production pack 1-10 on dramatic strength, "
+                "photorealistic specificity and real-life accuracy. Reply ONLY with a JSON array "
+                "of integers, one score per pack, in order."},
+             {"role": "user", "content":
+                "\n\n---PACK---\n\n".join(json.dumps(d, ensure_ascii=False) for d in drafts)}],
+            temperature=0.3, max_tokens=80)
+        scores = parse_llm_json(raw)
+        if isinstance(scores, list) and len(scores) == len(drafts):
+            scores = [int(s) if isinstance(s, (int, float)) else 0 for s in scores]
+            return drafts[scores.index(max(scores))]
+    except Exception:
+        pass
+    return drafts[0]
+
+
+def ensemble_production(story, history):
+    if not (os.environ.get("GROQ_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")):
+        return None, False
+    drafts = []
+    for _ in range(3):
+        p = llm_production(story, history)
+        if p:
+            drafts.append(p)
+    if not drafts:
+        return None, False
+    return critic_pick_best(drafts), True
+
+
 def template_production(story, history):
     used = {(p.get("style"), p.get("moment")) for p in history.get("packs", []) if p.get("style")}
     options = [(s, m) for s in STYLE_POOL for m in MOMENT_RULES if (s, m) not in used]
@@ -202,13 +266,13 @@ def template_production(story, history):
     text = story_text(story)
     return {
         "logline": f"{text.split('.')[0]}. — one moment that captures why it matters.",
-        "scene": f"{text}. The scene opens in the middle of the action, {style.lower()}.",
+        "scene": f"{text}. The scene opens in the middle of the action.",
         "beat": f"{moment} {text}",
         "characters": [
             {
                 "name": "The protagonist",
                 "role": "the person at the center of the story",
-                "appearance": "photorealistic: visible pores and skin texture, natural hair movement, " \
+                "appearance": "photorealistic: visible pores and skin texture, natural hair movement, "
                               "believable proportions, real eye reflections",
                 "clothing": "everyday clothes with natural fabric folds, subtle wear and correct drape",
                 "expression": "restrained tension - a tight jaw, a glance away, small tells",
@@ -239,11 +303,11 @@ def template_production(story, history):
 
 
 def build_production(story, history):
-    pack = llm_production(story, history)
+    pack, used_ensemble = ensemble_production(story, history)
     if pack:
-        return pack, None, None
+        return pack, None, None, used_ensemble
     pack, style, moment = template_production(story, history)
-    return pack, style, moment
+    return pack, style, moment, False
 
 
 def pack_to_prompt(pack):
@@ -264,34 +328,121 @@ def pack_to_prompt(pack):
     )
 
 
-def self_critique(pack):
-    ds_key = os.environ.get("DEEPSEEK_API_KEY")
-    if not ds_key:
+def pack_to_motion_prompt(pack):
+    shot = pack.get("shot") or {}
+    return (f"{shot.get('camera', 'slow dolly')} camera movement. "
+            f"{pack.get('beat', '')} Photorealistic natural motion, no morphing, "
+            "no text overlays, no watermarks.")
+
+
+# ---------------------------------------------------------------- QA engine
+
+def qa_battery(pack, story):
+    """~40 automated checks: structure, fact-faithfulness, photoreal specs."""
+    checks = []
+
+    def check(name, ok):
+        checks.append((name, bool(ok)))
+
+    env = pack.get("environment") or {}
+    shot = pack.get("shot") or {}
+    chars = pack.get("characters") or []
+
+    for k in ("logline", "scene", "beat"):
+        check(f"pack.{k} present", bool(pack.get(k)))
+    for k in ("location", "time", "lighting", "weather", "atmosphere"):
+        check(f"environment.{k} present", bool(env.get(k)))
+    for k in ("camera", "framing", "lens"):
+        check(f"shot.{k} present", bool(shot.get(k)))
+
+    check("characters present", len(chars) >= 1)
+    check("characters <= 3", len(chars) <= 3)
+
+    check("logline length ok", 20 <= len(pack.get("logline", "")) <= 300)
+    check("beat length ok", 20 <= len(pack.get("beat", "")) <= 300)
+    check("scene length ok", 40 <= len(pack.get("scene", "")) <= 700)
+
+    for f in ("logline", "scene", "beat"):
+        check(f"{f} no emoji", not EMOJI_RE.search(pack.get(f, "")))
+        check(f"{f} no hashtag", "#" not in pack.get(f, ""))
+
+    for i, c in enumerate(chars):
+        joined = " ".join(str(v) for v in c.values()).lower()
+        for k in ("name", "role", "appearance", "clothing", "expression", "motivation"):
+            check(f"char{i}.{k} present", bool(c.get(k)) and len(str(c.get(k))) >= 3)
+        check(f"char{i} photoreal spec",
+              bool(re.search(r"skin|texture|real|fabric|light|eye", joined)))
+
+    story_words = set(re.sub(r"[^\w\s]", " ", story_text(story).lower()).split()) - STOPWORDS
+    pack_words = set(re.sub(
+        r"[^\w\s]", " ",
+        (pack.get("logline", "") + " " + pack.get("beat", "")).lower()).split()) - STOPWORDS
+    overlap = story_words & pack_words
+    check("story overlap >= 1", len(overlap) >= 1)
+    check("story overlap >= 3", len(overlap) >= 3)
+
+    env_text = " ".join(env.values()).lower()
+    check("environment has lighting spec",
+          bool(re.search(r"light|shadow|sun|neon|golden|lamp", env_text)))
+    check("environment has real-place words",
+          bool(re.search(r"room|street|hall|office|stadium|city|town|building|stage|home|field|desk", env_text)))
+
+    total = len(checks)
+    passed = sum(1 for _, ok in checks if ok)
+    return {"checks": total, "passed": passed,
+            "failed": [name for name, ok in checks if not ok]}
+
+
+# ---------------------------------------------------------------- vision QA
+
+def vision_critique(video_path):
+    """Groq vision model inspects real frames of the finished video."""
+    groq_key = os.environ.get("GROQ_API_KEY")
+    if not groq_key:
         return None
     try:
-        return llm_chat(
-            "https://api.deepseek.com", ds_key,
-            os.environ.get("VIDEO_DS_MODEL", "deepseek-flash"),
-            [{"role": "system", "content":
-                "You review AI video production packs. After seeing the result in your mind, write ONE "
-                "sentence lesson for the next production: what to keep, what to change. Be specific."},
-             {"role": "user", "content": json.dumps(pack, ensure_ascii=False)}],
-            temperature=0.4, max_tokens=120)
-    except Exception:
+        frames = []
+        with tempfile.TemporaryDirectory() as td:
+            subprocess.run(
+                ["ffmpeg", "-i", video_path, "-vf", "fps=1/2,scale=640:-1",
+                 "-frames:v", "3", os.path.join(td, "f%02d.jpg")],
+                check=True, capture_output=True, timeout=120)
+            for f in sorted(os.listdir(td)):
+                with open(os.path.join(td, f), "rb") as fh:
+                    frames.append(base64.b64encode(fh.read()).decode())
+        content = [{"type": "text", "text":
+                    "You are a cinematographer reviewing 3 frames of an AI-generated news video. "
+                    "Score 1-10 on photorealism, physical accuracy and character realism. "
+                    "Reply ONLY with JSON: {\"score\": <int>, \"lesson\": \"one sentence\"}."}]
+        for fr in frames:
+            content.append({"type": "image_url",
+                            "image_url": {"url": "data:image/jpeg;base64," + fr}})
+        data = http("POST", "https://api.groq.com/openai/v1/chat/completions", key=groq_key,
+                    payload={"model": os.environ.get("VIDEO_VISION_MODEL", "llama-3.2-90b-vision"),
+                             "messages": [{"role": "user", "content": content}],
+                             "temperature": 0.3, "max_tokens": 200})
+        txt = ((data.get("choices") or [{}])[0].get("message") or {}).get("content", "")
+        parsed = parse_llm_json(txt) or {}
+        return {"score": parsed.get("score"), "lesson": parsed.get("lesson", txt[:200])}
+    except Exception as e:
+        print("vision critique skipped:", e)
         return None
 
 
-def submit(payload):
+# ---------------------------------------------------------------- LTX
+
+def submit(payload, use_keyframe=False):
     key = os.environ["LTX_API_KEY"]
-    return http("POST", LTX, key=key, payload=payload, timeout=60)
+    return http("POST", LTX_I2V if use_keyframe else LTX, key=key, payload=payload)
 
 
-def poll(job_id):
+def poll(job_id, use_keyframe=False):
     key = os.environ["LTX_API_KEY"]
+    endpoint = (LTX_I2V if use_keyframe else LTX) + "/" + job_id
     deadline = time.time() + POLL_TIMEOUT
     while time.time() < deadline:
         try:
-            job = http("GET", f"{LTX}/{job_id}", key=key)
+            job = http("GET", endpoint, key=key)
         except Exception as e:
             print("poll error:", e)
             time.sleep(POLL_SECONDS)
@@ -318,11 +469,16 @@ def prune_videos(keep=KEEP_VIDEOS):
         print("pruned", old)
 
 
+# ---------------------------------------------------------------- main
+
 def main():
     allow = os.environ.get("ALLOW_VIDEO_GEN", "false") == "true"
     story = pick_story()
     history = load_json(HISTORY_PATH, {"packs": []})
-    pack, style, moment = build_production(story, history)
+    pack, style, moment, used_ensemble = build_production(story, history)
+    qa = qa_battery(pack, story)
+    print(f"QA: {qa['passed']}/{qa['checks']} passed"
+          + (f" - failed: {qa['failed'][:5]}" if qa["failed"] else ""))
     prompt = pack_to_prompt(pack)
 
     generated_at = datetime.datetime.now(datetime.timezone.utc) \
@@ -337,10 +493,12 @@ def main():
         },
         "pack": pack,
         "prompt": prompt,
+        "qa": qa,
+        "ensemble": used_ensemble,
         "status": "standby",
     }
     save_json("production.json", production)
-    print("production pack written (dry-run ok)")
+    print("production pack written")
 
     if not allow:
         if not os.path.exists("video.json"):
@@ -356,16 +514,27 @@ def main():
         print("pipeline standby - no LTX call")
         return
 
+    use_keyframe = os.path.exists(KEYFRAME_PATH)
+    production["used_keyframe"] = use_keyframe
+    if use_keyframe:
+        payload = {"image_uri": KEYFRAME_URL,
+                   "prompt": pack_to_motion_prompt(pack),
+                   "model": MODEL, "duration": DURATION,
+                   "resolution": RESOLUTION, "fps": FPS, "generate_audio": True}
+        print("using Blender/director keyframe as first frame")
+    else:
+        payload = {"prompt": prompt, "model": MODEL, "duration": DURATION,
+                   "resolution": RESOLUTION, "fps": FPS, "generate_audio": True}
+
     try:
-        job = submit({"prompt": prompt, "model": MODEL, "duration": DURATION,
-                      "resolution": RESOLUTION, "fps": FPS, "generate_audio": True})
+        job = submit(payload, use_keyframe)
     except urllib.error.HTTPError as e:
         production["status"] = "insufficient_funds" if e.code == 402 else f"submit_error_{e.code}"
         save_json("production.json", production)
         print("submit failed:", e.code)
         return
 
-    job = poll(job["id"])
+    job = poll(job["id"], use_keyframe)
     status = job.get("status")
     production["job_id"] = job.get("id")
 
@@ -382,15 +551,19 @@ def main():
             prune_videos()
             production["status"] = "ready"
             production["video"] = path
+            production["vision"] = vision_critique(path)
             print("video ready:", path)
     else:
         production["status"] = status or "failed"
 
-    production["critique"] = self_critique(pack)
+    production["critique"] = production.get("critique") or self_critique(pack)
     history.setdefault("packs", []).append(
         {"ts": generated_at, "pack": pack, "prompt": prompt,
          "style": style, "moment": moment,
-         "status": production["status"], "critique": production.get("critique")})
+         "status": production["status"],
+         "qa": qa,
+         "vision": production.get("vision"),
+         "critique": production.get("critique")})
     history["packs"] = history["packs"][-10:]
     save_json(HISTORY_PATH, history)
 
@@ -405,8 +578,26 @@ def main():
         "generated_at": generated_at,
         "video": production.get("video"),
         "job_id": production.get("job_id"),
+        "vision": production.get("vision"),
     })
     save_json("production.json", production)
+
+
+def self_critique(pack):
+    ds_key = os.environ.get("DEEPSEEK_API_KEY")
+    if not ds_key:
+        return None
+    try:
+        return llm_chat(
+            "https://api.deepseek.com", ds_key,
+            os.environ.get("VIDEO_DS_MODEL", "deepseek-flash"),
+            [{"role": "system", "content":
+                "You review AI video production packs. After seeing the result in your mind, write ONE "
+                "sentence lesson for the next production: what to keep, what to change. Be specific."},
+             {"role": "user", "content": json.dumps(pack, ensure_ascii=False)}],
+            temperature=0.4, max_tokens=120)
+    except Exception:
+        return None
 
 
 if __name__ == "__main__":
