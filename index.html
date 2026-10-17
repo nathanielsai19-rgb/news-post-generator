@@ -102,6 +102,7 @@
   .card-label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
   .factcard .card-label::before { background: var(--amber); }
   .post-body { font-size: 16px; line-height: 1.62; white-space: pre-wrap; word-wrap: break-word; }
+  .post-hook { font-size: 16.5px; font-weight: 700; margin-bottom: 8px; white-space: pre-wrap; word-wrap: break-word; }
   .post-credit { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); color: var(--dim); font-size: 13.5px; line-height: 1.6; }
   .post-credit a { color: var(--dim); word-break: break-all; }
   .mini-label { font-size: 10.5px; font-weight: 750; letter-spacing: 1.8px; text-transform: uppercase; color: var(--dim); opacity: .8; margin-bottom: 6px; }
@@ -160,6 +161,11 @@
     width: 100%; height: 50px; border-radius: 14px; border: 1px solid var(--line);
     background: var(--bg); color: var(--ink); font-size: 16px; padding: 0 14px; outline: none;
   }
+  .sheet textarea {
+    width: 100%; min-height: 66px; border-radius: 14px; border: 1px solid var(--line);
+    background: var(--bg); color: var(--ink); font-size: 15px; padding: 10px 14px;
+    outline: none; resize: vertical; font-family: inherit; line-height: 1.5;
+  }
   .sheet input:focus { border-color: var(--accent); }
   .sheet .row { display: flex; gap: 10px; margin-top: 14px; }
   .status { margin-top: 14px; font-size: 13px; display: flex; align-items: center; gap: 8px; color: var(--dim); }
@@ -208,6 +214,7 @@
 
   <section class="card hidden" id="postCard" aria-live="polite">
     <div class="card-label">Your post</div>
+    <div class="post-hook" id="postHook"></div>
     <div class="post-body" id="postBody"></div>
     <div class="post-credit" id="postCredit">
       <div class="mini-label">Credit — paste as reply</div>
@@ -246,6 +253,7 @@
       <div id="videoPrompt"></div>
     </details>
     <div class="actions">
+      <button class="btn" id="captionBtn">Caption</button>
       <button class="btn" id="videoBtn">Check for new video</button>
       <button class="btn ghost" id="rateUp" aria-label="Good video">👍</button>
       <button class="btn ghost" id="rateDown" aria-label="Bad video">👎</button>
@@ -274,6 +282,10 @@
     <label for="dsModelInput">DeepSeek model (optional)</label>
     <input type="text" id="dsModelInput" placeholder="deepseek-flash" autocomplete="off" spellcheck="false">
     <div class="field-hint">deepseek-flash (fast, cheap) · deepseek-v4-pro (strongest)</div>
+  </div>
+  <div class="field">
+    <label for="voiceInput">Your best posts — voice reference (optional)</label>
+    <textarea id="voiceInput" rows="3" placeholder="Paste 2-4 of your best-performing posts, one per line. Writers will imitate this voice."></textarea>
   </div>
   <div class="modes" id="modes" role="group" aria-label="Writing mode"></div>
   <div class="row">
@@ -349,6 +361,7 @@
     $("keyInput").value = load("inkdrop_groq_key") || "";
     $("dsKeyInput").value = load("inkdrop_deepseek_key") || "";
     $("dsModelInput").value = load("inkdrop_ds_model") || "";
+    $("voiceInput").value = load("inkdrop_voice") || "";
     paintModes();
     $("backdrop").classList.add("open"); $("sheet").classList.add("open");
   }
@@ -360,7 +373,8 @@
     save("inkdrop_groq_key", $("keyInput").value.trim());
     save("inkdrop_deepseek_key", $("dsKeyInput").value.trim());
     save("inkdrop_ds_model", $("dsModelInput").value.trim());
-    toast("Keys saved on this device");
+    save("inkdrop_voice", $("voiceInput").value.trim());
+    toast("Saved on this device");
     keyStatusText(); closeSheet();
   });
   $("clearKey").addEventListener("click", () => {
@@ -437,25 +451,34 @@
   /* ---------- AI writing (Groq + DeepSeek, optional) ---------- */
   const SYSTEM_PROMPT =
     "You ghostwrite social media posts for a normal person with a point of view, sharing news they just read. " +
-    "Turn the item below into a post of 2-4 sentences: lead with YOUR sharp take on it (why it matters, who wins " +
-    "or loses, what happens next), then back it with the facts given. A neutral news summary is a failure. " +
+    "Structure the post in exactly three paragraphs separated by blank lines: " +
+    "1) HOOK - one short line that stops the scroll (curiosity, a strong claim, or a surprising angle on the item); " +
+    "2) BODY - 1-3 sentences with your sharp take (why it matters, who wins or loses, what happens next) and the facts that back it; " +
+    "3) BAIT - a short question or open loop that invites replies (never clichés like \"Thoughts?\" or \"Agree?\"). " +
     "Rules: sound like a real person with opinions, not a journalist or a bot; never invent details, numbers, " +
-    "quotes or names beyond the item; no emojis, no hashtags, no clichés (no \"game changer\", \"you won't believe\", " +
-    "\"breaking\"); no \"BREAKING:\" style openers; vary sentence length; end naturally. " +
-    "Return only the post text.";
+    "quotes or names beyond the item; no emojis, no hashtags, no clichés. Return only the post text with the three paragraphs.";
 
   const IMPROVER_PROMPT =
     "You are the final writer on a two-writer team. Your teammate drafted a post about the news " +
-    "item below. Improve the draft: 2-4 sentences, sound like a real person sharing news with a " +
+    "item below. Improve the draft: keep the hook/body/bait structure (hook stops the scroll, bait " +
+    "invites replies), 2-4 sentences in the body, sound like a real person sharing news with a " +
     "clear opinion or angle — a neutral summary is a failure. No clichés, no emojis, no hashtags, " +
     "no bot or PR phrasing. Keep every fact from the item and fix anything in the draft that drifts " +
     "from it. Never invent details. Return only the improved post text.";
+
+  function voiceBlock() {
+    const v = (load("inkdrop_voice") || "").trim();
+    if (!v) return "";
+    return "\nThe account's voice — imitate this energy, rhythm and personality:\n" +
+      v.split("\n").slice(0, 4).map((l) => "- " + l).join("\n");
+  }
 
   function storyToUser(story, tail) {
     return "Outlet: " + story.outlet + "\n" +
       "Headline: " + story.title + "\n" +
       (story.trend ? "Trending topic this story is about: " + story.trend + "\n" : "") +
       (story.summary ? "Summary: " + story.summary + "\n" : "") +
+      voiceBlock() +
       "\n" + tail;
   }
 
@@ -516,17 +539,19 @@
   /* ---------- consensus editing: both models must agree ---------- */
   const REVIEWER_PROMPT =
     "You are a tough social media editor deciding whether a draft post is worth publishing. " +
-    "You are shown the original news item and the draft. Judge: does it have a clear point of view " +
-    "or angle that would make a reader care (a neutral news summary is a reject), does it sound like " +
-    "a real person (no clichés, no bot phrasing, no emojis/hashtags), and is it accurate to the item? " +
+    "You are shown the original news item and the draft. Judge: does it have a scroll-stopping " +
+    "hook, a clear point of view or angle that would make a reader care (a neutral news summary " +
+    "is a reject), a reply bait at the end, does it sound like a real person (no clichés, no bot " +
+    "phrasing, no emojis/hashtags), and is it accurate to the item? " +
     "Reply ONLY with JSON: {\"score\": <integer 1-10>, \"verdict\": \"post\" or \"fix\", " +
     "\"reason\": \"one short sentence\"}. Use \"post\" when score is 7 or higher, otherwise \"fix\".";
 
   const REVISER_PROMPT =
     "You are the final writer on an editorial team. The editors rejected your draft and left notes. " +
-    "Rewrite the post: 2-4 sentences, real-person voice with a clear opinion or angle — a neutral " +
-    "summary is a failure. No clichés, no emojis, no hashtags, keep every fact from the item, and " +
-    "address the editors' notes. Return only the new post text.";
+    "Rewrite the post: keep the hook/body/bait structure (hook stops the scroll, bait invites " +
+    "replies), real-person voice with a clear opinion or angle — a neutral summary is a failure. " +
+    "No clichés, no emojis, no hashtags, keep every fact from the item, and address the editors' " +
+    "notes. Return only the new post text.";
 
   function parseVerdict(text) {
     try {
@@ -626,30 +651,51 @@
   }
 
   /* ---------- built-in writing styles ---------- */
-  const ANGLE_LEADS = ["The part everyone's missing:", "Here's why this matters:", "Bigger story here:", "Watch this one:", "The real story:"];
-  const TEMPLATES = [
-    (s) => pick(ANGLE_LEADS) + " " + s.title + (s.summary ? ". " + s.summary : ""),
-    (s) => s.title + (s.summary ? " — " + s.summary : "") + " That's the headline, but the part worth watching is what happens next.",
-    (s) => "People will read this wrong. " + s.title + (s.summary ? " " + s.summary : ""),
-    (s) => s.title + (s.summary ? "\n\n" + s.summary : "") + "\n\nNot enough people are paying attention to this.",
-    (s) => "Reading between the lines of " + s.title + (s.summary ? ": " + s.summary : ""),
+  const shortTitle = (s) => {
+    const words = s.title.split(" ");
+    return words.slice(0, 7).join(" ") + (words.length > 7 ? "…" : "");
+  };
+  const HOOKS = [
+    (s) => "Everyone's reading " + shortTitle(s) + " wrong.",
+    (s) => shortTitle(s) + " flew under the radar.",
+    (s) => "Nobody's talking about the real part of " + shortTitle(s) + ".",
+    (s) => shortTitle(s) + " changes more than it looks like.",
+    (s) => "If you follow one story today: " + shortTitle(s) + ".",
   ];
-  const TREND_TEMPLATES = [
-    (s) => "\"" + s.trend + "\" is trending — here's the part worth your attention: " + s.title + (s.summary ? " " + s.summary : ""),
-    (s) => s.title + " — the real reason \"" + s.trend + "\" is everywhere today" + (s.summary ? ": " + s.summary : "."),
+  const TREND_HOOKS = [
+    (s) => "\"" + s.trend + "\" is trending — and most people are missing the actual story.",
+    (s) => "Everyone's searching \"" + s.trend + "\" right now. The part worth knowing isn't obvious.",
+  ];
+  const BODIES = [
+    (s) => s.title + (s.summary ? " — " + s.summary : ""),
+    (s) => "Here's the short version: " + s.title + (s.summary ? ". " + s.summary : ""),
+    (s) => s.title + (s.summary ? "\n\n" + s.summary : ""),
+  ];
+  const TREND_BODIES = [
+    (s) => s.title + (s.summary ? " — " + s.summary : "") + " That's why \"" + s.trend + "\" is everywhere today.",
+    (s) => "The story behind \"" + s.trend + "\" trending: " + s.title + (s.summary ? ". " + s.summary : ""),
+  ];
+  const BAITS = [
+    "Am I wrong here?",
+    "What would you do?",
+    "Which side of this are you on?",
+    "See it differently? Tell me.",
+    "What's the part I'm missing?",
   ];
   function templatePost(story) {
-    const shapes = story.trend ? TEMPLATES.concat(TREND_TEMPLATES) : TEMPLATES;
-    let text = pick(shapes)(story).trim();
+    const hook = pick(story.trend ? HOOKS.concat(TREND_HOOKS) : HOOKS)(story);
+    const body = pick(story.trend ? BODIES.concat(TREND_BODIES) : BODIES)(story).trim();
+    let text = hook + "\n\n" + body;
     if (!/[.!?…]$/.test(text)) text += ".";
-    return text;
+    return text + "\n\n" + pick(BAITS);
   }
 
   /* ---------- credit ---------- */
   function creditLine(story) {
+    if (!story.outlet && !story.link) return "";
     let line = "— via " + story.outlet;
     if (story.author) line += ", by " + story.author;
-    return line + "\n" + story.link;
+    return line + "\n" + (story.link || "");
   }
 
   /* ---------- true facts ---------- */
@@ -726,7 +772,11 @@
 
   function renderPost(story, body, votes, fromLastHour) {
     lastPost = { body, reply: creditLine(story) };
-    $("postBody").textContent = body;
+    const hookParts = body.split("\n\n");
+    $("postHook").textContent = hookParts[0];
+    $("postHook").classList.toggle("hidden", hookParts.length < 2);
+    $("postBody").textContent = hookParts.length > 1 ? hookParts.slice(1).join("\n\n") : "";
+    $("postCredit").classList.toggle("hidden", !lastPost.reply);
     const creditBox = $("postCreditText");
     creditBox.textContent = "";
     const parts = lastPost.reply.split("\n");
@@ -955,6 +1005,26 @@
   $("videoBtn").addEventListener("click", fetchVideo);
   $("rateUp").addEventListener("click", () => rateVideo(1));
   $("rateDown").addEventListener("click", () => rateVideo(0));
+  $("captionBtn").addEventListener("click", async () => {
+    if (!lastVideo || lastVideo.status !== "ready") { toast("No video to caption yet", true); return; }
+    const btn = $("captionBtn");
+    btn.disabled = true;
+    try {
+      const story = {
+        title: lastVideo.title || "This video",
+        summary: "Video scene: " + (lastVideo.prompt || ""),
+        outlet: "",
+        category: "trending",
+        published: lastVideo.generated_at,
+      };
+      const result = await writePost(story, function () {});
+      renderPost(story, result.text, null, true);
+      setPageMode("post");
+      toast("Caption ready — Copy it and post with the video");
+    } finally {
+      btn.disabled = false;
+    }
+  });
 
   /* ---------- boot ---------- */
   buildPageModes();
