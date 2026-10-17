@@ -252,6 +252,18 @@
       <summary>Prompt</summary>
       <div id="videoPrompt"></div>
     </details>
+    <details class="prompt-details hidden" id="prodScriptWrap">
+      <summary>Script</summary>
+      <div id="prodScript"></div>
+    </details>
+    <details class="prompt-details hidden" id="prodCharsWrap">
+      <summary>Characters</summary>
+      <div id="prodChars"></div>
+    </details>
+    <details class="prompt-details hidden" id="prodEnvWrap">
+      <summary>Environment &amp; shot</summary>
+      <div id="prodEnv"></div>
+    </details>
     <div class="actions">
       <button class="btn" id="captionBtn">Caption</button>
       <button class="btn" id="videoBtn">Check for new video</button>
@@ -946,19 +958,51 @@
     try {
       const res = await fetch("video.json?v=" + Date.now(), { cache: "no-store" });
       if (!res.ok) throw new Error("no video.json");
-      renderVideo(await res.json());
+      const v = await res.json();
+      let prod = null;
+      try {
+        const r2 = await fetch("production.json?v=" + Date.now(), { cache: "no-store" });
+        if (r2.ok) prod = await r2.json();
+      } catch (e) { /* production pack optional */ }
+      renderVideo(v, prod);
     } catch (e) {
       lastVideo = null;
       $("videoStatus").textContent = "No video yet — the video pipeline is still warming up.";
       $("videoPlayer").classList.add("hidden");
       $("videoPromptWrap").classList.add("hidden");
+      $("prodScriptWrap").classList.add("hidden");
+      $("prodCharsWrap").classList.add("hidden");
+      $("prodEnvWrap").classList.add("hidden");
       $("videoMeta").textContent = "";
     } finally {
       btn.disabled = false;
     }
   }
 
-  function renderVideo(v) {
+  function renderProduction(prod) {
+    const p = prod && prod.pack;
+    $("prodScriptWrap").classList.toggle("hidden", !p);
+    $("prodCharsWrap").classList.toggle("hidden", !(p && (p.characters || []).length));
+    $("prodEnvWrap").classList.toggle("hidden", !p);
+    if (!p) return;
+    $("prodScript").textContent = [
+      "LOGLINE: " + (p.logline || ""),
+      "BEAT: " + (p.beat || ""),
+      "SCENE: " + (p.scene || ""),
+    ].join("\n\n");
+    $("prodChars").textContent = (p.characters || []).map((c) =>
+      c.name + " — " + c.role + "\n" +
+      [c.appearance, c.clothing, c.expression, c.motivation].filter(Boolean).join(" · ")
+    ).join("\n\n");
+    const e = p.environment || {};
+    const s = p.shot || {};
+    $("prodEnv").textContent = [
+      [e.location, e.time, e.lighting, e.weather, e.atmosphere].filter(Boolean).join(" · "),
+      [s.camera, s.framing, s.lens].filter(Boolean).join(" · "),
+    ].join("\n\n");
+  }
+
+  function renderVideo(v, prod) {
     lastVideo = v;
     const status = $("videoStatus");
     const player = $("videoPlayer");
@@ -985,6 +1029,7 @@
         $("videoPrompt").textContent = v.prompt;
         pw.classList.remove("hidden");
       }
+      renderProduction(prod);
     } else if (v.status === "standby") {
       status.textContent = "Video pipeline is on standby — top up your LTX balance and tell Claude to switch it on.";
     } else if (v.status === "insufficient_funds") {
@@ -992,6 +1037,7 @@
     } else {
       status.textContent = "Last generation " + (v.status || "failed") + " — the next run will retry.";
     }
+    renderProduction(prod);
   }
 
   function rateVideo(rating) {

@@ -1,0 +1,46 @@
+{
+ "generated_at": "2026-10-17T10:36:25Z",
+ "story": {
+  "title": "‘I just panic if I’m left alone’: A glimpse of the real Judi Dench",
+  "outlet": "Yahoo",
+  "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxQTjctRTdPcmZGazhjd21nS3J0eEMzQXRzeFlmVFhtVEF4MlhkTmdKVk1FSi1EU2F1dGZsS3Z0TzNuN0dZVmdEQlc0R0FDOVFxalM3Qmkydk82M3dMRk51d01lU0l5MWYtZmhaRk42MUNIX3ZLcWRCSElmN3g1SHdFYnBEaXhKcEE2ODA1LU9LdHZoM0NPN2c1RA?oc=5",
+  "trend": "judi dench"
+ },
+ "pack": {
+  "logline": "‘I just panic if I’m left alone’: A glimpse of the real Judi Dench. — one moment that captures why it matters.",
+  "scene": "‘I just panic if I’m left alone’: A glimpse of the real Judi Dench. Trending: judi dench. The scene opens in the middle of the action, ultra-detailed cinematic realism, volumetric light through dust and haze, 8k texture.",
+  "beat": "Capture the exact second something shifts - the beat before a reveal, not after ‘I just panic if I’m left alone’: A glimpse of the real Judi Dench. Trending: judi dench",
+  "characters": [
+   {
+    "name": "The protagonist",
+    "role": "the person at the center of the story",
+    "appearance": "photorealistic: visible pores and skin texture, natural hair movement, believable proportions, real eye reflections",
+    "clothing": "everyday clothes with natural fabric folds, subtle wear and correct drape",
+    "expression": "restrained tension - a tight jaw, a glance away, small tells",
+    "motivation": "to get through the next five minutes without losing control"
+   },
+   {
+    "name": "The witness",
+    "role": "someone watching it unfold",
+    "appearance": "photorealistic secondary character, distinct silhouette, age-appropriate detail",
+    "clothing": "weather-appropriate outfit, believable textures",
+    "expression": "quiet alarm, trying not to react",
+    "motivation": "to stay out of it - and failing"
+   }
+  ],
+  "environment": {
+   "location": "the real-world location implied by the story",
+   "time": "the time of day the story suggests",
+   "lighting": "natural cinematic light with physically plausible shadows and reflections",
+   "weather": "consistent with the story's setting and mood",
+   "atmosphere": "dense and tactile - air, dust, reflections all physically plausible"
+  },
+  "shot": {
+   "camera": "dolly_in",
+   "framing": "medium close-up on the protagonist, environment in deep focus",
+   "lens": "35mm anamorphic, shallow depth of field"
+  }
+ },
+ "prompt": "Photorealistic. Scene: ‘I just panic if I’m left alone’: A glimpse of the real Judi Dench. Trending: judi dench. The scene opens in the middle of the action, ultra-detailed cinematic realism, volumetric light through dust and haze, 8k texture. Characters: The protagonist: photorealistic: visible pores and skin texture, natural hair movement, believable proportions, real eye reflections everyday clothes with natural fabric folds, subtle wear and correct drape restrained tension - a tight jaw, a glance away, small tells The witness: photorealistic secondary character, distinct silhouette, age-appropriate detail weather-appropriate outfit, believable textures quiet alarm, trying not to react Environment: the real-world location implied by the story, the time of day the story suggests, natural cinematic light with physically plausible shadows and reflections, consistent with the story's setting and mood, dense and tactile - air, dust, reflections all physically plausible. Shot: dolly_in, medium close-up on the protagonist, environment in deep focus, 35mm anamorphic, shallow depth of field. Beat: Capture the exact second something shifts - the beat before a reveal, not after ‘I just panic if I’m left alone’: A glimpse of the real Judi Dench. Trending: judi dench No text overlays, no watermarks, no logos.",
+ "status": "standby"
+}
