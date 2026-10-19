@@ -75,6 +75,10 @@ TREND_TITLE_JUNK = [
     r"odds, picks",
     r"\?",                 # question headlines ("What channel is … tonight?")
     r"^(i|we|my|our)\b",   # first-person blog/opinion pieces
+    r"alert:",             # feed-alert labels ("Fantasy Football Injury Alert: …")
+    r"fantasy football",   # niche alert-jargon headlines
+    r"waiver wire",
+    r"\b&\b",              # multi-subject list titles ("A & B Become …")
 ]
 TREND_TITLE_PREFIX = re.compile(
     r"^(look|watch|just in|today in sports|update)\b[:,\- ]*", re.I

@@ -501,7 +501,9 @@
     "\"[Who or what] [verb] [what happened]\" — e.g. \"Kansas mom reportedly released without charges after driving into " +
     "youth soccer game killing 2.\" Rules: plain facts from the item only — no opinion, no commentary, no questions, " +
     "no hooks, no bait; never invent details, numbers, quotes or names beyond the item; no emojis, no hashtags, no clichés; " +
-    "one sentence ending with a period. If the item names a trending topic, the sentence must be self-explanatory — " +
+    "one sentence ending with a period. Phrase the headline as a natural spoken sentence — strip feed labels and alert-style " +
+    "prefixes, and use ordinary words (expand obvious abbreviations like IR to injured reserve when the headline makes the " +
+    "meaning clear; never explain anything the headline itself doesn't establish). If the item names a trending topic, the sentence must be self-explanatory — " +
     "a reader who has never heard of the topic should still understand who did what — and the topic itself should " +
     "appear in the sentence naturally. If a voice reference is given, borrow only its wording and rhythm — never its opinions. " +
     "Return only that one sentence.";
@@ -510,6 +512,7 @@
     "You are the final writer on a two-writer team. Your teammate drafted a post about the news " +
     "item below. Improve the draft: exactly ONE declarative news sentence (speaker + says/declares/warns + what they said, " +
     "or who/what + verb + what happened). Plain facts only — no opinion, no commentary, no questions, no hooks. " +
+    "Strip feed labels and alert-style prefixes, and phrase the headline in ordinary words. " +
     "No clichés, no emojis, no hashtags, no bot or PR phrasing. Keep every fact from the item and fix anything in the draft " +
     "that drifts from it. Never invent details. Return only the improved one-sentence post.";
 
@@ -706,6 +709,9 @@
     for (const p of TITLE_STARTERS) {
       if (t.toUpperCase().startsWith(p)) { t = t.slice(p.length).trim(); break; }
     }
+    // strip feed-label prefixes: "Fantasy Football Injury Alert: " -> ""
+    const alert = t.match(/^[^:]{2,40} alert:\s*/i);
+    if (alert) t = t.slice(alert[0].length);
     // cut at the first real sentence end (12+ chars in, so "U.S. ..." doesn't cut early)
     const m = t.match(/^(.{12,}?[.!?])(\s|$)/);
     if (m) t = m[1];
