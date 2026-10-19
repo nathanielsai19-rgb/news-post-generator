@@ -494,25 +494,29 @@
 
   /* ---------- AI writing (Groq + DeepSeek, optional) ---------- */
   const SYSTEM_PROMPT =
-    "You ghostwrite social media posts for a normal person who shares news they just read, in one clean sentence. " +
-    "Structure: exactly ONE declarative news sentence, nothing else. If a named person or company said or announced something: " +
-    "\"[Name or role] [says/declares/warns/announces/claims] [what they said or did]\" — e.g. \"Nvidia CEO Jensen Huang declares " +
-    "children won't need to learn basic math skills in the AI era.\" If it is an event with no speaker: " +
-    "\"[Who or what] [verb] [what happened]\" — e.g. \"Kansas mom reportedly released without charges after driving into " +
-    "youth soccer game killing 2.\" Rules: plain facts from the item only — no opinion, no commentary, no questions, " +
-    "no hooks, no bait; never invent details, numbers, quotes or names beyond the item; no emojis, no hashtags, no clichés; " +
-    "one sentence ending with a period. Phrase the headline as a natural spoken sentence — strip feed labels and alert-style " +
-    "prefixes, and use ordinary words (expand obvious abbreviations like IR to injured reserve when the headline makes the " +
-    "meaning clear; never explain anything the headline itself doesn't establish). If the item names a trending topic, the sentence must be self-explanatory — " +
-    "a reader who has never heard of the topic should still understand who did what — and the topic itself should " +
-    "appear in the sentence naturally. If a voice reference is given, borrow only its wording and rhythm — never its opinions. " +
+    "You write one-line news briefings for people scrolling a social feed. A reader who knows nothing about the topic " +
+    "must be able to read the sentence once, instantly understand what happened and who was involved, and move on. " +
+    "From the item, pick out: WHO (person, team or company — with a plain-word description of what they are when the " +
+    "item says), WHAT HAPPENED (the one thing), and the context the item gives that makes it land (like \"nearly two " +
+    "years after a devastating knee injury\"). Then write exactly ONE declarative sentence in plain spoken English. " +
+    "Translate headlinese into normal speech: \"Texans WR Tank Dell to return vs. Giants\" becomes \"Texans receiver " +
+    "Tank Dell returns to play the Giants\"; \"heads to IR\" becomes \"goes on injured reserve\". Expand every " +
+    "abbreviation the item makes clear, use normal articles and tense, and never copy the headline's formatting, feed " +
+    "labels or punctuation quirks. Use simple everyday words — sports, business or tech terms must still read clearly " +
+    "to someone outside that world. If the item names a trending topic, the sentence must be self-explanatory: a " +
+    "reader who has never heard of the topic still understands who did what, and the topic appears naturally in the " +
+    "sentence. Rules: one sentence ending with a period; plain facts from the item only — no opinion, no commentary, " +
+    "no questions, no hooks, no bait; never invent details, numbers, quotes or names beyond the item; no emojis, no " +
+    "hashtags, no clichés. If a voice reference is given, borrow only its wording and rhythm — never its opinions. " +
     "Return only that one sentence.";
 
   const IMPROVER_PROMPT =
     "You are the final writer on a two-writer team. Your teammate drafted a post about the news " +
     "item below. Improve the draft: exactly ONE declarative news sentence (speaker + says/declares/warns + what they said, " +
     "or who/what + verb + what happened). Plain facts only — no opinion, no commentary, no questions, no hooks. " +
-    "Strip feed labels and alert-style prefixes, and phrase the headline in ordinary words. " +
+    "The reader must understand it in one read with no background: translate any headlinese into normal spoken English " +
+    "(expand abbreviations the item makes clear, normal articles and tense), strip feed labels and alert-style prefixes, " +
+    "and use simple everyday words. " +
     "No clichés, no emojis, no hashtags, no bot or PR phrasing. Keep every fact from the item and fix anything in the draft " +
     "that drifts from it. Never invent details. Return only the improved one-sentence post.";
 
@@ -592,6 +596,8 @@
     "You are shown the original news item and the draft. Judge: is it exactly ONE declarative news sentence, " +
     "pure facts from the item (speaker + says/declares/warns form, or who/what + verb + what happened), with " +
     "no opinion, no commentary, no questions, no hooks, no emojis/hashtags, no clichés, and accurate to the item? " +
+    "Is it plain spoken English — would a reader with no background in the topic understand in one read what happened " +
+    "and who was involved (no headlinese, no unexplained abbreviations or jargon)? " +
     "If the item names a trending topic, is the sentence self-explanatory — would a reader who has never heard of " +
     "the topic understand who did what? " +
     "Anything else — an added take or angle, a question, multiple sentences — is a reject. " +
@@ -602,6 +608,8 @@
     "You are the final writer on an editorial team. The editors rejected your draft and left notes. " +
     "Rewrite the post as exactly ONE declarative news sentence (speaker + says/declares/warns + what they said, " +
     "or who/what + verb + what happened), pure facts with no opinion, no commentary, no questions. " +
+    "Write it in plain spoken English that a reader with no background understands in one read — translate any " +
+    "headlinese, expand abbreviations the item makes clear, simple everyday words. " +
     "No clichés, no emojis, no hashtags, keep every fact from the item, and address the editors' " +
     "notes. Return only the new one-sentence post.";
 
@@ -702,8 +710,10 @@
     return { text: templatePost(story), votes: null, forced: false };
   }
 
-  /* ---------- built-in writing style: one declarative news sentence ---------- */
+  /* ---------- built-in writing style: one plain declarative news sentence ---------- */
   const TITLE_STARTERS = ["BREAKING: ", "EXCLUSIVE: ", "LIVE: ", "WATCH: ", "UPDATE: "];
+  const CUT_SHIELDS = [/vs\./gi, /v\./g, /U\.S\./g, /St\./g, /Dr\./g, /Mr\./g, /Mrs\./g,
+                      /No\./g, /Jr\./g, /Sr\./g, /Co\./g, /Inc\./g, /Ltd\./g, /Rep\./g, /Sen\./g];
   function titleSentence(story) {
     let t = (story.title || "").trim();
     for (const p of TITLE_STARTERS) {
@@ -712,16 +722,52 @@
     // strip feed-label prefixes: "Fantasy Football Injury Alert: " -> ""
     const alert = t.match(/^[^:]{2,40} alert:\s*/i);
     if (alert) t = t.slice(alert[0].length);
-    // cut at the first real sentence end (12+ chars in, so "U.S. ..." doesn't cut early)
-    const m = t.match(/^(.{12,}?[.!?])(\s|$)/);
+    // shield abbreviations from the sentence-end cut ("vs.", "U.S.", "No. 1", …)
+    for (const r of CUT_SHIELDS) t = t.replace(r, (m) => m.slice(0, -1) + "\u0000");
+    // cut at the first real sentence end (12+ chars in, so short abbreviations don't
+    // cut early; ";" ends the first fact of transaction-dump headlines)
+    const m = t.match(/^(.{12,}?[.!?;])(\s|$)/);
     if (m) t = m[1];
+    t = t.replace(/\u0000/g, ".");
+    if (t.endsWith(";")) t = t.slice(0, -1);
     const words = t.split(/\s+/);
     if (words.length > 26) t = words.slice(0, 26).join(" ") + "…";
     if (!/[.!?]$/.test(t)) t += ".";
     return t;
   }
+
+  // best-effort headlinese -> plain speech (AI keys produce a smarter version of this)
+  const PLAIN_FIXES = [
+    [/\bWRs\b/g, "receivers"], [/\bWR\b/g, "receiver"],
+    [/\bRBs\b/g, "running backs"], [/\bRB\b/g, "running back"],
+    [/\bQBs\b/g, "quarterbacks"], [/\bQB\b/g, "quarterback"],
+    [/\bCBs\b/g, "cornerbacks"], [/\bCB\b/g, "cornerback"],
+    [/\bTEs\b/g, "tight ends"], [/\bTE\b/g, "tight end"],
+    [/\bLBs\b/g, "linebackers"], [/\bLB\b/g, "linebacker"],
+    [/\bDBs\b/g, "defensive backs"], [/\bDB\b/g, "defensive back"],
+    [/\bHC\b/g, "head coach"], [/\bGM\b/g, "general manager"],
+    [/\bon IR\b/g, "on injured reserve"],
+    [/\bheads? to IR\b/gi, "heads to injured reserve"],
+    [/\bto IR\b/gi, "goes on injured reserve"],
+    [/\bvs\.?/gi, "against"],
+    [/\bv\./g, "against"],
+    [/\s*&\s*/g, " and "],
+  ];
+  const TO_VERB = {
+    play: "plays", return: "returns", face: "faces", sign: "signs",
+    join: "joins", leave: "leaves", start: "starts",
+  };
+  const MID_WORDS = /\b(To|With|For|After|From|Over|At|As|By|Into|Out|Place|Injury|Injuries|Injured|Deal|Record|Title|Game|Match|Win|Loss|Streak|Season|Week|Trade|Signing|Extension|Contract|Coach|Manager|Plan|Law|Vote|Election|Stock|Stocks|Shares|Price|Prices|Report|Summit|Talks|Row|Walkout|Rant|Shoulder|Knee|Ankle|Reserve|Availability|Calls|Be)\b/g;
+  function plainify(t) {
+    for (const fix of PLAIN_FIXES) t = t.replace(fix[0], fix[1]);
+    t = t.replace(/\bto (play|return|face|sign|join|leave|start)\b/gi, (m, v) => TO_VERB[v.toLowerCase()]);
+    t = t.replace(MID_WORDS, (w) => w.toLowerCase());
+    t = t.replace(/\s{2,}/g, " ").trim();
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
+
   function templatePost(story) {
-    return titleSentence(story);
+    return plainify(titleSentence(story));
   }
 
   /* ---------- credit ---------- */
