@@ -66,6 +66,40 @@ PER_TREND = 3       # stories to keep per term
 MAX_TREND_AGE_HOURS = 24
 TRENDING_CAP = 45
 
+# Search results include pages that are not news stories. Titles matching any of
+# these would produce nonsense posts, so they are dropped from the trending pool.
+TREND_TITLE_JUNK = [
+    r"live scores?",
+    r"how to watch",
+    r"what (channel|time|day|week)",
+    r"odds, picks",
+    r"\?",                 # question headlines ("What channel is … tonight?")
+    r"^(i|we|my|our)\b",   # first-person blog/opinion pieces
+]
+TREND_TITLE_PREFIX = re.compile(
+    r"^(look|watch|just in|today in sports|update)\b[:,\- ]*", re.I
+)
+TREND_STOPWORDS = {"the", "and", "for", "with", "vs", "news",
+                   "this", "that", "week", "today", "tonight"}
+TREND_MIN_TITLE_WORDS = 5
+
+
+def trend_title_is_junk(title: str) -> bool:
+    return any(re.search(p, title, re.I) for p in TREND_TITLE_JUNK)
+
+
+def trend_overlaps(trend: str, title: str) -> bool:
+    """True if the title mentions at least one significant word of the trend term."""
+    words = [w for w in re.findall(r"\w+", trend.lower())
+             if w not in TREND_STOPWORDS and len(w) >= 3]
+    if not words:
+        words = [trend.lower().strip()]
+    title_l = title.lower()
+    return any(
+        re.search(r"(?<![a-z0-9])" + re.escape(w) + r"(?![a-z0-9])", title_l)
+        for w in words
+    )
+
 TAG_RE = re.compile(r"<[^>]+>")
 WS_RE = re.compile(r"\s+")
 
@@ -181,8 +215,13 @@ def fetch_trending() -> list[dict]:
         out = []
         for entry in fd.entries[:PER_TREND]:
             title = gn_item_title(clean_text(entry.get("title")), "Google News")
+            title = TREND_TITLE_PREFIX.sub("", title).strip()
             link = (entry.get("link") or "").strip()
             if not title or not link:
+                continue
+            if len(title.split()) < TREND_MIN_TITLE_WORDS or trend_title_is_junk(title):
+                continue
+            if not trend_overlaps(term, title):
                 continue
             ts = entry.get("published_parsed") or entry.get("updated_parsed")
             if not ts:

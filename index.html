@@ -501,7 +501,9 @@
     "\"[Who or what] [verb] [what happened]\" — e.g. \"Kansas mom reportedly released without charges after driving into " +
     "youth soccer game killing 2.\" Rules: plain facts from the item only — no opinion, no commentary, no questions, " +
     "no hooks, no bait; never invent details, numbers, quotes or names beyond the item; no emojis, no hashtags, no clichés; " +
-    "one sentence ending with a period. If a voice reference is given, borrow only its wording and rhythm — never its opinions. " +
+    "one sentence ending with a period. If the item names a trending topic, the sentence must be self-explanatory — " +
+    "a reader who has never heard of the topic should still understand who did what — and the topic itself should " +
+    "appear in the sentence naturally. If a voice reference is given, borrow only its wording and rhythm — never its opinions. " +
     "Return only that one sentence.";
 
   const IMPROVER_PROMPT =
@@ -521,7 +523,7 @@
   function storyToUser(story, tail) {
     return "Outlet: " + story.outlet + "\n" +
       "Headline: " + story.title + "\n" +
-      (story.trend ? "Trending topic this story is about: " + story.trend + "\n" : "") +
+      (story.trend ? "Trending topic: \"" + story.trend + "\" — people are searching this right now\n" : "") +
       (story.summary ? "Summary: " + story.summary + "\n" : "") +
       voiceBlock() +
       "\n" + tail;
@@ -587,6 +589,8 @@
     "You are shown the original news item and the draft. Judge: is it exactly ONE declarative news sentence, " +
     "pure facts from the item (speaker + says/declares/warns form, or who/what + verb + what happened), with " +
     "no opinion, no commentary, no questions, no hooks, no emojis/hashtags, no clichés, and accurate to the item? " +
+    "If the item names a trending topic, is the sentence self-explanatory — would a reader who has never heard of " +
+    "the topic understand who did what? " +
     "Anything else — an added take or angle, a question, multiple sentences — is a reject. " +
     "Reply ONLY with JSON: {\"score\": <integer 1-10>, \"verdict\": \"post\" or \"fix\", " +
     "\"reason\": \"one short sentence\"}. Use \"post\" when score is 7 or higher, otherwise \"fix\".";
