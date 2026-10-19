@@ -1,15 +1,15 @@
 {
- "generated_at": "2026-10-18T22:29:22Z",
+ "generated_at": "2026-10-19T04:55:37Z",
  "story": {
-  "title": "CJ Gardner-Johnson ejected for unsportsmanlike conduct, and it was absolutely disgusting",
-  "outlet": "SB Nation",
-  "link": "https://news.google.com/rss/articles/CBMinwFBVV95cUxNUzdwS1p2dlhTN2lOS014NUlMTUFnMzQzSlFyYzV1Y1h0Mm1qazlRZTBMc284N09LdHVFM1JvbC1ZNU1Dd3ZVUUhtRGg1VDVKY20zVlIxTXR3XzF3WnFzRXZ1ako2cXVTb3VuYnlhSlJ1U29mRWYyUDBiRUJYZFFLN1NaYWZrbHdJQTNXVHdRQS1Od3FBRm5kcXpnbjJpRW8?oc=5",
-  "trend": "cj gardner johnson"
+  "title": "Who plays on 'Monday Night Football' tonight? Time, TV channel, schedule, live stream for NFL Week 6 game",
+  "outlet": "Yahoo Sports",
+  "link": "https://news.google.com/rss/articles/CBMijAFBVV95cUxPeWF6VDliM25Gd0h1dG8zRHJSa29zbnhBZlZZZmE2VTJzWi1Tdk11UzZxcUktUVh5YU91ektEa242N2hZNkxmUndyWnlEY1djTkJfbk1TUHBlTXpUWUJjSV9KUHNGSHZ5X0ZYQVFVY0U5WTY2dGlDSGJlNWdCMTAwajFweVJlRW5TUWtGOA?oc=5",
+  "trend": "monday night football this week"
  },
  "pack": {
-  "logline": "CJ Gardner-Johnson ejected for unsportsmanlike conduct, and it was absolutely disgusting. — one moment that captures why it matters.",
-  "scene": "CJ Gardner-Johnson ejected for unsportsmanlike conduct, and it was absolutely disgusting. Trending: cj gardner johnson. The scene opens in the middle of the action.",
-  "beat": "End on an open loop: a look, a sound off-screen, a door opening - something that makes viewers rewatch CJ Gardner-Johnson ejected for unsportsmanlike conduct, and it was absolutely disgusting. Trending: cj gardner johnson",
+  "logline": "Who plays on 'Monday Night Football' tonight? Time, TV channel, schedule, live stream for NFL Week 6 game. — one moment that captures why it matters.",
+  "scene": "Who plays on 'Monday Night Football' tonight? Time, TV channel, schedule, live stream for NFL Week 6 game. Trending: monday night football this week. The scene opens in the middle of the action.",
+  "beat": "One clear dramatic beat: a decision, a discovery, a confrontation - never a static establishing shot Who plays on 'Monday Night Football' tonight? Time, TV channel, schedule, live stream for NFL Week 6 game. Trending: monday night football this week",
   "characters": [
    {
     "name": "The protagonist",
@@ -36,12 +36,12 @@
    "atmosphere": "dense and tactile - air, dust, reflections all physically plausible"
   },
   "shot": {
-   "camera": "dolly_in",
+   "camera": "jib_up",
    "framing": "medium close-up on the protagonist, environment in deep focus",
    "lens": "35mm anamorphic, shallow depth of field"
   }
  },
- "prompt": "Photorealistic. Scene: CJ Gardner-Johnson ejected for unsportsmanlike conduct, and it was absolutely disgusting. Trending: cj gardner johnson. The scene opens in the middle of the action. Characters: The protagonist: photorealistic: visible pores and skin texture, natural hair movement, believable proportions, real eye reflections everyday clothes with natural fabric folds, subtle wear and correct drape restrained tension - a tight jaw, a glance away, small tells The witness: photorealistic secondary character, distinct silhouette, age-appropriate detail weather-appropriate outfit, believable textures quiet alarm, trying not to react Environment: the real-world location implied by the story, the time of day the story suggests, natural cinematic light with physically plausible shadows and reflections, consistent with the story's setting and mood, dense and tactile - air, dust, reflections all physically plausible. Shot: dolly_in, medium close-up on the protagonist, environment in deep focus, 35mm anamorphic, shallow depth of field. Beat: End on an open loop: a look, a sound off-screen, a door opening - something that makes viewers rewatch CJ Gardner-Johnson ejected for unsportsmanlike conduct, and it was absolutely disgusting. Trending: cj gardner johnson No text overlays, no watermarks, no logos.",
+ "prompt": "Photorealistic. Scene: Who plays on 'Monday Night Football' tonight? Time, TV channel, schedule, live stream for NFL Week 6 game. Trending: monday night football this week. The scene opens in the middle of the action. Characters: The protagonist: photorealistic: visible pores and skin texture, natural hair movement, believable proportions, real eye reflections everyday clothes with natural fabric folds, subtle wear and correct drape restrained tension - a tight jaw, a glance away, small tells The witness: photorealistic secondary character, distinct silhouette, age-appropriate detail weather-appropriate outfit, believable textures quiet alarm, trying not to react Environment: the real-world location implied by the story, the time of day the story suggests, natural cinematic light with physically plausible shadows and reflections, consistent with the story's setting and mood, dense and tactile - air, dust, reflections all physically plausible. Shot: jib_up, medium close-up on the protagonist, environment in deep focus, 35mm anamorphic, shallow depth of field. Beat: One clear dramatic beat: a decision, a discovery, a confrontation - never a static establishing shot Who plays on 'Monday Night Football' tonight? Time, TV channel, schedule, live stream for NFL Week 6 game. Trending: monday night football this week No text overlays, no watermarks, no logos.",
  "qa": {
   "checks": 37,
   "passed": 36,
