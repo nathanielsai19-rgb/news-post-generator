@@ -281,7 +281,7 @@
 <div class="backdrop" id="backdrop"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Settings">
   <h2>Settings</h2>
-  <p>Optional: add your <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq</a> and <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek</a> keys for AI-written posts. <b>Team-up</b>: Groq drafts, DeepSeek improves. <b>Consensus</b>: both act as editors and must agree the post is worth publishing — otherwise they swap notes and rewrite until they do. Without keys, InkDrop uses its own writing styles. Keys never leave this device.</p>
+  <p>Optional: add your <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq</a> and <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek</a> keys for AI-written posts. <b>Team-up</b>: Groq drafts, DeepSeek improves. <b>Consensus</b>: both act as editors and must agree the post is one clean factual news sentence — otherwise they swap notes and rewrite until they do. Without keys, InkDrop uses its own writing style. Keys never leave this device.</p>
   <div class="field">
     <label for="keyInput">Groq API key</label>
     <input type="password" id="keyInput" placeholder="gsk_…" autocomplete="off" spellcheck="false">
@@ -494,21 +494,22 @@
 
   /* ---------- AI writing (Groq + DeepSeek, optional) ---------- */
   const SYSTEM_PROMPT =
-    "You ghostwrite social media posts for a normal person with a point of view, sharing news they just read. " +
-    "Structure the post in exactly three paragraphs separated by blank lines: " +
-    "1) HOOK - one short line that stops the scroll (curiosity, a strong claim, or a surprising angle on the item); " +
-    "2) BODY - 1-3 sentences with your sharp take (why it matters, who wins or loses, what happens next) and the facts that back it; " +
-    "3) BAIT - a short question or open loop that invites replies (never clichés like \"Thoughts?\" or \"Agree?\"). " +
-    "Rules: sound like a real person with opinions, not a journalist or a bot; never invent details, numbers, " +
-    "quotes or names beyond the item; no emojis, no hashtags, no clichés. Return only the post text with the three paragraphs.";
+    "You ghostwrite social media posts for a normal person who shares news they just read, in one clean sentence. " +
+    "Structure: exactly ONE declarative news sentence, nothing else. If a named person or company said or announced something: " +
+    "\"[Name or role] [says/declares/warns/announces/claims] [what they said or did]\" — e.g. \"Nvidia CEO Jensen Huang declares " +
+    "children won't need to learn basic math skills in the AI era.\" If it is an event with no speaker: " +
+    "\"[Who or what] [verb] [what happened]\" — e.g. \"Kansas mom reportedly released without charges after driving into " +
+    "youth soccer game killing 2.\" Rules: plain facts from the item only — no opinion, no commentary, no questions, " +
+    "no hooks, no bait; never invent details, numbers, quotes or names beyond the item; no emojis, no hashtags, no clichés; " +
+    "one sentence ending with a period. If a voice reference is given, borrow only its wording and rhythm — never its opinions. " +
+    "Return only that one sentence.";
 
   const IMPROVER_PROMPT =
     "You are the final writer on a two-writer team. Your teammate drafted a post about the news " +
-    "item below. Improve the draft: keep the hook/body/bait structure (hook stops the scroll, bait " +
-    "invites replies), 2-4 sentences in the body, sound like a real person sharing news with a " +
-    "clear opinion or angle — a neutral summary is a failure. No clichés, no emojis, no hashtags, " +
-    "no bot or PR phrasing. Keep every fact from the item and fix anything in the draft that drifts " +
-    "from it. Never invent details. Return only the improved post text.";
+    "item below. Improve the draft: exactly ONE declarative news sentence (speaker + says/declares/warns + what they said, " +
+    "or who/what + verb + what happened). Plain facts only — no opinion, no commentary, no questions, no hooks. " +
+    "No clichés, no emojis, no hashtags, no bot or PR phrasing. Keep every fact from the item and fix anything in the draft " +
+    "that drifts from it. Never invent details. Return only the improved one-sentence post.";
 
   function voiceBlock() {
     const v = (load("inkdrop_voice") || "").trim();
@@ -583,19 +584,19 @@
   /* ---------- consensus editing: both models must agree ---------- */
   const REVIEWER_PROMPT =
     "You are a tough social media editor deciding whether a draft post is worth publishing. " +
-    "You are shown the original news item and the draft. Judge: does it have a scroll-stopping " +
-    "hook, a clear point of view or angle that would make a reader care (a neutral news summary " +
-    "is a reject), a reply bait at the end, does it sound like a real person (no clichés, no bot " +
-    "phrasing, no emojis/hashtags), and is it accurate to the item? " +
+    "You are shown the original news item and the draft. Judge: is it exactly ONE declarative news sentence, " +
+    "pure facts from the item (speaker + says/declares/warns form, or who/what + verb + what happened), with " +
+    "no opinion, no commentary, no questions, no hooks, no emojis/hashtags, no clichés, and accurate to the item? " +
+    "Anything else — an added take or angle, a question, multiple sentences — is a reject. " +
     "Reply ONLY with JSON: {\"score\": <integer 1-10>, \"verdict\": \"post\" or \"fix\", " +
     "\"reason\": \"one short sentence\"}. Use \"post\" when score is 7 or higher, otherwise \"fix\".";
 
   const REVISER_PROMPT =
     "You are the final writer on an editorial team. The editors rejected your draft and left notes. " +
-    "Rewrite the post: keep the hook/body/bait structure (hook stops the scroll, bait invites " +
-    "replies), real-person voice with a clear opinion or angle — a neutral summary is a failure. " +
+    "Rewrite the post as exactly ONE declarative news sentence (speaker + says/declares/warns + what they said, " +
+    "or who/what + verb + what happened), pure facts with no opinion, no commentary, no questions. " +
     "No clichés, no emojis, no hashtags, keep every fact from the item, and address the editors' " +
-    "notes. Return only the new post text.";
+    "notes. Return only the new one-sentence post.";
 
   function parseVerdict(text) {
     try {
@@ -694,44 +695,23 @@
     return { text: templatePost(story), votes: null, forced: false };
   }
 
-  /* ---------- built-in writing styles ---------- */
-  const shortTitle = (s) => {
-    const words = s.title.split(" ");
-    return words.slice(0, 7).join(" ") + (words.length > 7 ? "…" : "");
-  };
-  const HOOKS = [
-    (s) => "Everyone's reading " + shortTitle(s) + " wrong.",
-    (s) => shortTitle(s) + " flew under the radar.",
-    (s) => "Nobody's talking about the real part of " + shortTitle(s) + ".",
-    (s) => shortTitle(s) + " changes more than it looks like.",
-    (s) => "If you follow one story today: " + shortTitle(s) + ".",
-  ];
-  const TREND_HOOKS = [
-    (s) => "\"" + s.trend + "\" is trending — and most people are missing the actual story.",
-    (s) => "Everyone's searching \"" + s.trend + "\" right now. The part worth knowing isn't obvious.",
-  ];
-  const BODIES = [
-    (s) => s.title + (s.summary ? " — " + s.summary : ""),
-    (s) => "Here's the short version: " + s.title + (s.summary ? ". " + s.summary : ""),
-    (s) => s.title + (s.summary ? "\n\n" + s.summary : ""),
-  ];
-  const TREND_BODIES = [
-    (s) => s.title + (s.summary ? " — " + s.summary : "") + " That's why \"" + s.trend + "\" is everywhere today.",
-    (s) => "The story behind \"" + s.trend + "\" trending: " + s.title + (s.summary ? ". " + s.summary : ""),
-  ];
-  const BAITS = [
-    "Am I wrong here?",
-    "What would you do?",
-    "Which side of this are you on?",
-    "See it differently? Tell me.",
-    "What's the part I'm missing?",
-  ];
+  /* ---------- built-in writing style: one declarative news sentence ---------- */
+  const TITLE_STARTERS = ["BREAKING: ", "EXCLUSIVE: ", "LIVE: ", "WATCH: ", "UPDATE: "];
+  function titleSentence(story) {
+    let t = (story.title || "").trim();
+    for (const p of TITLE_STARTERS) {
+      if (t.toUpperCase().startsWith(p)) { t = t.slice(p.length).trim(); break; }
+    }
+    // cut at the first real sentence end (12+ chars in, so "U.S. ..." doesn't cut early)
+    const m = t.match(/^(.{12,}?[.!?])(\s|$)/);
+    if (m) t = m[1];
+    const words = t.split(/\s+/);
+    if (words.length > 26) t = words.slice(0, 26).join(" ") + "…";
+    if (!/[.!?]$/.test(t)) t += ".";
+    return t;
+  }
   function templatePost(story) {
-    const hook = pick(story.trend ? HOOKS.concat(TREND_HOOKS) : HOOKS)(story);
-    const body = pick(story.trend ? BODIES.concat(TREND_BODIES) : BODIES)(story).trim();
-    let text = hook + "\n\n" + body;
-    if (!/[.!?…]$/.test(text)) text += ".";
-    return text + "\n\n" + pick(BAITS);
+    return titleSentence(story);
   }
 
   /* ---------- credit ---------- */
@@ -817,9 +797,11 @@
   function renderPost(story, body, votes, fromLastHour) {
     lastPost = { body, reply: creditLine(story) };
     const hookParts = body.split("\n\n");
+    const single = hookParts.length < 2;
     $("postHook").textContent = hookParts[0];
-    $("postHook").classList.toggle("hidden", hookParts.length < 2);
-    $("postBody").textContent = hookParts.length > 1 ? hookParts.slice(1).join("\n\n") : "";
+    $("postHook").classList.toggle("hidden", false);
+    $("postBody").textContent = single ? "" : hookParts.slice(1).join("\n\n");
+    $("postBody").classList.toggle("hidden", single);
     $("postCredit").classList.toggle("hidden", !lastPost.reply);
     const creditBox = $("postCreditText");
     creditBox.textContent = "";
@@ -883,7 +865,7 @@
           ? "Variety pick — the freshest trending stories are all sports right now"
           : "No story from the last hour in " + CATS[activeCat].label + " — showing the freshest one");
       } else if (result.forced) {
-        toast("Editors couldn't fully agree — showing their best take");
+        toast("Editors couldn't fully agree — showing their best version");
       } else {
         toast("Post ready — credit included");
       }
