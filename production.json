@@ -1,15 +1,15 @@
 {
- "generated_at": "2026-10-19T15:44:20Z",
+ "generated_at": "2026-10-19T21:09:55Z",
  "story": {
-  "title": "AMZN Oct 2026 252.500 put (AMZN261019P00252500) Stock Price, News, Quote & History",
-  "outlet": "Yahoo! Finance Canada",
-  "link": "https://news.google.com/rss/articles/CBMiZkFVX3lxTFA2ekVLNHFjc3BvOUdDSDZhNC1KSVdCamIyYUptQWd3WnYtbUtQVFBITlhpTWlkZnhmMnBoUmIwQXhzdmpOaENvWlJUTmpHTEM2aWZ1RTdLa2dhYU82ZTdlMUtGQ1Zqdw?oc=5",
-  "trend": "amzn"
+  "title": "Columbus shooting today: Deadly Ohio shooting was not mosque attack, but was nearby, police say",
+  "outlet": "6abc Philadelphia",
+  "link": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxPemF4M3EzamMySXRWZ3F4bW54RmFGWjAzdHhOeUc4X3NpVlBxR05NU2kxdzZEdmlxS1Y5QWotTzIwNHlwWXh2b052T3FMTzQwN1EzSjc3clB5VGxLLTV1VjZTOWQzeEtTUEZKVnRxa0lKdzg3UWtrOFRtbm1BMXNXZzgzYWpiMjcxcUhOSlF6OGRvMzJXNjZPQWdqVHJfQmFweGZ4eW1pVFYtWDDSAbABQVVfeXFMTXJGVHVyZzdKaERkdDFFMkNIWG5wbGtHR3JpOHJXWG5zSDYtWDc3VjF0RHliRVFaN2VfQWlDMDVWd19YcUQ5Y2hQRzUxMG1OaXRnT3Y3S216a3hpYlJjX3BhcWd2MVNqcUJ0alcySlI3MExVUUotUmJUbW1oVlFKRkloTzJfMzZQYWNlX1hTbjJQLXV4WERiODVaNmFseFMtZUZKZERrUVQ",
+  "trend": "mosque"
  },
  "pack": {
-  "logline": "AMZN Oct 2026 252. — one moment that captures why it matters.",
-  "scene": "AMZN Oct 2026 252.500 put (AMZN261019P00252500) Stock Price, News, Quote & History. Trending: amzn. The scene opens in the middle of the action.",
-  "beat": "End on an open loop: a look, a sound off-screen, a door opening - something that makes viewers rewatch AMZN Oct 2026 252.500 put (AMZN261019P00252500) Stock Price, News, Quote & History. Trending: amzn",
+  "logline": "Columbus shooting today: Deadly Ohio shooting was not mosque attack, but was nearby, police say. — one moment that captures why it matters.",
+  "scene": "Columbus shooting today: Deadly Ohio shooting was not mosque attack, but was nearby, police say. Trending: mosque. The scene opens in the middle of the action.",
+  "beat": "End on an open loop: a look, a sound off-screen, a door opening - something that makes viewers rewatch Columbus shooting today: Deadly Ohio shooting was not mosque attack, but was nearby, police say. Trending: mosque",
   "characters": [
    {
     "name": "The protagonist",
@@ -36,12 +36,12 @@
    "atmosphere": "dense and tactile - air, dust, reflections all physically plausible"
   },
   "shot": {
-   "camera": "focus_shift",
+   "camera": "jib_up",
    "framing": "medium close-up on the protagonist, environment in deep focus",
    "lens": "35mm anamorphic, shallow depth of field"
   }
  },
- "prompt": "Photorealistic. Scene: AMZN Oct 2026 252.500 put (AMZN261019P00252500) Stock Price, News, Quote & History. Trending: amzn. The scene opens in the middle of the action. Characters: The protagonist: photorealistic: visible pores and skin texture, natural hair movement, believable proportions, real eye reflections everyday clothes with natural fabric folds, subtle wear and correct drape restrained tension - a tight jaw, a glance away, small tells The witness: photorealistic secondary character, distinct silhouette, age-appropriate detail weather-appropriate outfit, believable textures quiet alarm, trying not to react Environment: the real-world location implied by the story, the time of day the story suggests, natural cinematic light with physically plausible shadows and reflections, consistent with the story's setting and mood, dense and tactile - air, dust, reflections all physically plausible. Shot: focus_shift, medium close-up on the protagonist, environment in deep focus, 35mm anamorphic, shallow depth of field. Beat: End on an open loop: a look, a sound off-screen, a door opening - something that makes viewers rewatch AMZN Oct 2026 252.500 put (AMZN261019P00252500) Stock Price, News, Quote & History. Trending: amzn No text overlays, no watermarks, no logos.",
+ "prompt": "Photorealistic. Scene: Columbus shooting today: Deadly Ohio shooting was not mosque attack, but was nearby, police say. Trending: mosque. The scene opens in the middle of the action. Characters: The protagonist: photorealistic: visible pores and skin texture, natural hair movement, believable proportions, real eye reflections everyday clothes with natural fabric folds, subtle wear and correct drape restrained tension - a tight jaw, a glance away, small tells The witness: photorealistic secondary character, distinct silhouette, age-appropriate detail weather-appropriate outfit, believable textures quiet alarm, trying not to react Environment: the real-world location implied by the story, the time of day the story suggests, natural cinematic light with physically plausible shadows and reflections, consistent with the story's setting and mood, dense and tactile - air, dust, reflections all physically plausible. Shot: jib_up, medium close-up on the protagonist, environment in deep focus, 35mm anamorphic, shallow depth of field. Beat: End on an open loop: a look, a sound off-screen, a door opening - something that makes viewers rewatch Columbus shooting today: Deadly Ohio shooting was not mosque attack, but was nearby, police say. Trending: mosque No text overlays, no watermarks, no logos.",
  "qa": {
   "checks": 37,
   "passed": 36,
