@@ -66,18 +66,22 @@ PER_TREND = 3       # stories to keep per term
 MAX_TREND_AGE_HOURS = 24
 TRENDING_CAP = 45
 
-# Search results include pages that are not news stories. Titles matching any of
-# these would produce nonsense posts, so they are dropped from the trending pool.
-TREND_TITLE_JUNK = [
+# Google News search results include pages that are not news stories. Titles
+# matching any of these would produce nonsense posts, so they are dropped.
+GN_TITLE_JUNK = [
     r"live scores?",
     r"how to watch",
     r"what (channel|time|day|week)",
     r"odds, picks",
     r"\?",                 # question headlines ("What channel is … tonight?")
     r"^(i|we|my|our)\b",   # first-person blog/opinion pieces
+    r"^(what|why|where|when|who|which|is|are|will|can|should|could|does|did)\b",  # question/explainer forms
     r"alert:",             # feed-alert labels ("Fantasy Football Injury Alert: …")
     r"fantasy football",   # niche alert-jargon headlines
     r"waiver wire",
+    r"tells us everything",  # interview-teaser headlines
+    r"prediction, picks",  # betting-preview pages
+    r"stats, injuries",    # game stats pages
     r"\b&\b",              # multi-subject list titles ("A & B Become …")
 ]
 TREND_TITLE_PREFIX = re.compile(
@@ -88,8 +92,8 @@ TREND_STOPWORDS = {"the", "and", "for", "with", "vs", "news",
 TREND_MIN_TITLE_WORDS = 5
 
 
-def trend_title_is_junk(title: str) -> bool:
-    return any(re.search(p, title, re.I) for p in TREND_TITLE_JUNK)
+def gn_title_is_junk(title: str) -> bool:
+    return any(re.search(p, title, re.I) for p in GN_TITLE_JUNK)
 
 
 def trend_overlaps(trend: str, title: str) -> bool:
@@ -136,9 +140,15 @@ def gn_item_outlet(entry, fallback: str) -> str:
 
 
 def gn_item_title(title: str, outlet: str) -> str:
-    """Google News titles end with ' - Publisher'; strip the suffix."""
-    if outlet == "Google News" and " - " in title:
-        return title.rsplit(" - ", 1)[0].rstrip()[:220]
+    """Google News titles carry the publisher suffix (' - Publisher', '| Publisher'); strip it."""
+    for sep in (" - ", " | ", " – ", " — "):
+        if sep in title:
+            head, tail = title.rsplit(sep, 1)
+            tail_words = tail.strip().split()
+            short_clean_tail = len(tail_words) <= 3 and not re.search(r"\d", tail)
+            if (outlet == "Google News" and short_clean_tail) \
+                    or tail.strip().lower() == outlet.lower():
+                return head.rstrip()[:220]
     return title[:220]
 
 
@@ -156,6 +166,8 @@ def fetch_one(outlet: str, url: str) -> list[dict]:
         title = clean_text(entry.get("title"))
         link = (entry.get("link") or "").strip()
         if not title or not link:
+            continue
+        if outlet == "Google News" and gn_title_is_junk(title):
             continue
 
         ts = entry.get("published_parsed") or entry.get("updated_parsed")
@@ -223,7 +235,7 @@ def fetch_trending() -> list[dict]:
             link = (entry.get("link") or "").strip()
             if not title or not link:
                 continue
-            if len(title.split()) < TREND_MIN_TITLE_WORDS or trend_title_is_junk(title):
+            if len(title.split()) < TREND_MIN_TITLE_WORDS or gn_title_is_junk(title):
                 continue
             if not trend_overlaps(term, title):
                 continue

@@ -477,8 +477,31 @@
     };
   }
 
+  /* last-resort picker guard: mirrors the server-side junk filters so stale
+     news.json snapshots can't serve nonsense titles either */
+  const JUNK_TITLE_RE = [
+    /^\s*(what|why|where|when|who|which|is|are|will|can|should|could|does|did)\b/i,
+    /\?/,
+    /^\s*(i|we|my|our)\b/i,
+    /live scores?/i,
+    /how to watch/i,
+    /odds, picks/i,
+    /prediction, picks/i,
+    /stats, injuries/i,
+    /alert:/i,
+    /fantasy football/i,
+    /waiver wire/i,
+    /tells us everything/i,
+    /\b&\b/,
+  ];
+  function junkTitle(t) {
+    return JUNK_TITLE_RE.some((re) => re.test(t || ""));
+  }
+
   function pickStory(cat) {
-    const list = itemsFor(cat).slice().sort((a, b) => new Date(b.published) - new Date(a.published));
+    const all = itemsFor(cat);
+    const ok = all.filter((i) => !junkTitle(i.title));
+    const list = (ok.length ? ok : all).slice().sort((a, b) => new Date(b.published) - new Date(a.published));
     if (!list.length) return null;
     const now = Date.now();
     const fresh = list.filter((i) => now - new Date(i.published).getTime() <= FRESH_WINDOW_MS);
@@ -719,9 +742,25 @@
     for (const p of TITLE_STARTERS) {
       if (t.toUpperCase().startsWith(p)) { t = t.slice(p.length).trim(); break; }
     }
-    // strip feed-label prefixes: "Fantasy Football Injury Alert: " -> ""
-    const alert = t.match(/^[^:]{2,40} alert:\s*/i);
-    if (alert) t = t.slice(alert[0].length);
+    // strip feed-label prefixes: "Fantasy Football Injury Alert: ", "Coventry latest: "
+    const label = t.match(/^[^:]{2,40} (?:alert|latest|recap):\s*/i);
+    if (label) t = t.slice(label[0].length);
+    // strip publisher suffixes: "… | ITV News", "… - BBC News", plus short
+    // " | X" tails (≤3 words, no digits) that are feed decorations
+    const outlet = (story.outlet || "").trim();
+    for (const sep of [" - ", " | ", " – ", " — "]) {
+      if (!t.toLowerCase().includes(sep)) continue;
+      const tail = t.slice(t.toLowerCase().lastIndexOf(sep) + sep.length).trim();
+      const tailWords = tail.split(/\s+/).length;
+      const shortClean = tailWords <= 3 && !/\d/.test(tail);
+      if (t.toLowerCase().endsWith(sep + outlet.toLowerCase()) ||
+          (outlet && (sep === " | " || sep === " – ") && shortClean)) {
+        t = t.slice(0, -(sep.length + tail.length)).trim();
+        break;
+      }
+    }
+    // strip feed-style suffixes: "… - live", "… – follow updates"
+    t = t.replace(/\s*[-–|]\s*(live|follow updates|updates)\s*$/i, "");
     // shield abbreviations from the sentence-end cut ("vs.", "U.S.", "No. 1", …)
     for (const r of CUT_SHIELDS) t = t.replace(r, (m) => m.slice(0, -1) + "\u0000");
     // cut at the first real sentence end (12+ chars in, so short abbreviations don't
@@ -757,7 +796,7 @@
     play: "plays", return: "returns", face: "faces", sign: "signs",
     join: "joins", leave: "leaves", start: "starts",
   };
-  const MID_WORDS = /\b(To|With|For|After|From|Over|At|As|By|Into|Out|Place|Injury|Injuries|Injured|Deal|Record|Title|Game|Match|Win|Loss|Streak|Season|Week|Trade|Signing|Extension|Contract|Coach|Manager|Plan|Law|Vote|Election|Stock|Stocks|Shares|Price|Prices|Report|Summit|Talks|Row|Walkout|Rant|Shoulder|Knee|Ankle|Reserve|Availability|Calls|Be)\b/g;
+  const MID_WORDS = /\b(To|With|For|After|From|Over|At|As|By|Into|Out|In|And|Is|Place|Injury|Injuries|Injured|Deal|Record|Title|Game|Match|Win|Loss|Streak|Season|Week|This|Trade|Signing|Extension|Contract|Coach|Manager|Plan|Law|Vote|Election|Stock|Stocks|Shares|Price|Prices|Report|Summit|Talks|Row|Walkout|Rant|Rumor|Rumors|Says|Claimed|It's|Reportedly|Sources|Announce|Decision|Cutting|Ties|Amid|Threatens|Major|Surrender|Brings|Debut|Energy|Slain|Jail|Repairs|Pushing|Against|Weaponized|Hours|Hit-Packed|Shoulder|Knee|Ankle|Reserve|Availability|Calls|Be)\b/g;
   function plainify(t) {
     for (const fix of PLAIN_FIXES) t = t.replace(fix[0], fix[1]);
     t = t.replace(/\bto (play|return|face|sign|join|leave|start)\b/gi, (m, v) => TO_VERB[v.toLowerCase()]);
