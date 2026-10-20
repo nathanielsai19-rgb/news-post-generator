@@ -23,18 +23,15 @@ jobs:
         with:
           python-version: "3.12"
 
-      # The ALLOW_VIDEO_GEN gate lives inside the script: when off, it only
-      # writes the production pack (zero LTX cost). secrets can't be used in
-      # `if` expressions, so the script is the gate.
-      - name: Install ffmpeg (for vision QA frames)
+      # Cloud runs only write the production pack + scene spec (zero render
+      # cost). Rendering happens locally: ALLOW_VIDEO_GEN=true python
+      # scripts/generate_video.py on the PC with Blender installed.
+      - name: Install ffmpeg (unused in standby; kept for completeness)
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
 
       - name: Generate video
         env:
-          LTX_API_KEY: ${{ secrets.LTX_API_KEY }}
-          ALLOW_VIDEO_GEN: ${{ secrets.ALLOW_VIDEO_GEN }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/generate_video.py
 
       - name: Commit results

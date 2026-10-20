@@ -20,10 +20,32 @@ A mobile-first page that turns today's headlines into ready-to-paste text posts,
 
 | Path | Purpose |
 | --- | --- |
-| `index.html` | the whole app (styles, logic, optional Groq call) |
+| `index.html` | the whole app (styles, logic, optional Groq call, video tab) |
 | `scripts/fetch_news.py` | RSS collector that writes `news.json` |
 | `.github/workflows/refresh-news.yml` | runs the collector every 30 min and commits |
 | `news.json` | committed news snapshot the page reads |
+| `scripts/generate_video.py` | video pipeline: OpenAI writes the production pack + Blender scene spec, QA battery validates it, then the local Blender renders it (needs `ALLOW_VIDEO_GEN=true`) |
+| `scripts/build_render.py` | headless Blender script: builds the stylized 3D scene from `scene_spec.json`, animates the camera, renders PNG frames + `keyframes/latest.png` |
+| `scene_spec.json` | the latest Blender-ready scene spec (written by the writer) |
+| `production.json` | latest production pack + QA report (shown on the video tab) |
+| `video.json` | latest video status (shown on the video tab) |
+| `.env` | local secrets (gitignored): `OPENAI_API_KEY`, optional `GROQ_API_KEY` / `DEEPSEEK_API_KEY` |
+
+## Video pipeline (OpenAI writer + local Blender render)
+
+The cloud workflow (`generate-video.yml`, every 4 h) only **writes** the
+production pack + scene spec with the ChatGPT API (`OPENAI_API_KEY` repo
+secret). Rendering happens **on the local PC** with Blender 5.2 installed:
+
+```bash
+ALLOW_VIDEO_GEN=true python scripts/generate_video.py   # full 1280x720 render
+```
+
+Blender builds a stylized low-poly scene from the spec (characters, props
+from a fixed catalog, palette, sun/fill lights), keyframes a tracked camera
+move, renders a 24 fps PNG sequence, and the system ffmpeg muxes it to
+`videos/inkdrop_<ts>.mp4`. A Groq vision model then critiques real frames
+and writes a lesson into `video_history.json` for the next production.
 
 ## Run the refresh manually
 

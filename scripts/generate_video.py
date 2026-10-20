@@ -1,63 +1,54 @@
 #!/usr/bin/env python3
-"""InkDrop video production pipeline with a QA engine.
+"""InkDrop video production pipeline (OpenAI writer + local Blender renderer).
 
-Stage 1 (always, zero cost): the PRODUCTION TEAM writes a production pack
-(logline, scene, dramatic beat, photorealistic character sheets,
-environment, shot). With Groq/DeepSeek secrets the team is an ENSEMBLE:
-3 candidate packs, one critic call picks the best. A ~40-point automated
-QA battery validates structure, fact-faithfulness and photoreal specs on
-every pack.
+Stage 1 (always): OpenAI writes a production pack for a news story AND a
+Blender-ready scene spec - stylized 3D character builds, props from a fixed
+catalog, palette, lights, camera keyframes. With no OpenAI key the pipeline
+falls back to a built-in stylized template. A QA battery validates every
+pack (structure, catalog types, colors, bounds, fact-faithfulness).
 
-Stage 2 (when ALLOW_VIDEO_GEN=true): the pack becomes an LTX job -
-text-to-video, or image-to-video when keyframes/latest.png exists in the
-repo (Blender-rendered director's cut; served publicly via Pages).
+Stage 2 (when ALLOW_VIDEO_GEN=true, LOCAL): the scene spec goes to Blender
+(scripts/build_render.py, headless), which builds the scene, animates the
+camera and renders an H.264 mp4 + keyframes/latest.png. Runs on the local
+PC - not in GitHub Actions.
 
 Stage 3 (learning): after rendering, a Groq VISION model inspects real
 frames of the video and writes a score + lesson for the next production.
 All lessons live in video_history.json.
 """
 
-import base64
 import datetime
 import json
 import os
 import random
 import re
+import shutil
 import subprocess
+import sys
 import tempfile
 import time
 import urllib.request
 
-LTX = "https://api.ltx.io/v2/text-to-video"
-LTX_I2V = "https://api.ltx.io/v2/image-to-video"
-MODEL = os.environ.get("VIDEO_MODEL", "ltx-2-3-fast")
-DURATION = int(os.environ.get("VIDEO_DURATION", "5"))
-RESOLUTION = os.environ.get("VIDEO_RESOLUTION", "1280x720")
-FPS = 24
-POLL_SECONDS = 10
-POLL_TIMEOUT = 480
-KEEP_VIDEOS = 3
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HISTORY_PATH = "video_history.json"
 KEYFRAME_PATH = "keyframes/latest.png"
-KEYFRAME_URL = ("https://nathanielsai19-rgb.github.io/news-post-generator/"
-                "keyframes/latest.png")
+KEEP_VIDEOS = 3
+OPENAI_API = "https://api.openai.com/v1"
+OPENAI_MODEL = os.environ.get("VIDEO_OPENAI_MODEL", "gpt-4o-mini")
+VIDEO_RES = os.environ.get("VIDEO_RES", "1280x720")
+VIDEO_DURATION = int(os.environ.get("VIDEO_DURATION", "5"))
 
-STYLE_POOL = [
-    "Photorealistic, shot on 35mm film with shallow depth of field and anamorphic lens flare",
-    "Ultra-detailed cinematic realism, volumetric light through dust and haze, 8K texture",
-    "Moody neo-noir: hard rim light, deep shadows, wet asphalt reflections, teal-and-amber grade",
-    "Golden-hour documentary realism, natural skin texture, hand-held energy with subtle shake",
-    "High-contrast thriller look, slow dolly, dense atmosphere, foreground bokeh",
-    "Dreamlike realism: soft morning fog, sun shafts, silky highlights, gentle grain",
-    "Gritty photoreal detail: close-up macro textures, sweat, weathered materials, harsh key light",
-    "Cinematic low-key lighting, candlelight and neon mixed, long shadows, film noir framing",
-]
-MOMENT_RULES = [
-    "Capture the exact second something shifts - the beat before a reveal, not after",
-    "One clear dramatic beat: a decision, a discovery, a confrontation - never a static establishing shot",
-    "End on an open loop: a look, a sound off-screen, a door opening - something that makes viewers rewatch",
-]
-CAMERA_MOVES = ["dolly_in", "jib_up", "focus_shift"]
+# Mirrors the catalog in scripts/build_render.py - the writer may only use
+# these, so any pack that passes QA is guaranteed buildable.
+PROP_CATALOG = ("table", "chair", "window", "door", "tree", "bush",
+                "building", "lamppost", "bench", "rock", "cloud", "fence",
+                "car", "boat", "sign", "plant", "stairs", "tv", "sofa",
+                "bookshelf")
+POSES = ("standing", "reaching", "pointing", "looking_up")
+ACCESSORIES = ("none", "hat")
+CAMERA_MOVES = ("dolly_in", "dolly_out", "pan_left", "pan_right",
+                "orbit_left", "orbit_right", "crane_up", "static")
+BOUNDS = 7.0
 
 STOPWORDS = {
     "the", "a", "an", "and", "or", "but", "of", "to", "in", "on", "for", "with",
@@ -68,6 +59,20 @@ STOPWORDS = {
 }
 
 EMOJI_RE = re.compile(r"[\U0001F000-\U0001FAFF☀-➿]")
+HEX_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+
+def load_env(path=".env"):
+    try:
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                os.environ.setdefault(key.strip(), value.strip().strip("\"'"))
+    except OSError:
+        pass
 
 
 def load_json(path, default):
@@ -83,7 +88,7 @@ def save_json(path, data):
         json.dump(data, fh, ensure_ascii=False, indent=1)
 
 
-def http(method, url, key=None, payload=None, timeout=60):
+def http(method, url, key=None, payload=None, timeout=120):
     req = urllib.request.Request(url, method=method)
     if key:
         req.add_header("Authorization", "Bearer " + key)
@@ -97,6 +102,36 @@ def http(method, url, key=None, payload=None, timeout=60):
         if "json" in ctype:
             return json.loads(raw.decode() or "{}")
         return raw
+
+
+def llm_chat(base, key, model, messages, temperature=0.9, max_tokens=900,
+             json_mode=False):
+    payload = {"model": model, "temperature": temperature,
+               "max_tokens": max_tokens, "messages": messages}
+    if json_mode:
+        payload["response_format"] = {"type": "json_object"}
+    data = http("POST", base + "/chat/completions", key=key, payload=payload)
+    return ((data.get("choices") or [{}])[0].get("message") or {}).get("content", "").strip()
+
+
+def parse_llm_json(text):
+    text = (text or "").strip()
+    if text.startswith("```"):
+        text = text.split("```", 2)[1]
+        text = text.lstrip("json").strip()
+    try:
+        return json.loads(text)
+    except Exception:
+        pass
+    start, end = text.find("{"), text.rfind("}")
+    if start == -1 or end <= start:
+        start, end = text.find("["), text.rfind("]")
+    if start == -1 or end <= start:
+        return None
+    try:
+        return json.loads(text[start:end + 1])
+    except Exception:
+        return None
 
 
 def pick_story():
@@ -118,227 +153,136 @@ def story_text(story):
     return ". ".join(p for p in parts if p)
 
 
-def llm_chat(base, key, model, messages, temperature=0.9, max_tokens=900):
-    payload = {"model": model, "temperature": temperature,
-               "max_tokens": max_tokens, "messages": messages}
-    data = http("POST", base + "/chat/completions", key=key, payload=payload)
-    return ((data.get("choices") or [{}])[0].get("message") or {}).get("content", "").strip()
+# ---------------------------------------------------------------- writer
 
-
-def parse_llm_json(text):
-    text = (text or "").strip()
-    if text.startswith("```"):
-        text = text.split("```", 2)[1]
-        text = text.lstrip("json").strip()
-    try:
-        return json.loads(text)
-    except Exception:
-        pass
-    start, end = text.find("{"), text.rfind("}")
-    if start == -1 or end <= start:
-        try:
-            start, end = text.find("["), text.rfind("]")
-        except Exception:
-            return None
-    if start == -1 or end <= start:
-        return None
-    try:
-        return json.loads(text[start:end + 1])
-    except Exception:
-        return None
-
-
-# ---------------------------------------------------------------- production
-
-def llm_production(story, history):
-    groq_key = os.environ.get("GROQ_API_KEY")
-    ds_key = os.environ.get("DEEPSEEK_API_KEY")
-    if not (groq_key or ds_key):
-        return None
+def writer_prompt(story, history):
     past = history.get("packs", [])[-2:]
     past_note = "\n".join(
-        f"- pack: {json.dumps(p.get('pack'), ensure_ascii=False)[:600]}\n  lesson: {p.get('critique') or 'none'}"
-        for p in past if p.get("critique")
+        f"- pack: {json.dumps(p.get('pack'), ensure_ascii=False)[:400]}\n"
+        f"  vision lesson: {p.get('vision', {}).get('lesson') or 'none'}"
+        for p in past if (p.get("vision") or {}).get("lesson")
     )
     ask = (
-        "You are the showrunner of a one-shot film based on this news story:\n"
+        "You are the showrunner of a short stylized-3D news film. Story:\n"
         f"{story_text(story)}\n\n"
-        "Write a production pack as STRICT JSON with exactly these keys:\n"
+        "Write a production pack as STRICT JSON with these keys:\n"
         "- logline: one sentence selling the story's most dramatic angle\n"
         "- scene: 2-3 sentences setting the scene\n"
         "- beat: the single most dramatic 5-second moment to film, one sentence\n"
-        "- characters: array of 1-3 objects with keys name, role, appearance, clothing, "
-        "expression, motivation - photorealistic and specific (visible skin texture, real "
-        "fabric, believable body language), faithful to the real people in the story\n"
+        "- characters: array of 1-3 display descriptions, each with keys name, role, "
+        "appearance, clothing, expression, motivation - describe the STYLIZED 3D look "
+        "(rounded simple shapes, matte colors, toy-like figures), faithful to the real "
+        "people in the story, no real-person likeness claims\n"
         "- environment: object with keys location, time, lighting, weather, atmosphere - "
-        "real-life accuracy: real places, era-correct details, plausible physics\n"
-        "- shot: object with keys camera, framing, lens\n\n"
-        "Stay strictly faithful to the story - never invent events. Return ONLY the JSON."
+        "real-life accuracy for place and time, weather one of: clear, cloudy, rain, night, sunset\n"
+        "- shot: object with keys camera, framing, lens\n"
+        "- build: the Blender build spec, EXACTLY these keys:\n"
+        f"  - palette: object with hex colors sky, ground, accent (e.g. \"#8fb8d8\")\n"
+        "  - duration: 5 (seconds, 3 to 10)\n"
+        f"  - characters: array matching the display characters above; each: name, height "
+        f"(1.2-2.4), pose one of {list(POSES)}, accessory one of {list(ACCESSORIES)}, "
+        f"facing (degrees 0-360, 0 = facing +Y), body (hex), head (hex), "
+        f"position [x, y] within {-BOUNDS}..{BOUNDS}\n"
+        f"  - props: 2-6 objects; each: type one of {list(PROP_CATALOG)}, "
+        f"position [x, y] within {-BOUNDS}..{BOUNDS}, scale 0.3-3, color (hex)\n"
+        f"  - camera: move one of {list(CAMERA_MOVES)}; start and end objects each with "
+        f"pos [x,y,z] (x,y within -12..12, z 0.3..8), target [x,y,z] (within the scene), "
+        f"fov 24-70 (vertical degrees)\n"
+        "  - lights: sun_dir [x,y,z] (towards the scene, z positive), sun_color (hex), "
+        "sun_strength 0.5-8, fill 0-2\n\n"
+        "Rules: stay strictly faithful to the story - never invent events. All colors must "
+        "be 6-digit hex. No emoji anywhere. Return ONLY the JSON object."
     )
     if past_note:
         ask += "\n\nLearn from the past - do not repeat these weaknesses:\n" + past_note
-    system = "You are a film showrunner. Reply with JSON only."
-    draft = None
-    if groq_key:
-        for model in ("llama-3.3-70b-versatile", "llama-3.1-8b-instant"):
-            try:
-                draft = parse_llm_json(llm_chat(
-                    "https://api.groq.com/openai/v1", groq_key, model,
-                    [{"role": "system", "content": system},
-                     {"role": "user", "content": ask}], max_tokens=900))
-                if draft:
-                    break
-            except Exception:
-                continue
-    if not draft and ds_key:
-        try:
-            draft = parse_llm_json(llm_chat(
-                "https://api.deepseek.com", ds_key,
-                os.environ.get("VIDEO_DS_MODEL", "deepseek-flash"),
-                [{"role": "system", "content": system},
-                 {"role": "user", "content": ask}], max_tokens=1200))
-        except Exception:
-            draft = None
-    if draft and ds_key:
-        try:
-            improved = parse_llm_json(llm_chat(
-                "https://api.deepseek.com", ds_key,
-                os.environ.get("VIDEO_DS_MODEL", "deepseek-flash"),
-                [{"role": "system", "content":
-                    "You are the final showrunner on a two-director team. Improve the production "
-                    "pack JSON your teammate drafted: stronger beat, more photorealistic character "
-                    "detail, real-life-accurate environment. Return ONLY the improved JSON with the "
-                    "same keys."},
-                 {"role": "user", "content": json.dumps(draft, ensure_ascii=False)}],
-                max_tokens=1200))
-            if improved:
-                draft = improved
-        except Exception:
-            pass
-    return draft
+    return ask
 
 
-def critic_pick_best(drafts):
-    """One critic call scores all candidate packs; the best wins."""
-    ds_key = os.environ.get("DEEPSEEK_API_KEY")
-    if not ds_key:
-        return drafts[0]
+def openai_production(story, history):
+    key = os.environ.get("OPENAI_API_KEY")
+    if not key:
+        return None
+    ask = writer_prompt(story, history)
     try:
-        raw = llm_chat(
-            "https://api.deepseek.com", ds_key,
-            os.environ.get("VIDEO_DS_MODEL", "deepseek-flash"),
-            [{"role": "system", "content":
-                "You are a film critic. Score each production pack 1-10 on dramatic strength, "
-                "photorealistic specificity and real-life accuracy. Reply ONLY with a JSON array "
-                "of integers, one score per pack, in order."},
-             {"role": "user", "content":
-                "\n\n---PACK---\n\n".join(json.dumps(d, ensure_ascii=False) for d in drafts)}],
-            temperature=0.3, max_tokens=80)
-        scores = parse_llm_json(raw)
-        if isinstance(scores, list) and len(scores) == len(drafts):
-            scores = [int(s) if isinstance(s, (int, float)) else 0 for s in scores]
-            return drafts[scores.index(max(scores))]
-    except Exception:
-        pass
-    return drafts[0]
-
-
-def ensemble_production(story, history):
-    if not (os.environ.get("GROQ_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")):
-        return None, False
-    drafts = []
-    for _ in range(3):
-        p = llm_production(story, history)
-        if p:
-            drafts.append(p)
-    if not drafts:
-        return None, False
-    return critic_pick_best(drafts), True
+        raw = llm_chat(OPENAI_API, key, OPENAI_MODEL,
+                       [{"role": "system",
+                         "content": "You are a film showrunner who designs stylized "
+                                    "low-poly 3D scenes. Reply with JSON only."},
+                        {"role": "user", "content": ask}],
+                       temperature=0.9, max_tokens=2500, json_mode=True)
+        pack = parse_llm_json(raw)
+        if isinstance(pack, dict) and pack.get("build"):
+            return pack
+    except Exception as e:
+        print("openai production failed:", e)
+    return None
 
 
 def template_production(story, history):
-    used = {(p.get("style"), p.get("moment")) for p in history.get("packs", []) if p.get("style")}
-    options = [(s, m) for s in STYLE_POOL for m in MOMENT_RULES if (s, m) not in used]
-    if options:
-        style, moment = random.choice(options)
-    else:
-        style, moment = random.choice([(s, MOMENT_RULES[0]) for s in STYLE_POOL])
+    """Zero-cost fallback: a fixed stylized scene with the story woven in."""
     text = story_text(story)
+    first = text.split(".")[0]
     return {
-        "logline": f"{text.split('.')[0]}. — one moment that captures why it matters.",
-        "scene": f"{text}. The scene opens in the middle of the action.",
-        "beat": f"{moment} {text}",
+        "logline": f"{first}. One quiet moment that captures why it matters.",
+        "scene": f"{text}. The scene opens on a figure at a window, mid-thought.",
+        "beat": "The figure turns from the window as the light shifts - a decision made.",
         "characters": [
             {
-                "name": "The protagonist",
+                "name": "The figure",
                 "role": "the person at the center of the story",
-                "appearance": "photorealistic: visible pores and skin texture, natural hair movement, "
-                              "believable proportions, real eye reflections",
-                "clothing": "everyday clothes with natural fabric folds, subtle wear and correct drape",
-                "expression": "restrained tension - a tight jaw, a glance away, small tells",
-                "motivation": "to get through the next five minutes without losing control",
-            },
-            {
-                "name": "The witness",
-                "role": "someone watching it unfold",
-                "appearance": "photorealistic secondary character, distinct silhouette, age-appropriate detail",
-                "clothing": "weather-appropriate outfit, believable textures",
-                "expression": "quiet alarm, trying not to react",
-                "motivation": "to stay out of it - and failing",
+                "appearance": "rounded low-poly figure: capsule body, sphere head, simple dark eyes",
+                "clothing": "matte single-color body with a bright accent hat",
+                "expression": "still, head slightly raised - mid-thought",
+                "motivation": "to understand what the news means before acting",
             },
         ],
         "environment": {
-            "location": "the real-world location implied by the story",
+            "location": "a quiet room implied by the story",
             "time": "the time of day the story suggests",
-            "lighting": "natural cinematic light with physically plausible shadows and reflections",
-            "weather": "consistent with the story's setting and mood",
-            "atmosphere": "dense and tactile - air, dust, reflections all physically plausible",
+            "lighting": "soft key light from the window, gentle fill",
+            "weather": "clear",
+            "atmosphere": "calm and unhurried",
         },
         "shot": {
-            "camera": random.choice(CAMERA_MOVES),
-            "framing": "medium close-up on the protagonist, environment in deep focus",
-            "lens": "35mm anamorphic, shallow depth of field",
+            "camera": "dolly_in",
+            "framing": "medium shot on the figure, window behind",
+            "lens": "50mm equivalent",
         },
-    }, style, moment
+        "build": {
+            "palette": {"sky": "#8fb8d8", "ground": "#4a5d3a", "accent": "#e8c04a"},
+            "duration": VIDEO_DURATION,
+            "characters": [
+                {"name": "The figure", "height": 1.7, "pose": "looking_up",
+                 "accessory": "hat", "facing": 180,
+                 "body": "#2456a5", "head": "#d8a06a", "position": [0.6, -0.6]},
+            ],
+            "props": [
+                {"type": "window", "position": [0, -4.5], "scale": 1.6, "color": "#6b4a2f"},
+                {"type": "table", "position": [0.8, 0.9], "scale": 1.0, "color": "#6b4a2f"},
+                {"type": "plant", "position": [-1.6, 0.4], "scale": 1.1, "color": "#3f7d3f"},
+                {"type": "lamppost", "position": [2.8, 1.6], "scale": 1.0, "color": "#3a3a3a"},
+            ],
+            "camera": {
+                "move": "dolly_in",
+                "start": {"pos": [4.8, -6.2, 2.6], "target": [0.4, -0.4, 1.3], "fov": 50},
+                "end": {"pos": [2.6, -3.4, 1.9], "target": [0.4, -0.4, 1.3], "fov": 44},
+            },
+            "lights": {"sun_dir": [-0.6, -0.8, 1.2], "sun_color": "#fff2d9",
+                       "sun_strength": 3.0, "fill": 0.35},
+        },
+    }
 
 
 def build_production(story, history):
-    pack, used_ensemble = ensemble_production(story, history)
-    if pack:
-        return pack, None, None, used_ensemble
-    pack, style, moment = template_production(story, history)
-    return pack, style, moment, False
-
-
-def pack_to_prompt(pack):
-    chars = " ".join(
-        f"{c.get('name')}: {c.get('appearance', '')} {c.get('clothing', '')} {c.get('expression', '')}"
-        for c in pack.get("characters", [])[:2]
-    )
-    env = pack.get("environment") or {}
-    shot = pack.get("shot") or {}
-    return (
-        f"Photorealistic. Scene: {pack.get('scene', '')} "
-        f"Characters: {chars} "
-        f"Environment: {env.get('location', '')}, {env.get('time', '')}, {env.get('lighting', '')}, "
-        f"{env.get('weather', '')}, {env.get('atmosphere', '')}. "
-        f"Shot: {shot.get('camera', '')}, {shot.get('framing', '')}, {shot.get('lens', '')}. "
-        f"Beat: {pack.get('beat', '')} "
-        "No text overlays, no watermarks, no logos."
-    )
-
-
-def pack_to_motion_prompt(pack):
-    shot = pack.get("shot") or {}
-    return (f"{shot.get('camera', 'slow dolly')} camera movement. "
-            f"{pack.get('beat', '')} Photorealistic natural motion, no morphing, "
-            "no text overlays, no watermarks.")
+    pack = openai_production(story, history)
+    writer = "openai" if pack else "template"
+    return (pack or template_production(story, history)), writer
 
 
 # ---------------------------------------------------------------- QA engine
 
 def qa_battery(pack, story):
-    """~40 automated checks: structure, fact-faithfulness, photoreal specs."""
+    """~35 automated checks: structure, catalog types, colors, bounds, facts."""
     checks = []
 
     def check(name, ok):
@@ -346,6 +290,7 @@ def qa_battery(pack, story):
 
     env = pack.get("environment") or {}
     shot = pack.get("shot") or {}
+    build = pack.get("build") or {}
     chars = pack.get("characters") or []
 
     for k in ("logline", "scene", "beat"):
@@ -357,7 +302,6 @@ def qa_battery(pack, story):
 
     check("characters present", len(chars) >= 1)
     check("characters <= 3", len(chars) <= 3)
-
     check("logline length ok", 20 <= len(pack.get("logline", "")) <= 300)
     check("beat length ok", 20 <= len(pack.get("beat", "")) <= 300)
     check("scene length ok", 40 <= len(pack.get("scene", "")) <= 700)
@@ -369,8 +313,8 @@ def qa_battery(pack, story):
         joined = " ".join(str(v) for v in c.values()).lower()
         for k in ("name", "role", "appearance", "clothing", "expression", "motivation"):
             check(f"char{i}.{k} present", bool(c.get(k)) and len(str(c.get(k))) >= 3)
-        check(f"char{i} photoreal spec",
-              bool(re.search(r"skin|texture|real|fabric|light|eye", joined)))
+        check(f"char{i} stylized words",
+              bool(re.search(r"low.?poly|rounded|sphere|matte|capsule|stylized|3d|shape", joined)))
 
     story_words = set(re.sub(r"[^\w\s]", " ", story_text(story).lower()).split()) - STOPWORDS
     pack_words = set(re.sub(
@@ -380,16 +324,119 @@ def qa_battery(pack, story):
     check("story overlap >= 1", len(overlap) >= 1)
     check("story overlap >= 3", len(overlap) >= 3)
 
-    env_text = " ".join(env.values()).lower()
-    check("environment has lighting spec",
-          bool(re.search(r"light|shadow|sun|neon|golden|lamp", env_text)))
-    check("environment has real-place words",
-          bool(re.search(r"room|street|hall|office|stadium|city|town|building|stage|home|field|desk", env_text)))
+    pal = build.get("palette") or {}
+    check("build.palette present", bool(pal))
+    for k in ("sky", "ground"):
+        check(f"palette.{k} valid hex", bool(HEX_RE.match(str(pal.get(k, "")))))
+    dur = build.get("duration", VIDEO_DURATION)
+    check("duration in range", isinstance(dur, (int, float)) and 3 <= dur <= 10)
+
+    bchars = build.get("characters") or []
+    check("build.characters present", len(bchars) >= 1)
+    for i, c in enumerate(bchars):
+        check(f"bchar{i}.height in range",
+              isinstance(c.get("height"), (int, float)) and 1.2 <= c.get("height") <= 2.4)
+        check(f"bchar{i}.pose valid", c.get("pose") in POSES)
+        check(f"bchar{i}.accessory valid", c.get("accessory") in ACCESSORIES)
+        check(f"bchar{i}.body valid hex", bool(HEX_RE.match(str(c.get("body", "")))))
+        pos = c.get("position") or [0, 0]
+        check(f"bchar{i}.position in bounds",
+              len(pos) >= 2 and all(isinstance(v, (int, float)) and
+                                    -BOUNDS <= v <= BOUNDS for v in pos[:2]))
+
+    props = build.get("props") or []
+    check("props 1-8", 1 <= len(props) <= 8)
+    for i, p in enumerate(props):
+        check(f"prop{i}.type valid", p.get("type") in PROP_CATALOG)
+        check(f"prop{i}.color valid hex", bool(HEX_RE.match(str(p.get("color", "")))))
+        check(f"prop{i}.scale in range",
+              isinstance(p.get("scale"), (int, float)) and 0.3 <= p.get("scale") <= 3)
+        pos = p.get("position") or [0, 0]
+        check(f"prop{i}.position in bounds",
+              len(pos) >= 2 and all(isinstance(v, (int, float)) and
+                                    -BOUNDS <= v <= BOUNDS for v in pos[:2]))
+
+    cam = build.get("camera") or {}
+    check("camera.move valid", cam.get("move") in CAMERA_MOVES)
+    for k in ("start", "end"):
+        node = cam.get(k) or {}
+        pos = node.get("pos") or []
+        tgt = node.get("target") or []
+        check(f"camera.{k}.pos in bounds",
+              len(pos) >= 3 and all(isinstance(v, (int, float)) for v in pos[:3])
+              and abs(pos[0]) <= 12 and abs(pos[1]) <= 12 and 0.3 <= pos[2] <= 8)
+        check(f"camera.{k}.target present",
+              len(tgt) >= 3 and all(isinstance(v, (int, float)) for v in tgt[:3]))
+        check(f"camera.{k}.fov in range",
+              isinstance(node.get("fov"), (int, float)) and 24 <= node.get("fov") <= 70)
+
+    lights = build.get("lights") or {}
+    check("lights.sun_strength in range",
+          isinstance(lights.get("sun_strength"), (int, float)) and
+          0.5 <= lights.get("sun_strength") <= 8)
+    check("lights.sun_color valid hex", bool(HEX_RE.match(str(lights.get("sun_color", "")))))
 
     total = len(checks)
     passed = sum(1 for _, ok in checks if ok)
     return {"checks": total, "passed": passed,
             "failed": [name for name, ok in checks if not ok]}
+
+
+# ---------------------------------------------------------------- Blender render
+
+def find_blender():
+    candidates = [os.environ.get("BLENDER_EXE", ""),
+                  r"C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"]
+    for cand in candidates:
+        if cand and os.path.exists(cand):
+            return cand
+    return shutil.which("blender")
+
+
+def render_with_blender(ts):
+    """Headless local render: build_render.py writes PNG frames, ffmpeg muxes the mp4."""
+    blender = find_blender()
+    if not blender:
+        print("Blender not found - set BLENDER_EXE or install Blender")
+        return None
+    os.makedirs("videos", exist_ok=True)
+    out = f"videos/inkdrop_{ts}.mp4"
+    if os.path.isdir("frames"):
+        shutil.rmtree("frames")
+    cmd = [blender, "-b", "--factory-startup",
+           "-P", "scripts/build_render.py", "--", "scene_spec.json", out]
+    try:
+        result = subprocess.run(cmd, cwd=REPO_ROOT, capture_output=True,
+                                text=True, timeout=3600)
+    except subprocess.TimeoutExpired:
+        print("Blender render timed out")
+        return None
+    tail = "\n".join((result.stdout or "").strip().splitlines()[-6:])
+    print(tail or (result.stderr or "")[-2000:])
+    if result.returncode != 0:
+        return None
+
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg or not os.path.isdir("frames"):
+        print("ffmpeg or frames missing - no mp4 produced")
+        return None
+    mux = subprocess.run(
+        [ffmpeg, "-y", "-framerate", "24", "-i", "frames/f%04d.png",
+         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "23", out],
+        cwd=REPO_ROOT, capture_output=True, text=True, timeout=600)
+    shutil.rmtree("frames", ignore_errors=True)
+    if mux.returncode != 0:
+        print("ffmpeg mux failed:", (mux.stderr or "")[-400:])
+        return None
+    return out
+
+
+def prune_videos(keep=KEEP_VIDEOS):
+    import glob
+    files = sorted(glob.glob("videos/*.mp4"))
+    for old in files[:-keep]:
+        os.remove(old)
+        print("pruned", old)
 
 
 # ---------------------------------------------------------------- vision QA
@@ -407,12 +454,14 @@ def vision_critique(video_path):
                  "-frames:v", "3", os.path.join(td, "f%02d.jpg")],
                 check=True, capture_output=True, timeout=120)
             for f in sorted(os.listdir(td)):
+                import base64
                 with open(os.path.join(td, f), "rb") as fh:
                     frames.append(base64.b64encode(fh.read()).decode())
         content = [{"type": "text", "text":
-                    "You are a cinematographer reviewing 3 frames of an AI-generated news video. "
-                    "Score 1-10 on photorealism, physical accuracy and character realism. "
-                    "Reply ONLY with JSON: {\"score\": <int>, \"lesson\": \"one sentence\"}."}]
+                    "You are a cinematographer reviewing 3 frames of a stylized-3D news video. "
+                    "Score 1-10 on scene composition, character readability and physical "
+                    "plausibility. Reply ONLY with JSON: {\"score\": <int>, \"lesson\": "
+                    "\"one sentence\"}."}]
         for fr in frames:
             content.append({"type": "image_url",
                             "image_url": {"url": "data:image/jpeg;base64," + fr}})
@@ -428,62 +477,43 @@ def vision_critique(video_path):
         return None
 
 
-# ---------------------------------------------------------------- LTX
-
-def submit(payload, use_keyframe=False):
-    key = os.environ["LTX_API_KEY"]
-    return http("POST", LTX_I2V if use_keyframe else LTX, key=key, payload=payload)
-
-
-def poll(job_id, use_keyframe=False):
-    key = os.environ["LTX_API_KEY"]
-    endpoint = (LTX_I2V if use_keyframe else LTX) + "/" + job_id
-    deadline = time.time() + POLL_TIMEOUT
-    while time.time() < deadline:
-        try:
-            job = http("GET", endpoint, key=key)
-        except Exception as e:
-            print("poll error:", e)
-            time.sleep(POLL_SECONDS)
-            continue
-        status = job.get("status")
-        print("job status:", status)
-        if status in ("completed", "failed", "error", "cancelled"):
-            return job
-        time.sleep(POLL_SECONDS)
-    return {"status": "timeout"}
-
-
-def download(url, path):
-    req = urllib.request.Request(url)
-    with urllib.request.urlopen(req, timeout=120) as resp, open(path, "wb") as fh:
-        fh.write(resp.read())
-
-
-def prune_videos(keep=KEEP_VIDEOS):
-    import glob
-    files = sorted(glob.glob("videos/*.mp4"))
-    for old in files[:-keep]:
-        os.remove(old)
-        print("pruned", old)
+def self_critique(pack):
+    ds_key = os.environ.get("DEEPSEEK_API_KEY")
+    if not ds_key:
+        return None
+    try:
+        return llm_chat(
+            "https://api.deepseek.com", ds_key,
+            os.environ.get("VIDEO_DS_MODEL", "deepseek-flash"),
+            [{"role": "system", "content":
+                "You review stylized-3D video production packs. After seeing the result in "
+                "your mind, write ONE sentence lesson for the next production: what to keep, "
+                "what to change. Be specific."},
+             {"role": "user", "content": json.dumps(pack, ensure_ascii=False)}],
+            temperature=0.4, max_tokens=120)
+    except Exception:
+        return None
 
 
 # ---------------------------------------------------------------- main
 
 def main():
+    os.chdir(REPO_ROOT)
+    load_env(".env")
     allow = os.environ.get("ALLOW_VIDEO_GEN", "false") == "true"
     story = pick_story()
     history = load_json(HISTORY_PATH, {"packs": []})
-    pack, style, moment, used_ensemble = build_production(story, history)
+    pack, writer = build_production(story, history)
     qa = qa_battery(pack, story)
-    print(f"QA: {qa['passed']}/{qa['checks']} passed"
+    print(f"writer: {writer} | QA: {qa['passed']}/{qa['checks']} passed"
           + (f" - failed: {qa['failed'][:5]}" if qa["failed"] else ""))
-    prompt = pack_to_prompt(pack)
 
     generated_at = datetime.datetime.now(datetime.timezone.utc) \
         .isoformat(timespec="seconds").replace("+00:00", "Z")
+    prompt = f"{pack.get('logline', '')} {pack.get('beat', '')}".strip()
     production = {
         "generated_at": generated_at,
+        "writer": writer,
         "story": {
             "title": story.get("title") if story else "",
             "outlet": story.get("outlet") if story else "",
@@ -493,11 +523,13 @@ def main():
         "pack": pack,
         "prompt": prompt,
         "qa": qa,
-        "ensemble": used_ensemble,
         "status": "standby",
     }
     save_json("production.json", production)
-    print("production pack written")
+    save_json("scene_spec.json", {"pack": pack,
+                                  "story": production["story"],
+                                  "generated_at": generated_at})
+    print("production pack + scene spec written")
 
     if not allow:
         if not os.path.exists("video.json"):
@@ -507,60 +539,29 @@ def main():
                 "outlet": production["story"]["outlet"],
                 "story_link": production["story"]["link"],
                 "prompt": prompt,
-                "model": MODEL, "duration": DURATION, "resolution": RESOLUTION,
+                "model": OPENAI_MODEL + " + Blender EEVEE",
+                "duration": pack.get("build", {}).get("duration", VIDEO_DURATION),
+                "resolution": VIDEO_RES,
                 "generated_at": generated_at,
             })
-        print("pipeline standby - no LTX call")
+        print("pipeline standby - local render not requested (ALLOW_VIDEO_GEN=true to render)")
         return
 
-    use_keyframe = os.path.exists(KEYFRAME_PATH)
-    production["used_keyframe"] = use_keyframe
-    if use_keyframe:
-        payload = {"image_uri": KEYFRAME_URL,
-                   "prompt": pack_to_motion_prompt(pack),
-                   "model": MODEL, "duration": DURATION,
-                   "resolution": RESOLUTION, "fps": FPS, "generate_audio": True}
-        print("using Blender/director keyframe as first frame")
+    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
+    video = render_with_blender(ts)
+    if video:
+        production["status"] = "ready"
+        production["video"] = video
+        production["vision"] = vision_critique(video)
+        prune_videos()
+        print("video ready:", video)
     else:
-        payload = {"prompt": prompt, "model": MODEL, "duration": DURATION,
-                   "resolution": RESOLUTION, "fps": FPS, "generate_audio": True}
+        production["status"] = "render_failed"
 
-    try:
-        job = submit(payload, use_keyframe)
-    except urllib.error.HTTPError as e:
-        production["status"] = "insufficient_funds" if e.code == 402 else f"submit_error_{e.code}"
-        save_json("production.json", production)
-        print("submit failed:", e.code)
-        return
-
-    job = poll(job["id"], use_keyframe)
-    status = job.get("status")
-    production["job_id"] = job.get("id")
-
-    if status == "completed":
-        result = job.get("result") or {}
-        url = result.get("video_url")
-        if not url:
-            production["status"] = "no_video_url"
-        else:
-            os.makedirs("videos", exist_ok=True)
-            ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
-            path = f"videos/inkdrop_{ts}.mp4"
-            download(url, path)
-            prune_videos()
-            production["status"] = "ready"
-            production["video"] = path
-            production["vision"] = vision_critique(path)
-            print("video ready:", path)
-    else:
-        production["status"] = status or "failed"
-
-    production["critique"] = production.get("critique") or self_critique(pack)
+    production["critique"] = self_critique(pack)
     history.setdefault("packs", []).append(
-        {"ts": generated_at, "pack": pack, "prompt": prompt,
-         "style": style, "moment": moment,
-         "status": production["status"],
-         "qa": qa,
+        {"ts": generated_at, "pack": pack, "writer": writer,
+         "status": production["status"], "qa": qa,
          "vision": production.get("vision"),
          "critique": production.get("critique")})
     history["packs"] = history["packs"][-10:]
@@ -573,30 +574,14 @@ def main():
         "story_link": production["story"]["link"],
         "trend": production["story"]["trend"],
         "prompt": prompt,
-        "model": MODEL, "duration": DURATION, "resolution": RESOLUTION,
+        "model": OPENAI_MODEL + " + Blender EEVEE",
+        "duration": pack.get("build", {}).get("duration", VIDEO_DURATION),
+        "resolution": VIDEO_RES,
         "generated_at": generated_at,
         "video": production.get("video"),
-        "job_id": production.get("job_id"),
         "vision": production.get("vision"),
     })
     save_json("production.json", production)
-
-
-def self_critique(pack):
-    ds_key = os.environ.get("DEEPSEEK_API_KEY")
-    if not ds_key:
-        return None
-    try:
-        return llm_chat(
-            "https://api.deepseek.com", ds_key,
-            os.environ.get("VIDEO_DS_MODEL", "deepseek-flash"),
-            [{"role": "system", "content":
-                "You review AI video production packs. After seeing the result in your mind, write ONE "
-                "sentence lesson for the next production: what to keep, what to change. Be specific."},
-             {"role": "user", "content": json.dumps(pack, ensure_ascii=False)}],
-            temperature=0.4, max_tokens=120)
-    except Exception:
-        return None
 
 
 if __name__ == "__main__":
