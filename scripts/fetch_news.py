@@ -77,12 +77,16 @@ GN_TITLE_JUNK = [
     r"^(i|we|my|our)\b",   # first-person blog/opinion pieces
     r"^(what|why|where|when|who|which|is|are|will|can|should|could|does|did)\b",  # question/explainer forms
     r"alert:",             # feed-alert labels ("Fantasy Football Injury Alert: …")
+    r"first alert",        # local-TV weather filler ("First Alert forecast here")
     r"fantasy football",   # niche alert-jargon headlines
     r"waiver wire",
     r"tells us everything",  # interview-teaser headlines
     r"prediction, picks",  # betting-preview pages
+    r"predictions, teams",
     r"stats, injuries",    # game stats pages
-    r"\b&\b",              # multi-subject list titles ("A & B Become …")
+    r"live updates",       # liveblog labels
+    r"match (wta|atp)",    # tennis match-listing pages
+    r"&",                  # multi-subject list titles ("A & B Become …")
 ]
 TREND_TITLE_PREFIX = re.compile(
     r"^(look|watch|just in|today in sports|update)\b[:,\- ]*", re.I

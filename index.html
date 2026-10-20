@@ -487,15 +487,36 @@
     /how to watch/i,
     /odds, picks/i,
     /prediction, picks/i,
+    /predictions, teams/i,
     /stats, injuries/i,
+    /live updates/i,
+    /match (wta|atp)/i,
     /alert:/i,
+    /first alert/i,
     /fantasy football/i,
     /waiver wire/i,
     /tells us everything/i,
-    /\b&\b/,
+    /&/,
   ];
   function junkTitle(t) {
-    return JUNK_TITLE_RE.some((re) => re.test(t || ""));
+    t = (t || "").trim();
+    if (JUNK_TITLE_RE.some((re) => re.test(t))) return true;
+    // bare-word titles ("Software", "Martian Dawn") carry no story — unless the
+    // words are important enough on their own ("Trump wins")
+    if (t.split(/\s+/).length < 4 && !IMPORTANT_RE.test(t)) return true;
+    return false;
+  }
+
+  /* ---------- importance weighting: big stories over filler ---------- */
+  const IMPORTANT_RE = /trump|musk|putin|zelensky|biden|president|minister|election|\bwar\b|attack|missile|\bstrike\b|\bkilled\b|\bdead\b|\bdies\b|\bdied\b|death|\brecord\b|billion|million|\bdeal\b|resign|fired|arrest|charged|convicted|\bwins?\b|champion|\bfinal\b|super bowl|world cup|playoff|nvidia|apple|microsoft|google|openai|\bai\b|bitcoin|crypto|nasa|spacex|tesla|ronaldo|messi|netflix|disney|taylor swift|premiere|released\b/i;
+  const FILLER_RE = /forecast|weather|first alert|traffic|commute|lottery|jackpot|horoscope|schedule|live blog|what to know|what we know|explainer|weekend outlook|sunshine|temperatures/i;
+  function storyScore(i) {
+    const text = ((i.trend || "") + " " + (i.title || "") + " " + (i.summary || "")).toLowerCase();
+    let s = 0;
+    if (i.trend) s += 3;                 // people are already searching this
+    if (IMPORTANT_RE.test(text)) s += 2; // big names, big events
+    if (FILLER_RE.test(text)) s -= 3;    // routine weather/traffic/housekeeping
+    return s;
   }
 
   function pickStory(cat) {
@@ -507,10 +528,15 @@
     const fresh = list.filter((i) => now - new Date(i.published).getTime() <= FRESH_WINDOW_MS);
     const basePool = fresh.length ? fresh : list;
     if (cat === "trending") return pickTrending(list.slice(0, 60));
+    // weighted pick: important stories are far more likely, filler still possible but rare
     const pool = basePool.slice(0, 20);
-    const idx = Math.floor(Math.pow(Math.random(), 1.6) * pool.length);
+    const weights = pool.map((i) => Math.pow(2, storyScore(i)));
+    const total = weights.reduce((s, w) => s + w, 0);
+    let r = Math.random() * total;
+    let story = pool[pool.length - 1];
+    for (let k = 0; k < pool.length; k++) { r -= weights[k]; if (r <= 0) { story = pool[k]; break; } }
     return {
-      story: pool[Math.min(idx, pool.length - 1)],
+      story,
       fromLastHour: fresh.length > 0,
     };
   }
