@@ -1,8 +1,8 @@
 {
  "pack": {
-  "style": "snowy_dawn",
-  "logline": "Martin Shaw Recasts Four Years on a Welsh Mountainside. One quiet moment that captures why it matters.",
-  "scene": "Martin Shaw Recasts Four Years on a Welsh Mountainside. Trending: martin shaw. The scene opens on a figure mid-thought.",
+  "style": "sunset",
+  "logline": "Hilary Duff – Spark Arena: October 20, 2026 (13th Floor Concert Review) - The 13th Floor. One quiet moment that captures why it matters.",
+  "scene": "Hilary Duff – Spark Arena: October 20, 2026 (13th Floor Concert Review) - The 13th Floor. Trending: hilary duff. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -18,19 +18,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "cloudy",
-   "atmosphere": "snowy dawn mood - calm and unhurried"
+   "weather": "sunset",
+   "atmosphere": "sunset mood - calm and unhurried"
   },
   "shot": {
-   "camera": "dolly_in",
+   "camera": "pan_right",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#c7d4e8",
-    "ground": "#e8edf2",
-    "accent": "#b3543f"
+    "sky": "#d98d5f",
+    "ground": "#3f3a52",
+    "accent": "#ffd166"
    },
    "duration": 5,
    "characters": [
@@ -105,7 +105,7 @@
     }
    ],
    "camera": {
-    "move": "dolly_in",
+    "move": "pan_right",
     "start": {
      "pos": [
       4.8,
@@ -146,10 +146,10 @@
   }
  },
  "story": {
-  "title": "Martin Shaw Recasts Four Years on a Welsh Mountainside",
-  "outlet": "شبكة تواصل الإخبارية",
-  "link": "https://news.google.com/rss/articles/CBMiU0FVX3lxTFA1STdnZlVPb2RSVlo4REV6NG9pMmc5aHF2TXFhTXB0LXF4VkhaTTNpak5Ta2ZoVVBNV1Q4ZUw0Q1hBNmVwMk5yMS1iMmtZdlNFTGVn?oc=5",
-  "trend": "martin shaw"
+  "title": "Hilary Duff – Spark Arena: October 20, 2026 (13th Floor Concert Review) - The 13th Floor",
+  "outlet": "The 13th Floor",
+  "link": "https://news.google.com/rss/articles/CBMilAFBVV95cUxPYlVCb1pwS0lzRUdZOWhrRDVpZVZ5N3EycFFZRS1TNkxlZkhPb2hEdkVqZkZnSjJobEk2V05xaUFUMVNRM3k0dUxSSFZoeWVTYlgyNWhyMWF2LUQyaW92S2ZacnRWRzUzOFZtdC1SaEpOZVM5TGRNZWU2XzlrNWFUQmo1WVhLTFlTUHBlTjZsNjJ0LTBR?oc=5",
+  "trend": "hilary duff"
  },
- "generated_at": "2026-10-20T21:16:06Z"
+ "generated_at": "2026-10-20T23:14:57Z"
 }
