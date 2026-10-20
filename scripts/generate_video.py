@@ -43,12 +43,34 @@ VIDEO_DURATION = int(os.environ.get("VIDEO_DURATION", "5"))
 PROP_CATALOG = ("table", "chair", "window", "door", "tree", "bush",
                 "building", "lamppost", "bench", "rock", "cloud", "fence",
                 "car", "boat", "sign", "plant", "stairs", "tv", "sofa",
-                "bookshelf")
+                "bookshelf", "skyline", "hills")
 POSES = ("standing", "reaching", "pointing", "looking_up")
 ACCESSORIES = ("none", "hat")
 CAMERA_MOVES = ("dolly_in", "dolly_out", "pan_left", "pan_right",
                 "orbit_left", "orbit_right", "crane_up", "static")
 BOUNDS = 7.0
+KEEP_PACKS = 3
+
+# Visual variety: each run rotates through distinct looks. `mj` tokens feed
+# the Midjourney prompts, the palette drives the Blender scene.
+STYLE_POOL = [
+    {"name": "sunset", "weather": "sunset", "sky": "#d98d5f", "ground": "#3f3a52",
+     "accent": "#ffd166", "mj": "golden hour, warm rim light, long shadows, cinematic haze"},
+    {"name": "rainy_night", "weather": "rain", "sky": "#1b2735", "ground": "#232830",
+     "accent": "#6fd3c7", "mj": "moody night rain, neon reflections on wet ground, cinematic noir"},
+    {"name": "neon_city", "weather": "night", "sky": "#1a1433", "ground": "#241d3d",
+     "accent": "#ff4d9d", "mj": "neon-lit city night, cyberpunk palette, volumetric glow"},
+    {"name": "desert_noon", "weather": "clear", "sky": "#9fd0e8", "ground": "#d9b382",
+     "accent": "#e2574c", "mj": "harsh desert noon sun, heat haze, bleached warm colors"},
+    {"name": "foggy_forest", "weather": "cloudy", "sky": "#b8c4c0", "ground": "#3e5a44",
+     "accent": "#e8e3d0", "mj": "soft morning fog, diffused light, muted greens, quiet mood"},
+    {"name": "snowy_dawn", "weather": "cloudy", "sky": "#c7d4e8", "ground": "#e8edf2",
+     "accent": "#b3543f", "mj": "snowy dawn, cool blue light, soft pink horizon glow"},
+    {"name": "noon_clear", "weather": "clear", "sky": "#8fb8d8", "ground": "#4a5d3a",
+     "accent": "#e8c04a", "mj": "bright midday, crisp shadows, saturated natural colors"},
+    {"name": "night_clear", "weather": "night", "sky": "#101a33", "ground": "#26303c",
+     "accent": "#f0c060", "mj": "moonlit night, deep blues, warm glowing windows"},
+]
 
 STOPWORDS = {
     "the", "a", "an", "and", "or", "but", "of", "to", "in", "on", "for", "with",
@@ -155,7 +177,23 @@ def story_text(story):
 
 # ---------------------------------------------------------------- writer
 
-def writer_prompt(story, history):
+def pick_style(history):
+    """Rotate visual styles, avoiding the last few used."""
+    used = {p.get("pack", {}).get("style") for p in history.get("packs", [])[-4:]}
+    options = [s for s in STYLE_POOL if s["name"] not in used] or STYLE_POOL
+    return random.choice(options)
+
+
+def style_directive(style):
+    return (
+        f"Visual style directive (MUST follow): {style['name']} - "
+        f"palette sky {style['sky']}, ground {style['ground']}, accent {style['accent']} "
+        f"(use exactly these hexes in build.palette and as prop/character colors where it fits); "
+        f"weather exactly \"{style['weather']}\"; mood tokens: {style['mj']}."
+    )
+
+
+def writer_prompt(story, history, style):
     past = history.get("packs", [])[-2:]
     past_note = "\n".join(
         f"- pack: {json.dumps(p.get('pack'), ensure_ascii=False)[:400]}\n"
@@ -165,6 +203,7 @@ def writer_prompt(story, history):
     ask = (
         "You are the showrunner of a short stylized-3D news film. Story:\n"
         f"{story_text(story)}\n\n"
+        f"{style_directive(style)}\n\n"
         "Write a production pack as STRICT JSON with these keys:\n"
         "- logline: one sentence selling the story's most dramatic angle\n"
         "- scene: 2-3 sentences setting the scene\n"
@@ -174,17 +213,19 @@ def writer_prompt(story, history):
         "(rounded simple shapes, matte colors, toy-like figures), faithful to the real "
         "people in the story, no real-person likeness claims\n"
         "- environment: object with keys location, time, lighting, weather, atmosphere - "
-        "real-life accuracy for place and time, weather one of: clear, cloudy, rain, night, sunset\n"
-        "- shot: object with keys camera, framing, lens\n"
+        "real-life accuracy for place and time, weather as in the style directive\n"
+        "- shot: object with keys camera, framing, lens - written like a film shot "
+        "(vivid framing and lens language a video AI can follow)\n"
         "- build: the Blender build spec, EXACTLY these keys:\n"
-        f"  - palette: object with hex colors sky, ground, accent (e.g. \"#8fb8d8\")\n"
+        f"  - palette: object with the style directive's hex colors sky, ground, accent\n"
         "  - duration: 5 (seconds, 3 to 10)\n"
         f"  - characters: array matching the display characters above; each: name, height "
         f"(1.2-2.4), pose one of {list(POSES)}, accessory one of {list(ACCESSORIES)}, "
         f"facing (degrees 0-360, 0 = facing +Y), body (hex), head (hex), "
         f"position [x, y] within {-BOUNDS}..{BOUNDS}\n"
-        f"  - props: 2-6 objects; each: type one of {list(PROP_CATALOG)}, "
-        f"position [x, y] within {-BOUNDS}..{BOUNDS}, scale 0.3-3, color (hex)\n"
+        f"  - props: 3-7 objects for a DENSE scene; each: type one of {list(PROP_CATALOG)}, "
+        f"position [x, y] within {-BOUNDS}..{BOUNDS}, scale 0.3-3, color (hex). Include "
+        f"background depth (skyline or hills near the far edge) when outdoors\n"
         f"  - camera: move one of {list(CAMERA_MOVES)}; start and end objects each with "
         f"pos [x,y,z] (x,y within -12..12, z 0.3..8), target [x,y,z] (within the scene), "
         f"fov 24-70 (vertical degrees)\n"
@@ -198,11 +239,11 @@ def writer_prompt(story, history):
     return ask
 
 
-def openai_production(story, history):
+def openai_production(story, history, style):
     key = os.environ.get("OPENAI_API_KEY")
     if not key:
         return None
-    ask = writer_prompt(story, history)
+    ask = writer_prompt(story, history, style)
     try:
         raw = llm_chat(OPENAI_API, key, OPENAI_MODEL,
                        [{"role": "system",
@@ -218,14 +259,25 @@ def openai_production(story, history):
     return None
 
 
-def template_production(story, history):
-    """Zero-cost fallback: a fixed stylized scene with the story woven in."""
+def template_production(story, history, style):
+    """Zero-cost fallback: a stylized scene driven by the style pool."""
     text = story_text(story)
     first = text.split(".")[0]
+    moves = [m for m in ("dolly_in", "orbit_left", "pan_right", "crane_up")
+             if m != history.get("last_move")]
+    move = random.choice(moves)
+    env = {
+        "location": "a quiet place implied by the story",
+        "time": "the time of day the story suggests",
+        "lighting": "key light from the sun with gentle fill",
+        "weather": style["weather"],
+        "atmosphere": f"{style['name'].replace('_', ' ')} mood - calm and unhurried",
+    }
     return {
+        "style": style["name"],
         "logline": f"{first}. One quiet moment that captures why it matters.",
-        "scene": f"{text}. The scene opens on a figure at a window, mid-thought.",
-        "beat": "The figure turns from the window as the light shifts - a decision made.",
+        "scene": f"{text}. The scene opens on a figure mid-thought.",
+        "beat": "The figure turns toward the light as the moment settles - a decision made.",
         "characters": [
             {
                 "name": "The figure",
@@ -236,20 +288,15 @@ def template_production(story, history):
                 "motivation": "to understand what the news means before acting",
             },
         ],
-        "environment": {
-            "location": "a quiet room implied by the story",
-            "time": "the time of day the story suggests",
-            "lighting": "soft key light from the window, gentle fill",
-            "weather": "clear",
-            "atmosphere": "calm and unhurried",
-        },
+        "environment": env,
         "shot": {
-            "camera": "dolly_in",
+            "camera": move,
             "framing": "medium shot on the figure, window behind",
             "lens": "50mm equivalent",
         },
         "build": {
-            "palette": {"sky": "#8fb8d8", "ground": "#4a5d3a", "accent": "#e8c04a"},
+            "palette": {"sky": style["sky"], "ground": style["ground"],
+                        "accent": style["accent"]},
             "duration": VIDEO_DURATION,
             "characters": [
                 {"name": "The figure", "height": 1.7, "pose": "looking_up",
@@ -261,9 +308,11 @@ def template_production(story, history):
                 {"type": "table", "position": [0.8, 0.9], "scale": 1.0, "color": "#6b4a2f"},
                 {"type": "plant", "position": [-1.6, 0.4], "scale": 1.1, "color": "#3f7d3f"},
                 {"type": "lamppost", "position": [2.8, 1.6], "scale": 1.0, "color": "#3a3a3a"},
+                {"type": "skyline", "position": [0, -6.8], "scale": 1.3, "color": "#2a3442"},
+                {"type": "hills", "position": [5.0, -6.5], "scale": 1.5, "color": "#5a6b58"},
             ],
             "camera": {
-                "move": "dolly_in",
+                "move": move,
                 "start": {"pos": [4.8, -6.2, 2.6], "target": [0.4, -0.4, 1.3], "fov": 50},
                 "end": {"pos": [2.6, -3.4, 1.9], "target": [0.4, -0.4, 1.3], "fov": 44},
             },
@@ -273,10 +322,12 @@ def template_production(story, history):
     }
 
 
-def build_production(story, history):
-    pack = openai_production(story, history)
+def build_production(story, history, style):
+    pack = openai_production(story, history, style)
     writer = "openai" if pack else "template"
-    return (pack or template_production(story, history)), writer
+    pack = pack or template_production(story, history, style)
+    pack["style"] = style["name"]
+    return pack, writer
 
 
 # ---------------------------------------------------------------- QA engine
@@ -382,6 +433,108 @@ def qa_battery(pack, story):
             "failed": [name for name, ok in checks if not ok]}
 
 
+# ---------------------------------------------------------------- scene pack
+
+def pack_to_mj_prompt(pack, style):
+    """Midjourney text-to-video prompt: beat, subjects, scene, style, shot."""
+    shot = pack.get("shot") or {}
+    env = pack.get("environment") or {}
+    subjects = "; ".join(
+        f"{c.get('name')} - {c.get('appearance', '')}, {c.get('clothing', '')}, "
+        f"{c.get('expression', '')}"
+        for c in pack.get("characters", [])[:3]
+    )
+    prompt = (
+        f"{pack.get('beat', '')} {subjects}. "
+        f"Scene: {pack.get('scene', '')} "
+        f"{env.get('location', '')}, {env.get('time', '')}, {env.get('weather', '')}. "
+        f"{style.get('mj', '')}, {env.get('lighting', '')}, {env.get('atmosphere', '')}. "
+        f"{shot.get('framing', '')}, camera {shot.get('camera', 'slow dolly')}, "
+        f"{shot.get('lens', '')}. --ar 16:9"
+    )
+    return re.sub(r"\s+", " ", prompt).strip()
+
+
+def pack_to_mj_motion(pack):
+    """Short motion prompt for image-to-video with opening_frame.png uploaded."""
+    shot = pack.get("shot") or {}
+    return re.sub(r"\s+", " ", (
+        f"Camera {shot.get('camera', 'slow dolly')}, {pack.get('beat', '')} "
+        "Consistent stylized 3D scene and characters, smooth natural motion, "
+        "no morphing, no text overlays.")).strip()
+
+
+def write_pack_doc(path, production, style, mj_prompt, mj_motion):
+    """Scene narration document - everything another AI needs for the scene."""
+    pack = production["pack"]
+    story = production["story"]
+    env = pack.get("environment") or {}
+    shot = pack.get("shot") or {}
+    chars = "\n\n".join(
+        f"### {c.get('name', 'Character')} - {c.get('role', '')}\n"
+        f"- Appearance: {c.get('appearance', '')}\n"
+        f"- Clothing: {c.get('clothing', '')}\n"
+        f"- Expression: {c.get('expression', '')}\n"
+        f"- Motivation: {c.get('motivation', '')}"
+        for c in pack.get("characters", [])
+    )
+    lines = [
+        f"# InkDrop Scene Pack - {story.get('title') or 'News scene'}",
+        "",
+        f"Story: {story.get('title', '')}",
+        f"Outlet: {story.get('outlet', '')}",
+        f"Link: {story.get('link', '')}",
+        f"Generated: {production.get('generated_at', '')} · "
+        f"writer: {production.get('writer', '')} · style: {style['name']}",
+        "",
+        "## Scene script",
+        "",
+        f"LOGLINE: {pack.get('logline', '')}",
+        "",
+        f"SCENE: {pack.get('scene', '')}",
+        "",
+        f"BEAT: {pack.get('beat', '')}",
+        "",
+        "## Characters",
+        "",
+        chars or "(none)",
+        "",
+        "## Environment & shot",
+        "",
+        f"- Location: {env.get('location', '')}",
+        f"- Time: {env.get('time', '')}",
+        f"- Lighting: {env.get('lighting', '')}",
+        f"- Weather: {env.get('weather', '')}",
+        f"- Atmosphere: {env.get('atmosphere', '')}",
+        f"- Camera: {shot.get('camera', '')}",
+        f"- Framing: {shot.get('framing', '')}",
+        f"- Lens: {shot.get('lens', '')}",
+        "",
+        "## Midjourney text-to-video prompt",
+        "",
+        mj_prompt,
+        "",
+        "## Midjourney image-to-video (upload opening_frame.png as the image)",
+        "",
+        mj_motion,
+        "",
+        "## Reference images",
+        "",
+        "- opening_frame.png - the video's first frame (camera view)",
+        "- refs/ref_front.png - three-quarter view of the scene",
+        "- refs/ref_high.png - high angle overview",
+        "- refs/ref_close.png - close-up on the main character",
+        "",
+        "## Blender scene",
+        "",
+        "scene.blend - open in Blender 5.2 to inspect or re-render the scene.",
+        "scene_spec.json - the machine-readable build spec.",
+    ]
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(lines))
+    return path
+
+
 # ---------------------------------------------------------------- Blender render
 
 def find_blender():
@@ -393,33 +546,33 @@ def find_blender():
     return shutil.which("blender")
 
 
-def render_with_blender(ts):
-    """Headless local render: build_render.py writes PNG frames, ffmpeg muxes the mp4."""
+def render_with_blender(ts, pack_dir):
+    """Headless local render: Blender writes frames + scene pack, ffmpeg muxes."""
     blender = find_blender()
     if not blender:
         print("Blender not found - set BLENDER_EXE or install Blender")
-        return None
+        return None, None
     os.makedirs("videos", exist_ok=True)
     out = f"videos/inkdrop_{ts}.mp4"
     if os.path.isdir("frames"):
         shutil.rmtree("frames")
     cmd = [blender, "-b", "--factory-startup",
-           "-P", "scripts/build_render.py", "--", "scene_spec.json", out]
+           "-P", "scripts/build_render.py", "--", "scene_spec.json", out, pack_dir]
     try:
         result = subprocess.run(cmd, cwd=REPO_ROOT, capture_output=True,
                                 text=True, timeout=3600)
     except subprocess.TimeoutExpired:
         print("Blender render timed out")
-        return None
+        return None, None
     tail = "\n".join((result.stdout or "").strip().splitlines()[-6:])
     print(tail or (result.stderr or "")[-2000:])
     if result.returncode != 0:
-        return None
+        return None, None
 
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg or not os.path.isdir("frames"):
         print("ffmpeg or frames missing - no mp4 produced")
-        return None
+        return None, None
     mux = subprocess.run(
         [ffmpeg, "-y", "-framerate", "24", "-i", "frames/f%04d.png",
          "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "23", out],
@@ -427,8 +580,28 @@ def render_with_blender(ts):
     shutil.rmtree("frames", ignore_errors=True)
     if mux.returncode != 0:
         print("ffmpeg mux failed:", (mux.stderr or "")[-400:])
-        return None
-    return out
+        return None, None
+
+    # Zip the scene pack: narration doc + opening frame + refs + .blend + spec.
+    zip_path = pack_dir + ".zip"
+    try:
+        shutil.copyfile("keyframes/latest.png",
+                        os.path.join(pack_dir, "opening_frame.png"))
+        shutil.make_archive(pack_dir, "zip", pack_dir)
+        shutil.rmtree(pack_dir, ignore_errors=True)
+        zip_path = zip_path.replace("\\", "/")
+    except OSError as e:
+        print("scene pack zip failed:", e)
+        zip_path = None
+    return out, zip_path
+
+
+def prune_packs(keep=KEEP_PACKS):
+    import glob
+    files = sorted(glob.glob("scene-packs/*.zip"))
+    for old in files[:-keep]:
+        os.remove(old)
+        print("pruned", old)
 
 
 def prune_videos(keep=KEEP_VIDEOS):
@@ -503,17 +676,21 @@ def main():
     allow = os.environ.get("ALLOW_VIDEO_GEN", "false") == "true"
     story = pick_story()
     history = load_json(HISTORY_PATH, {"packs": []})
-    pack, writer = build_production(story, history)
+    style = pick_style(history)
+    pack, writer = build_production(story, history, style)
     qa = qa_battery(pack, story)
-    print(f"writer: {writer} | QA: {qa['passed']}/{qa['checks']} passed"
+    print(f"style: {style['name']} | writer: {writer} | "
+          f"QA: {qa['passed']}/{qa['checks']} passed"
           + (f" - failed: {qa['failed'][:5]}" if qa["failed"] else ""))
 
     generated_at = datetime.datetime.now(datetime.timezone.utc) \
         .isoformat(timespec="seconds").replace("+00:00", "Z")
-    prompt = f"{pack.get('logline', '')} {pack.get('beat', '')}".strip()
+    mj_prompt = pack_to_mj_prompt(pack, style)
+    mj_motion = pack_to_mj_motion(pack)
     production = {
         "generated_at": generated_at,
         "writer": writer,
+        "style": style["name"],
         "story": {
             "title": story.get("title") if story else "",
             "outlet": story.get("outlet") if story else "",
@@ -521,7 +698,8 @@ def main():
             "trend": story.get("trend") if story else "",
         },
         "pack": pack,
-        "prompt": prompt,
+        "prompt": mj_prompt,
+        "mj_motion": mj_motion,
         "qa": qa,
         "status": "standby",
     }
@@ -538,7 +716,7 @@ def main():
                 "title": production["story"]["title"],
                 "outlet": production["story"]["outlet"],
                 "story_link": production["story"]["link"],
-                "prompt": prompt,
+                "prompt": mj_prompt,
                 "model": OPENAI_MODEL + " + Blender EEVEE",
                 "duration": pack.get("build", {}).get("duration", VIDEO_DURATION),
                 "resolution": VIDEO_RES,
@@ -548,12 +726,20 @@ def main():
         return
 
     ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
-    video = render_with_blender(ts)
+    pack_dir = os.path.join("scene-packs", f"inkdrop_{ts}")
+    os.makedirs(pack_dir, exist_ok=True)
+    write_pack_doc(os.path.join(pack_dir, "pack.md"), production, style,
+                   mj_prompt, mj_motion)
+    shutil.copyfile("scene_spec.json", os.path.join(pack_dir, "scene_spec.json"))
+    video, zip_path = render_with_blender(ts, pack_dir)
     if video:
         production["status"] = "ready"
         production["video"] = video
+        if zip_path:
+            production["pack_zip"] = zip_path
         production["vision"] = vision_critique(video)
         prune_videos()
+        prune_packs()
         print("video ready:", video)
     else:
         production["status"] = "render_failed"
@@ -565,6 +751,7 @@ def main():
          "vision": production.get("vision"),
          "critique": production.get("critique")})
     history["packs"] = history["packs"][-10:]
+    history["last_move"] = (pack.get("shot") or {}).get("camera")
     save_json(HISTORY_PATH, history)
 
     save_json("video.json", {
@@ -573,12 +760,13 @@ def main():
         "outlet": production["story"]["outlet"],
         "story_link": production["story"]["link"],
         "trend": production["story"]["trend"],
-        "prompt": prompt,
+        "prompt": mj_prompt,
         "model": OPENAI_MODEL + " + Blender EEVEE",
         "duration": pack.get("build", {}).get("duration", VIDEO_DURATION),
         "resolution": VIDEO_RES,
         "generated_at": generated_at,
         "video": production.get("video"),
+        "pack": production.get("pack_zip"),
         "vision": production.get("vision"),
     })
     save_json("production.json", production)

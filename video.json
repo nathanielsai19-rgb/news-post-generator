@@ -1,14 +1,15 @@
 {
  "status": "ready",
- "title": "Fedex Truck Stolen Trading Cards Psa Theft Hits $963,000",
+ "title": "Martin Shaw Recasts Four Years on a Welsh Mountainside",
  "outlet": "شبكة تواصل الإخبارية",
- "story_link": "https://news.google.com/rss/articles/CBMiU0FVX3lxTFAxem4xeDdOTFNTeXliMnZ5aTNDQ1Y3QkR2b3ZVdUVyMG9YWERwRkhDSjdZOTNnTjNTZE5rdjJMVnlxQm8wRDBFY25xTG1MdUkyYnJN?oc=5",
- "trend": "fedex truck stolen trading cards psa",
- "prompt": "Fedex Truck Stolen Trading Cards Psa Theft Hits $963,000. One quiet moment that captures why it matters. The figure turns from the window as the light shifts - a decision made.",
+ "story_link": "https://news.google.com/rss/articles/CBMiU0FVX3lxTFA1STdnZlVPb2RSVlo4REV6NG9pMmc5aHF2TXFhTXB0LXF4VkhaTTNpak5Ta2ZoVVBNV1Q4ZUw0Q1hBNmVwMk5yMS1iMmtZdlNFTGVn?oc=5",
+ "trend": "martin shaw",
+ "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Martin Shaw Recasts Four Years on a Welsh Mountainside. Trending: martin shaw. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, cloudy. snowy dawn, cool blue light, soft pink horizon glow, key light from the sun with gentle fill, snowy dawn mood - calm and unhurried. medium shot on the figure, window behind, camera dolly_in, 50mm equivalent. --ar 16:9",
  "model": "gpt-4o-mini + Blender EEVEE",
  "duration": 5,
  "resolution": "1280x720",
- "generated_at": "2026-10-20T20:19:58Z",
- "video": "videos/inkdrop_20261020201958.mp4",
+ "generated_at": "2026-10-20T21:16:06Z",
+ "video": "videos/inkdrop_20261020211606.mp4",
+ "pack": "scene-packs/inkdrop_20261020211606.zip",
  "vision": null
 }

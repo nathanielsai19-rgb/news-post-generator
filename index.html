@@ -267,6 +267,7 @@
     <div class="actions">
       <button class="btn" id="captionBtn">Caption</button>
       <button class="btn" id="videoBtn">Check for new video</button>
+      <a class="btn hidden" id="packBtn" target="_blank" rel="noopener" download>Scene pack</a>
       <button class="btn ghost" id="rateUp" aria-label="Good video">👍</button>
       <button class="btn ghost" id="rateDown" aria-label="Bad video">👎</button>
     </div>
@@ -1110,6 +1111,7 @@
       $("prodScriptWrap").classList.add("hidden");
       $("prodCharsWrap").classList.add("hidden");
       $("prodEnvWrap").classList.add("hidden");
+      $("packBtn").classList.add("hidden");
       $("videoMeta").textContent = "";
     } finally {
       btn.disabled = false;
@@ -1148,8 +1150,10 @@
     const player = $("videoPlayer");
     const meta = $("videoMeta");
     const pw = $("videoPromptWrap");
+    const pb = $("packBtn");
     player.classList.add("hidden");
     pw.classList.add("hidden");
+    pb.classList.add("hidden");
     meta.textContent = "";
     if (v.status === "ready") {
       player.src = v.video;
@@ -1165,15 +1169,19 @@
         meta.appendChild(document.createTextNode(" · "));
         meta.appendChild(a);
       }
+      if (v.pack) {
+        pb.href = v.pack;
+        pb.classList.remove("hidden");
+      }
       if (v.prompt) {
         $("videoPrompt").textContent = v.prompt;
         pw.classList.remove("hidden");
       }
       renderProduction(prod);
     } else if (v.status === "standby") {
-      status.textContent = "Video pipeline is on standby — top up your LTX balance and tell Claude to switch it on.";
-    } else if (v.status === "insufficient_funds") {
-      status.textContent = "LTX balance too low to generate — top up and check back.";
+      status.textContent = "Video pipeline is on standby — ask Claude to make a video.";
+    } else if (v.status === "render_failed") {
+      status.textContent = "The local Blender render failed — ask Claude to check the logs.";
     } else {
       status.textContent = "Last generation " + (v.status || "failed") + " — the next run will retry.";
     }

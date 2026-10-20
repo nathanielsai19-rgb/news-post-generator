@@ -1,16 +1,18 @@
 {
- "generated_at": "2026-10-20T20:19:58Z",
+ "generated_at": "2026-10-20T21:16:06Z",
  "writer": "template",
+ "style": "snowy_dawn",
  "story": {
-  "title": "Fedex Truck Stolen Trading Cards Psa Theft Hits $963,000",
+  "title": "Martin Shaw Recasts Four Years on a Welsh Mountainside",
   "outlet": "شبكة تواصل الإخبارية",
-  "link": "https://news.google.com/rss/articles/CBMiU0FVX3lxTFAxem4xeDdOTFNTeXliMnZ5aTNDQ1Y3QkR2b3ZVdUVyMG9YWERwRkhDSjdZOTNnTjNTZE5rdjJMVnlxQm8wRDBFY25xTG1MdUkyYnJN?oc=5",
-  "trend": "fedex truck stolen trading cards psa"
+  "link": "https://news.google.com/rss/articles/CBMiU0FVX3lxTFA1STdnZlVPb2RSVlo4REV6NG9pMmc5aHF2TXFhTXB0LXF4VkhaTTNpak5Ta2ZoVVBNV1Q4ZUw0Q1hBNmVwMk5yMS1iMmtZdlNFTGVn?oc=5",
+  "trend": "martin shaw"
  },
  "pack": {
-  "logline": "Fedex Truck Stolen Trading Cards Psa Theft Hits $963,000. One quiet moment that captures why it matters.",
-  "scene": "Fedex Truck Stolen Trading Cards Psa Theft Hits $963,000. Trending: fedex truck stolen trading cards psa. The scene opens on a figure at a window, mid-thought.",
-  "beat": "The figure turns from the window as the light shifts - a decision made.",
+  "style": "snowy_dawn",
+  "logline": "Martin Shaw Recasts Four Years on a Welsh Mountainside. One quiet moment that captures why it matters.",
+  "scene": "Martin Shaw Recasts Four Years on a Welsh Mountainside. Trending: martin shaw. The scene opens on a figure mid-thought.",
+  "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
     "name": "The figure",
@@ -22,11 +24,11 @@
    }
   ],
   "environment": {
-   "location": "a quiet room implied by the story",
+   "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
-   "lighting": "soft key light from the window, gentle fill",
-   "weather": "clear",
-   "atmosphere": "calm and unhurried"
+   "lighting": "key light from the sun with gentle fill",
+   "weather": "cloudy",
+   "atmosphere": "snowy dawn mood - calm and unhurried"
   },
   "shot": {
    "camera": "dolly_in",
@@ -35,9 +37,9 @@
   },
   "build": {
    "palette": {
-    "sky": "#8fb8d8",
-    "ground": "#4a5d3a",
-    "accent": "#e8c04a"
+    "sky": "#c7d4e8",
+    "ground": "#e8edf2",
+    "accent": "#b3543f"
    },
    "duration": 5,
    "characters": [
@@ -91,6 +93,24 @@
      ],
      "scale": 1.0,
      "color": "#3a3a3a"
+    },
+    {
+     "type": "skyline",
+     "position": [
+      0,
+      -6.8
+     ],
+     "scale": 1.3,
+     "color": "#2a3442"
+    },
+    {
+     "type": "hills",
+     "position": [
+      5.0,
+      -6.5
+     ],
+     "scale": 1.5,
+     "color": "#5a6b58"
     }
    ],
    "camera": {
@@ -134,14 +154,16 @@
    }
   }
  },
- "prompt": "Fedex Truck Stolen Trading Cards Psa Theft Hits $963,000. One quiet moment that captures why it matters. The figure turns from the window as the light shifts - a decision made.",
+ "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Martin Shaw Recasts Four Years on a Welsh Mountainside. Trending: martin shaw. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, cloudy. snowy dawn, cool blue light, soft pink horizon glow, key light from the sun with gentle fill, snowy dawn mood - calm and unhurried. medium shot on the figure, window behind, camera dolly_in, 50mm equivalent. --ar 16:9",
+ "mj_motion": "Camera dolly_in, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
  "qa": {
-  "checks": 64,
-  "passed": 64,
+  "checks": 72,
+  "passed": 72,
   "failed": []
  },
  "status": "ready",
- "video": "videos/inkdrop_20261020201958.mp4",
+ "video": "videos/inkdrop_20261020211606.mp4",
+ "pack_zip": "scene-packs/inkdrop_20261020211606.zip",
  "vision": null,
  "critique": null
 }

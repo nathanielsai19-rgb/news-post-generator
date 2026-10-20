@@ -385,6 +385,36 @@ def prop_door(name, pos, s, color, pal):
     return [door, knob]
 
 
+def prop_skyline(name, pos, s, color, pal):
+    """Row of dark buildings with lit windows - background depth."""
+    rnd = random.Random(f"skyline{pos}")
+    m = material("prop_sky", "#2a3442", 0.85)
+    win = material("prop_win", "#ffd98a", 0.2, emit="#ffd98a", emit_strength=1.6)
+    objs = []
+    for i in range(7):
+        w = rnd.uniform(0.5, 1.1) * s
+        h = rnd.uniform(1.2, 2.8) * s
+        x = (i - 3) * 0.95 * s
+        objs.append(prim("cube", f"{name}_b{i}", (x, 0, h / 2), (w / 2, 0.5 * s, h / 2), m))
+        for k in range(max(2, int(h // (0.35 * s)))):
+            objs.append(prim("cube", f"{name}_w{i}_{k}",
+                             (x + rnd.uniform(-w * 0.3, w * 0.3), 0.5 * s + 0.01,
+                              rnd.uniform(0.25, 0.9) * h),
+                             (0.06 * s, 0.02 * s, 0.08 * s), win))
+    return objs
+
+
+def prop_hills(name, pos, s, color, pal):
+    """Soft blobby hills at the horizon - muted color from palette."""
+    rnd = random.Random(f"hills{pos}")
+    m = material("prop_hill", color, 0.95)
+    return [prim("ico", f"{name}_{i}",
+                 (rnd.uniform(-3.0, 3.0) * s, rnd.uniform(-0.5, 0.5) * s, 0.25 * s),
+                 (rnd.uniform(1.6, 2.6) * s, rnd.uniform(1.4, 2.2) * s,
+                  rnd.uniform(0.5, 0.9) * s), m)
+            for i in range(4)]
+
+
 CATALOG = {
     "table": prop_table, "chair": prop_chair, "window": prop_window,
     "door": prop_door, "tree": prop_tree, "bush": prop_bush,
@@ -393,6 +423,7 @@ CATALOG = {
     "car": prop_car, "boat": prop_boat, "sign": prop_sign,
     "plant": prop_plant, "stairs": prop_stairs, "tv": prop_tv,
     "sofa": prop_sofa, "bookshelf": prop_bookshelf,
+    "skyline": prop_skyline, "hills": prop_hills,
 }
 
 
@@ -411,11 +442,29 @@ def build_scene(spec):
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete(use_global=False)
 
-    # World from palette sky.
+    # World from palette sky (flat first, gradient added when nodes allow).
     world = bpy.data.worlds.new("InkDropWorld")
     world.use_nodes = True
-    bg = next(n for n in world.node_tree.nodes if n.type == "BACKGROUND")
-    bg.inputs["Color"].default_value = (*hex_rgb(pal.get("sky", "#8fb8d8")), 1.0)
+    tree = world.node_tree
+    bg = next(n for n in tree.nodes if n.type == "BACKGROUND")
+    sky_col = (*hex_rgb(pal.get("sky", "#8fb8d8")), 1.0)
+    bg.inputs["Color"].default_value = sky_col
+    try:  # vertical sky gradient: lighter near the horizon
+        coord = tree.nodes.new(type="ShaderNodeTexCoord")
+        mapping = tree.nodes.new(type="ShaderNodeMapping")
+        mapping.inputs["Rotation"].default_value = (0.0, 0.0, math.radians(90))
+        grad = tree.nodes.new(type="ShaderNodeTexGradient")
+        grad.gradient_type = "LINEAR"
+        ramp = tree.nodes.new(type="ShaderNodeValToRGB")
+        ramp.color_ramp.elements[0].color = (*sky_col[:3], 1.0)
+        horizon = tuple(min(1.0, c * 1.35) for c in sky_col[:3])
+        ramp.color_ramp.elements[1].color = (*horizon, 1.0)
+        tree.links.new(coord.outputs["Generated"], mapping.inputs["Vector"])
+        tree.links.new(mapping.outputs["Vector"], grad.inputs["Vector"])
+        tree.links.new(grad.outputs["Fac"], ramp.inputs["Fac"])
+        tree.links.new(ramp.outputs["Color"], bg.inputs["Color"])
+    except Exception:
+        pass  # flat sky is fine
     bpy.context.scene.world = world
 
     # Ground.
@@ -435,6 +484,13 @@ def build_scene(spec):
     sun_obj = bpy.data.objects.new("sun", sun_data)
     bpy.context.scene.collection.objects.link(sun_obj)
     sun_obj.rotation_euler = sun_dir.to_track_quat("-Z", "Y").to_euler()
+    try:  # softer, grounded shadows (EEVEE contact shadows + sun disk angle)
+        sun_data.angle = math.radians(8.0)
+        sun_data.use_contact_shadow = True
+        sun_data.contact_shadow_distance = 12.0
+        sun_data.contact_shadow_thickness = 0.35
+    except Exception:
+        pass
 
     fill_strength = clamp(float(lights.get("fill", 0.3) or 0.3), 0.0, 2.0)
     if fill_strength > 0:
@@ -544,6 +600,12 @@ def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     spec_path = args[0] if args else "scene_spec.json"
     out_path = args[1] if len(args) > 1 else "videos/inkdrop_out.mp4"
+    pack_dir = args[2] if len(args) > 2 else "scene-packs/latest"
+    # Absolute: after saving the .blend inside pack_dir, Blender would resolve
+    # relative render paths against the blend file's folder.
+    pack_dir = os.path.abspath(pack_dir)
+    refs_dir = os.path.join(pack_dir, "refs")
+    os.makedirs(refs_dir, exist_ok=True)
     with open(spec_path, encoding="utf-8") as fh:
         spec = json.load(fh)
     pack = spec.get("pack", spec)
@@ -563,6 +625,23 @@ def main():
     scene.frame_start = 1
     scene.frame_end = duration * FPS
     scene.render.film_transparent = False
+
+    # Prettier picture: AgX color, punchier look, gentle bloom on emissives.
+    try:
+        scene.view_settings.view_transform = "AgX"
+    except Exception:
+        pass
+    try:
+        scene.view_settings.look = "Medium High Contrast"
+    except Exception:
+        pass
+    try:
+        scene.eevee.use_bloom = True
+        scene.eevee.bloom_intensity = 0.05
+        scene.eevee.bloom_threshold = 0.8
+        scene.eevee.bloom_radius = 4.0
+    except Exception:
+        pass
 
     # Camera animation: position/aim/fov keyframed with sine easing.
     build = pack.get("build", {})
@@ -588,6 +667,38 @@ def main():
     set_easing(cam_obj, "location", "SINE")
     set_easing(tgt, "location", "SINE")
     set_easing(cam_data, "lens", "LINEAR")
+
+    # Scene pack: keep the .blend and render reference stills for other AIs.
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(pack_dir, "scene.blend"))
+
+    def ref_camera(name, pos, target, fov):
+        cdata = bpy.data.cameras.new(name)
+        cdata.sensor_fit = "VERTICAL"
+        cdata.lens_unit = "FOV"
+        cdata.lens = fov_to_lens(fov)
+        cam = bpy.data.objects.new(name, cdata)
+        bpy.context.scene.collection.objects.link(cam)
+        cam.location = pos
+        direction = Vector(target) - Vector(pos)
+        cam.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
+        return cam
+
+    bchars = pack.get("build", {}).get("characters", []) or []
+    close_pos = (bchars[0].get("position") or [0, 0])[:2] if bchars else [0, 0]
+    refs = [
+        ("ref_front", (4.2, -6.8, 2.2), (0, 0, 1.1), 52),
+        ("ref_high", (0.2, -9.8, 7.6), (0, 0, 0.3), 44),
+        ("ref_close", (close_pos[0] + 1.3, close_pos[1] - 2.4, 1.5),
+         (close_pos[0], close_pos[1], 1.2), 45),
+    ]
+    scene.frame_set(1)
+    scene.render.image_settings.file_format = "PNG"
+    for name, pos, target, fov in refs:
+        rcam = ref_camera(name, pos, target, fov)
+        scene.camera = rcam
+        scene.render.filepath = os.path.join(refs_dir, f"{name}.png")
+        bpy.ops.render.render(write_still=True)
+    scene.camera = cam_obj
 
     # Director's cut: frame 1 as keyframes/latest.png.
     scene.frame_set(1)

@@ -24,11 +24,12 @@ A mobile-first page that turns today's headlines into ready-to-paste text posts,
 | `scripts/fetch_news.py` | RSS collector that writes `news.json` |
 | `.github/workflows/refresh-news.yml` | runs the collector every 30 min and commits |
 | `news.json` | committed news snapshot the page reads |
-| `scripts/generate_video.py` | video pipeline: OpenAI writes the production pack + Blender scene spec, QA battery validates it, then the local Blender renders it (needs `ALLOW_VIDEO_GEN=true`) |
-| `scripts/build_render.py` | headless Blender script: builds the stylized 3D scene from `scene_spec.json`, animates the camera, renders PNG frames + `keyframes/latest.png` |
+| `scripts/generate_video.py` | video pipeline: OpenAI writes the production pack + Blender scene spec (rotating through 8 visual styles), QA battery validates it, local Blender renders it (needs `ALLOW_VIDEO_GEN=true`), then zips a **scene pack** |
+| `scripts/build_render.py` | headless Blender script: builds the stylized 3D scene from `scene_spec.json`, animates the camera, saves `scene.blend` + reference stills, renders PNG frames + `keyframes/latest.png` |
 | `scene_spec.json` | the latest Blender-ready scene spec (written by the writer) |
 | `production.json` | latest production pack + QA report (shown on the video tab) |
-| `video.json` | latest video status (shown on the video tab) |
+| `video.json` | latest video status + scene pack link (shown on the video tab) |
+| `scene-packs/*.zip` | scene packs: narration doc with Midjourney prompts, reference images, `scene.blend`, spec |
 | `.env` | local secrets (gitignored): `OPENAI_API_KEY`, optional `GROQ_API_KEY` / `DEEPSEEK_API_KEY` |
 
 ## Video pipeline (OpenAI writer + local Blender render)
@@ -42,10 +43,22 @@ ALLOW_VIDEO_GEN=true python scripts/generate_video.py   # full 1280x720 render
 ```
 
 Blender builds a stylized low-poly scene from the spec (characters, props
-from a fixed catalog, palette, sun/fill lights), keyframes a tracked camera
-move, renders a 24 fps PNG sequence, and the system ffmpeg muxes it to
-`videos/inkdrop_<ts>.mp4`. A Groq vision model then critiques real frames
-and writes a lesson into `video_history.json` for the next production.
+from a 22-type catalog incl. skyline/hills, palette, sun/fill lights),
+keyframes a tracked camera move, renders a 24 fps PNG sequence, and the
+system ffmpeg muxes it to `videos/inkdrop_<ts>.mp4`. A Groq vision model
+then critiques real frames and writes a lesson into `video_history.json`.
+
+**Scene packs** — every local render also zips a pack
+(`scene-packs/inkdrop_<ts>.zip`, downloadable via the **Scene pack** button
+on the site's video tab) containing:
+
+- `pack.md` — scene narration: script, characters, environment & shot, plus
+  a ready-to-paste **Midjourney text-to-video prompt** and an
+  image-to-video motion prompt
+- `opening_frame.png` + `refs/` — reference renders of the scene (front,
+  high angle, character close-up) to upload to image-based video AIs
+- `scene.blend` — the actual Blender scene, open in Blender 5.2
+- `scene_spec.json` — the machine-readable build spec
 
 ## Run the refresh manually
 
