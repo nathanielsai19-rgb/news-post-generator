@@ -1,15 +1,15 @@
 {
- "generated_at": "2026-10-19T21:09:55Z",
+ "generated_at": "2026-10-20T05:01:54Z",
  "story": {
-  "title": "Columbus shooting today: Deadly Ohio shooting was not mosque attack, but was nearby, police say",
-  "outlet": "6abc Philadelphia",
-  "link": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxPemF4M3EzamMySXRWZ3F4bW54RmFGWjAzdHhOeUc4X3NpVlBxR05NU2kxdzZEdmlxS1Y5QWotTzIwNHlwWXh2b052T3FMTzQwN1EzSjc3clB5VGxLLTV1VjZTOWQzeEtTUEZKVnRxa0lKdzg3UWtrOFRtbm1BMXNXZzgzYWpiMjcxcUhOSlF6OGRvMzJXNjZPQWdqVHJfQmFweGZ4eW1pVFYtWDDSAbABQVVfeXFMTXJGVHVyZzdKaERkdDFFMkNIWG5wbGtHR3JpOHJXWG5zSDYtWDc3VjF0RHliRVFaN2VfQWlDMDVWd19YcUQ5Y2hQRzUxMG1OaXRnT3Y3S216a3hpYlJjX3BhcWd2MVNqcUJ0alcySlI3MExVUUotUmJUbW1oVlFKRkloTzJfMzZQYWNlX1hTbjJQLXV4WERiODVaNmFseFMtZUZKZERrUVQ",
-  "trend": "mosque"
+  "title": "Four Exhibit-10 Players Head Celtics Starting Lineup in Final Tune-Up",
+  "outlet": "شبكة تواصل الإخبارية",
+  "link": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE5GZEp4Z1Q2U1VveXQ0OHFoZE41blJiT2RvQUhYVGJva3cwSFZBN3RIcHdTdU9FQWs0akU2cVpMNVJFSFJPTnJvU0xpdE9ubElmb2ZF?oc=5",
+  "trend": "celtics starting lineup"
  },
  "pack": {
-  "logline": "Columbus shooting today: Deadly Ohio shooting was not mosque attack, but was nearby, police say. — one moment that captures why it matters.",
-  "scene": "Columbus shooting today: Deadly Ohio shooting was not mosque attack, but was nearby, police say. Trending: mosque. The scene opens in the middle of the action.",
-  "beat": "End on an open loop: a look, a sound off-screen, a door opening - something that makes viewers rewatch Columbus shooting today: Deadly Ohio shooting was not mosque attack, but was nearby, police say. Trending: mosque",
+  "logline": "Four Exhibit-10 Players Head Celtics Starting Lineup in Final Tune-Up. — one moment that captures why it matters.",
+  "scene": "Four Exhibit-10 Players Head Celtics Starting Lineup in Final Tune-Up. Trending: celtics starting lineup. The scene opens in the middle of the action.",
+  "beat": "One clear dramatic beat: a decision, a discovery, a confrontation - never a static establishing shot Four Exhibit-10 Players Head Celtics Starting Lineup in Final Tune-Up. Trending: celtics starting lineup",
   "characters": [
    {
     "name": "The protagonist",
@@ -36,12 +36,12 @@
    "atmosphere": "dense and tactile - air, dust, reflections all physically plausible"
   },
   "shot": {
-   "camera": "jib_up",
+   "camera": "focus_shift",
    "framing": "medium close-up on the protagonist, environment in deep focus",
    "lens": "35mm anamorphic, shallow depth of field"
   }
  },
- "prompt": "Photorealistic. Scene: Columbus shooting today: Deadly Ohio shooting was not mosque attack, but was nearby, police say. Trending: mosque. The scene opens in the middle of the action. Characters: The protagonist: photorealistic: visible pores and skin texture, natural hair movement, believable proportions, real eye reflections everyday clothes with natural fabric folds, subtle wear and correct drape restrained tension - a tight jaw, a glance away, small tells The witness: photorealistic secondary character, distinct silhouette, age-appropriate detail weather-appropriate outfit, believable textures quiet alarm, trying not to react Environment: the real-world location implied by the story, the time of day the story suggests, natural cinematic light with physically plausible shadows and reflections, consistent with the story's setting and mood, dense and tactile - air, dust, reflections all physically plausible. Shot: jib_up, medium close-up on the protagonist, environment in deep focus, 35mm anamorphic, shallow depth of field. Beat: End on an open loop: a look, a sound off-screen, a door opening - something that makes viewers rewatch Columbus shooting today: Deadly Ohio shooting was not mosque attack, but was nearby, police say. Trending: mosque No text overlays, no watermarks, no logos.",
+ "prompt": "Photorealistic. Scene: Four Exhibit-10 Players Head Celtics Starting Lineup in Final Tune-Up. Trending: celtics starting lineup. The scene opens in the middle of the action. Characters: The protagonist: photorealistic: visible pores and skin texture, natural hair movement, believable proportions, real eye reflections everyday clothes with natural fabric folds, subtle wear and correct drape restrained tension - a tight jaw, a glance away, small tells The witness: photorealistic secondary character, distinct silhouette, age-appropriate detail weather-appropriate outfit, believable textures quiet alarm, trying not to react Environment: the real-world location implied by the story, the time of day the story suggests, natural cinematic light with physically plausible shadows and reflections, consistent with the story's setting and mood, dense and tactile - air, dust, reflections all physically plausible. Shot: focus_shift, medium close-up on the protagonist, environment in deep focus, 35mm anamorphic, shallow depth of field. Beat: One clear dramatic beat: a decision, a discovery, a confrontation - never a static establishing shot Four Exhibit-10 Players Head Celtics Starting Lineup in Final Tune-Up. Trending: celtics starting lineup No text overlays, no watermarks, no logos.",
  "qa": {
   "checks": 37,
   "passed": 36,
