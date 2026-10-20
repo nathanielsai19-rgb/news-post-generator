@@ -1,15 +1,15 @@
 {
- "generated_at": "2026-10-20T13:41:02Z",
+ "generated_at": "2026-10-20T20:02:42Z",
  "story": {
-  "title": "Ukraine's Zelenskyy says if Trump \"cannot rein Putin in,\" at least clear interceptor missile shipment",
-  "outlet": "CBS News",
-  "link": "https://news.google.com/rss/articles/CBMilwFBVV95cUxOV1RGYVlLSGU0ZFc2Rl93NG4xTEQxN2N5UWozbDRZVUpzelpkajJYaW9kbDJoSVZOUS1LWU9sODZvY295V2ExLUsxOG9WczNqWU9JNWFVQXNWeGppcWFTVldQYzVzQ0gzZHcwTWlrTm5WQXAzMDZZelVBRFNsdnZoNU1KTkVnUm43Z1dRM0RWRXk1bmFKWGdV?oc=5",
-  "trend": "ukraine"
+  "title": "Dwayne Johnson Transforms Into a 70-Year-Old Man in Shocking ‘Lizard Music’ Set Photos",
+  "outlet": "Variety",
+  "link": "https://news.google.com/rss/articles/CBMingFBVV95cUxOZ3gwemVKYnZocDZwam5PT24tYWdiMUNUZVFPN2dhV3N5MEs0Qm1FYlR0dzlYM24wU2t0RVIxR3pYSmZsQ0ZVOWpJRGhvWTJ4dlRMNmxwb1NoSkI5T0xxUEJ4VDdhbUpyaWM1VU51Ymd3TDBNTi1tbEtGbFF4MnNLakpMaFl1eVlnSXhnSlA3bkJoM1FBa08zWmRTM1Jjdw?oc=5",
+  "trend": "dwayne johnson elderly man role"
  },
  "pack": {
-  "logline": "Ukraine's Zelenskyy says if Trump \"cannot rein Putin in,\" at least clear interceptor missile shipment. — one moment that captures why it matters.",
-  "scene": "Ukraine's Zelenskyy says if Trump \"cannot rein Putin in,\" at least clear interceptor missile shipment. Trending: ukraine. The scene opens in the middle of the action.",
-  "beat": "One clear dramatic beat: a decision, a discovery, a confrontation - never a static establishing shot Ukraine's Zelenskyy says if Trump \"cannot rein Putin in,\" at least clear interceptor missile shipment. Trending: ukraine",
+  "logline": "Dwayne Johnson Transforms Into a 70-Year-Old Man in Shocking ‘Lizard Music’ Set Photos. — one moment that captures why it matters.",
+  "scene": "Dwayne Johnson Transforms Into a 70-Year-Old Man in Shocking ‘Lizard Music’ Set Photos. Trending: dwayne johnson elderly man role. The scene opens in the middle of the action.",
+  "beat": "End on an open loop: a look, a sound off-screen, a door opening - something that makes viewers rewatch Dwayne Johnson Transforms Into a 70-Year-Old Man in Shocking ‘Lizard Music’ Set Photos. Trending: dwayne johnson elderly man role",
   "characters": [
    {
     "name": "The protagonist",
@@ -36,12 +36,12 @@
    "atmosphere": "dense and tactile - air, dust, reflections all physically plausible"
   },
   "shot": {
-   "camera": "jib_up",
+   "camera": "focus_shift",
    "framing": "medium close-up on the protagonist, environment in deep focus",
    "lens": "35mm anamorphic, shallow depth of field"
   }
  },
- "prompt": "Photorealistic. Scene: Ukraine's Zelenskyy says if Trump \"cannot rein Putin in,\" at least clear interceptor missile shipment. Trending: ukraine. The scene opens in the middle of the action. Characters: The protagonist: photorealistic: visible pores and skin texture, natural hair movement, believable proportions, real eye reflections everyday clothes with natural fabric folds, subtle wear and correct drape restrained tension - a tight jaw, a glance away, small tells The witness: photorealistic secondary character, distinct silhouette, age-appropriate detail weather-appropriate outfit, believable textures quiet alarm, trying not to react Environment: the real-world location implied by the story, the time of day the story suggests, natural cinematic light with physically plausible shadows and reflections, consistent with the story's setting and mood, dense and tactile - air, dust, reflections all physically plausible. Shot: jib_up, medium close-up on the protagonist, environment in deep focus, 35mm anamorphic, shallow depth of field. Beat: One clear dramatic beat: a decision, a discovery, a confrontation - never a static establishing shot Ukraine's Zelenskyy says if Trump \"cannot rein Putin in,\" at least clear interceptor missile shipment. Trending: ukraine No text overlays, no watermarks, no logos.",
+ "prompt": "Photorealistic. Scene: Dwayne Johnson Transforms Into a 70-Year-Old Man in Shocking ‘Lizard Music’ Set Photos. Trending: dwayne johnson elderly man role. The scene opens in the middle of the action. Characters: The protagonist: photorealistic: visible pores and skin texture, natural hair movement, believable proportions, real eye reflections everyday clothes with natural fabric folds, subtle wear and correct drape restrained tension - a tight jaw, a glance away, small tells The witness: photorealistic secondary character, distinct silhouette, age-appropriate detail weather-appropriate outfit, believable textures quiet alarm, trying not to react Environment: the real-world location implied by the story, the time of day the story suggests, natural cinematic light with physically plausible shadows and reflections, consistent with the story's setting and mood, dense and tactile - air, dust, reflections all physically plausible. Shot: focus_shift, medium close-up on the protagonist, environment in deep focus, 35mm anamorphic, shallow depth of field. Beat: End on an open loop: a look, a sound off-screen, a door opening - something that makes viewers rewatch Dwayne Johnson Transforms Into a 70-Year-Old Man in Shocking ‘Lizard Music’ Set Photos. Trending: dwayne johnson elderly man role No text overlays, no watermarks, no logos.",
  "qa": {
   "checks": 37,
   "passed": 36,
