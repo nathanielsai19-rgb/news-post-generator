@@ -1,8 +1,8 @@
 {
  "pack": {
-  "style": "noon_clear",
-  "logline": "Tereza Valentova vs Lilli Tagger · Round 2 · WTA Osaka. One quiet moment that captures why it matters.",
-  "scene": "Tereza Valentova vs Lilli Tagger · Round 2 · WTA Osaka. Trending: lilli tagger. The scene opens on a figure mid-thought.",
+  "style": "rainy_night",
+  "logline": "England star Kildunne dropped for Canada rematch. One quiet moment that captures why it matters.",
+  "scene": "England star Kildunne dropped for Canada rematch. Ellie Kildunne has been dropped to the bench in the England Red Roses squad to face Canada on Friday, a week on from suffering defeat in Toronto which ended a 41-match unbeaten run.. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -18,19 +18,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "clear",
-   "atmosphere": "noon clear mood - calm and unhurried"
+   "weather": "rain",
+   "atmosphere": "rainy night mood - calm and unhurried"
   },
   "shot": {
-   "camera": "pan_right",
+   "camera": "orbit_left",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#8fb8d8",
-    "ground": "#4a5d3a",
-    "accent": "#e8c04a"
+    "sky": "#1b2735",
+    "ground": "#232830",
+    "accent": "#6fd3c7"
    },
    "duration": 5,
    "characters": [
@@ -105,7 +105,7 @@
     }
    ],
    "camera": {
-    "move": "pan_right",
+    "move": "orbit_left",
     "start": {
      "pos": [
       4.8,
@@ -146,10 +146,10 @@
   }
  },
  "story": {
-  "title": "Tereza Valentova vs Lilli Tagger · Round 2 · WTA Osaka",
-  "outlet": "Tennis.com",
-  "link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxQb01ETGI1TlVmNTh1Y2piQldIdzA2RC1jbVFTbjN3NjBDZVQtT04wNHZPVjh2V3lkMjN0Zk9DNnJROUxSQ0ZydzlyLURRWlN2QXBxZmFRbjlid1BmX3VvVXlzeWl1UWh2VGNvLUNwMkQzRDlWV1A5U2s4MVFySGRja3pxM1gzR212SVhaM25GQ0hkQW4ySnFhMG1VN2swUEV3S3ItNkNybw?oc=5",
-  "trend": "lilli tagger"
+  "title": "England star Kildunne dropped for Canada rematch",
+  "outlet": "Sky Sports",
+  "link": "https://www.skysports.com/rugby-union/news/12040/13601856/englands-red-roses-ellie-kildunne-benched-as-part-of-four-changes-to-starting-xv-in-search-for-victory-in-canada-rematch",
+  "trend": null
  },
- "generated_at": "2026-10-21T05:01:41Z"
+ "generated_at": "2026-10-21T13:57:22Z"
 }
