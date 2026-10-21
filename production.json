@@ -1,17 +1,17 @@
 {
- "generated_at": "2026-10-20T23:14:57Z",
+ "generated_at": "2026-10-21T05:01:41Z",
  "writer": "template",
- "style": "sunset",
+ "style": "noon_clear",
  "story": {
-  "title": "Hilary Duff – Spark Arena: October 20, 2026 (13th Floor Concert Review) - The 13th Floor",
-  "outlet": "The 13th Floor",
-  "link": "https://news.google.com/rss/articles/CBMilAFBVV95cUxPYlVCb1pwS0lzRUdZOWhrRDVpZVZ5N3EycFFZRS1TNkxlZkhPb2hEdkVqZkZnSjJobEk2V05xaUFUMVNRM3k0dUxSSFZoeWVTYlgyNWhyMWF2LUQyaW92S2ZacnRWRzUzOFZtdC1SaEpOZVM5TGRNZWU2XzlrNWFUQmo1WVhLTFlTUHBlTjZsNjJ0LTBR?oc=5",
-  "trend": "hilary duff"
+  "title": "Tereza Valentova vs Lilli Tagger · Round 2 · WTA Osaka",
+  "outlet": "Tennis.com",
+  "link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxQb01ETGI1TlVmNTh1Y2piQldIdzA2RC1jbVFTbjN3NjBDZVQtT04wNHZPVjh2V3lkMjN0Zk9DNnJROUxSQ0ZydzlyLURRWlN2QXBxZmFRbjlid1BmX3VvVXlzeWl1UWh2VGNvLUNwMkQzRDlWV1A5U2s4MVFySGRja3pxM1gzR212SVhaM25GQ0hkQW4ySnFhMG1VN2swUEV3S3ItNkNybw?oc=5",
+  "trend": "lilli tagger"
  },
  "pack": {
-  "style": "sunset",
-  "logline": "Hilary Duff – Spark Arena: October 20, 2026 (13th Floor Concert Review) - The 13th Floor. One quiet moment that captures why it matters.",
-  "scene": "Hilary Duff – Spark Arena: October 20, 2026 (13th Floor Concert Review) - The 13th Floor. Trending: hilary duff. The scene opens on a figure mid-thought.",
+  "style": "noon_clear",
+  "logline": "Tereza Valentova vs Lilli Tagger · Round 2 · WTA Osaka. One quiet moment that captures why it matters.",
+  "scene": "Tereza Valentova vs Lilli Tagger · Round 2 · WTA Osaka. Trending: lilli tagger. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -27,8 +27,8 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "sunset",
-   "atmosphere": "sunset mood - calm and unhurried"
+   "weather": "clear",
+   "atmosphere": "noon clear mood - calm and unhurried"
   },
   "shot": {
    "camera": "pan_right",
@@ -37,9 +37,9 @@
   },
   "build": {
    "palette": {
-    "sky": "#d98d5f",
-    "ground": "#3f3a52",
-    "accent": "#ffd166"
+    "sky": "#8fb8d8",
+    "ground": "#4a5d3a",
+    "accent": "#e8c04a"
    },
    "duration": 5,
    "characters": [
@@ -154,7 +154,7 @@
    }
   }
  },
- "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Hilary Duff – Spark Arena: October 20, 2026 (13th Floor Concert Review) - The 13th Floor. Trending: hilary duff. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, sunset. golden hour, warm rim light, long shadows, cinematic haze, key light from the sun with gentle fill, sunset mood - calm and unhurried. medium shot on the figure, window behind, camera pan_right, 50mm equivalent. --ar 16:9",
+ "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Tereza Valentova vs Lilli Tagger · Round 2 · WTA Osaka. Trending: lilli tagger. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, clear. bright midday, crisp shadows, saturated natural colors, key light from the sun with gentle fill, noon clear mood - calm and unhurried. medium shot on the figure, window behind, camera pan_right, 50mm equivalent. --ar 16:9",
  "mj_motion": "Camera pan_right, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
  "qa": {
   "checks": 72,
