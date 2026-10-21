@@ -1,8 +1,8 @@
 {
  "pack": {
-  "style": "neon_city",
-  "logline": "📸 Tonight's bizarre moment: Harry Kane takes a goal kick 😳. One quiet moment that captures why it matters.",
-  "scene": "📸 Tonight's bizarre moment: Harry Kane takes a goal kick 😳. Trending: harry kane. The scene opens on a figure mid-thought.",
+  "style": "sunset",
+  "logline": "Chicago Bulls vs Toronto Raptors Oct 21, 2026 Game Summary. One quiet moment that captures why it matters.",
+  "scene": "Chicago Bulls vs Toronto Raptors Oct 21, 2026 Game Summary. Trending: bulls vs raptors. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -18,19 +18,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "night",
-   "atmosphere": "neon city mood - calm and unhurried"
+   "weather": "sunset",
+   "atmosphere": "sunset mood - calm and unhurried"
   },
   "shot": {
-   "camera": "pan_right",
+   "camera": "orbit_left",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#1a1433",
-    "ground": "#241d3d",
-    "accent": "#ff4d9d"
+    "sky": "#d98d5f",
+    "ground": "#3f3a52",
+    "accent": "#ffd166"
    },
    "duration": 5,
    "characters": [
@@ -105,7 +105,7 @@
     }
    ],
    "camera": {
-    "move": "pan_right",
+    "move": "orbit_left",
     "start": {
      "pos": [
       4.8,
@@ -146,10 +146,10 @@
   }
  },
  "story": {
-  "title": "📸 Tonight's bizarre moment: Harry Kane takes a goal kick 😳",
-  "outlet": "Yahoo Sports",
-  "link": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxNX1RycnJjLURvRUdZUEpWcUI3Q25ZT0w4VHhtUk12QWxOZ0lVbWR4ZDZQQ1prV2gtS1c1b3dXZGZJRTJIMUo4bVVQTVp2V3VyazhITk44eTBGSVNmOEM1dV9IT1dCMm5TUUF2RUNIbTIxVWF4ZEo3YjFJam1UTXdScWFtYkFpdXFWMmN3?oc=5",
-  "trend": "harry kane"
+  "title": "Chicago Bulls vs Toronto Raptors Oct 21, 2026 Game Summary",
+  "outlet": "NBA.com",
+  "link": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE0zR2ZZQ3R4dU9JX3ZYb1BHS2JmLW4zeEI0ZkhxcDdJdTJxOTkxcld5ZlJFNC1NT3VQSUdOQ2EzcHB2OGFBSmg4Z1BYTXRacmFZOG9OMl8wc2J5QQ?oc=5",
+  "trend": "bulls vs raptors"
  },
- "generated_at": "2026-10-21T20:15:36Z"
+ "generated_at": "2026-10-21T23:28:25Z"
 }
