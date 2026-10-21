@@ -1,8 +1,8 @@
 {
  "pack": {
-  "style": "rainy_night",
-  "logline": "England star Kildunne dropped for Canada rematch. One quiet moment that captures why it matters.",
-  "scene": "England star Kildunne dropped for Canada rematch. Ellie Kildunne has been dropped to the bench in the England Red Roses squad to face Canada on Friday, a week on from suffering defeat in Toronto which ended a 41-match unbeaten run.. The scene opens on a figure mid-thought.",
+  "style": "neon_city",
+  "logline": "📸 Tonight's bizarre moment: Harry Kane takes a goal kick 😳. One quiet moment that captures why it matters.",
+  "scene": "📸 Tonight's bizarre moment: Harry Kane takes a goal kick 😳. Trending: harry kane. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -18,19 +18,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "rain",
-   "atmosphere": "rainy night mood - calm and unhurried"
+   "weather": "night",
+   "atmosphere": "neon city mood - calm and unhurried"
   },
   "shot": {
-   "camera": "orbit_left",
+   "camera": "pan_right",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#1b2735",
-    "ground": "#232830",
-    "accent": "#6fd3c7"
+    "sky": "#1a1433",
+    "ground": "#241d3d",
+    "accent": "#ff4d9d"
    },
    "duration": 5,
    "characters": [
@@ -105,7 +105,7 @@
     }
    ],
    "camera": {
-    "move": "orbit_left",
+    "move": "pan_right",
     "start": {
      "pos": [
       4.8,
@@ -146,10 +146,10 @@
   }
  },
  "story": {
-  "title": "England star Kildunne dropped for Canada rematch",
-  "outlet": "Sky Sports",
-  "link": "https://www.skysports.com/rugby-union/news/12040/13601856/englands-red-roses-ellie-kildunne-benched-as-part-of-four-changes-to-starting-xv-in-search-for-victory-in-canada-rematch",
-  "trend": null
+  "title": "📸 Tonight's bizarre moment: Harry Kane takes a goal kick 😳",
+  "outlet": "Yahoo Sports",
+  "link": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxNX1RycnJjLURvRUdZUEpWcUI3Q25ZT0w4VHhtUk12QWxOZ0lVbWR4ZDZQQ1prV2gtS1c1b3dXZGZJRTJIMUo4bVVQTVp2V3VyazhITk44eTBGSVNmOEM1dV9IT1dCMm5TUUF2RUNIbTIxVWF4ZEo3YjFJam1UTXdScWFtYkFpdXFWMmN3?oc=5",
+  "trend": "harry kane"
  },
- "generated_at": "2026-10-21T13:57:22Z"
+ "generated_at": "2026-10-21T20:15:36Z"
 }
