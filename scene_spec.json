@@ -1,8 +1,8 @@
 {
  "pack": {
-  "style": "sunset",
-  "logline": "Anthony Edwards scores 45 as Timberwolves spoil Giannis Antetokounmpo’s Heat debut. One quiet moment that captures why it matters.",
-  "scene": "Anthony Edwards scores 45 as Timberwolves spoil Giannis Antetokounmpo’s Heat debut. Trending: nba scores. The scene opens on a figure mid-thought.",
+  "style": "desert_noon",
+  "logline": "Tom Skerritt, actor known for 'Top Gun,' 'River Runs Through It' and 'Picket Fences,' dies at 93 - ABC7 Los Angeles. One quiet moment that captures why it matters.",
+  "scene": "Tom Skerritt, actor known for 'Top Gun,' 'River Runs Through It' and 'Picket Fences,' dies at 93 - ABC7 Los Angeles. Trending: tom skerritt. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -18,8 +18,8 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "sunset",
-   "atmosphere": "sunset mood - calm and unhurried"
+   "weather": "clear",
+   "atmosphere": "desert noon mood - calm and unhurried"
   },
   "shot": {
    "camera": "orbit_left",
@@ -28,9 +28,9 @@
   },
   "build": {
    "palette": {
-    "sky": "#d98d5f",
-    "ground": "#3f3a52",
-    "accent": "#ffd166"
+    "sky": "#9fd0e8",
+    "ground": "#d9b382",
+    "accent": "#e2574c"
    },
    "duration": 5,
    "characters": [
@@ -146,10 +146,10 @@
   }
  },
  "story": {
-  "title": "Anthony Edwards scores 45 as Timberwolves spoil Giannis Antetokounmpo’s Heat debut",
-  "outlet": "The Guardian",
-  "link": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxQclpIOUxEMDhCSEw4YzN5QzRBMG16ejRFbWlHS2lfNEhmejdMdU51X0V0ck53N3FhUUd3bFFDU29ldkdHODJubEh5VUFVUk1WTTRfQWlUTml5MWlrZ2JEaXk0cG5LeXdodzF1aFRtLUFVN2QyRy1EcmpDVXAzRF8wUURoNDgxamNzRDVWRkUtQlhyVFRmSEZ2YzZaMzZKTUY2YW9JbzR1eTRMdV9wNnN3aDFwdGFMZElLanNWTjZlLU8?oc=5",
-  "trend": "nba scores"
+  "title": "Tom Skerritt, actor known for 'Top Gun,' 'River Runs Through It' and 'Picket Fences,' dies at 93 - ABC7 Los Angeles",
+  "outlet": "ABC7 Los Angeles",
+  "link": "https://news.google.com/rss/articles/CBMingFBVV95cUxNX1BLZnpLQ2JtR3NKWVBwTkRjdXN2blBOWlppd3JTdWNMSFpabjNoWXA3ZzNmOUFHZTZ2bGxWck5nVFNSWnYwZktnb1h6ZmY2cVIwZDkwWHFXZ25MRTdoWWFldlEzeFpobzZ4cm5oX3NQWmRtaTByZWRkdkVKT1NIRWpldEVHNzBNa21aTWtHS2tKODN5SVdzcGdvR1d5Z9IBowFBVV95cUxQeFVUTGMydDAxMTZMMEhXV3J0ZHVJYmJ4eHJLZTdUT1hCdVNmRDJlaE5CQkdQbnZ0cndLU1VCblQ2bWl2OW1ZMjlZU05xeUZKSVZNQVVBWGlxQ2ZGOGlpakk5QmxJcHZnUU1wTXBVelJ1STlWcjBoWlR4cnYyMXk3dXIzYjh2Q0xXelcxQjNtRUxtY1VYM2Fpc1FXbmFZc1VsMjlV?oc=5",
+  "trend": "tom skerritt"
  },
- "generated_at": "2026-10-22T05:04:08Z"
+ "generated_at": "2026-10-22T20:13:13Z"
 }
