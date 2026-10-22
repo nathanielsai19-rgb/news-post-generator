@@ -113,6 +113,10 @@
   .prompt-details { margin-top: 12px; font-size: 13.5px; color: var(--dim); }
   .prompt-details summary { cursor: pointer; color: var(--accent); font-weight: 650; }
   .prompt-details div { margin-top: 6px; white-space: pre-wrap; line-height: 1.6; }
+  .gif-box { margin-top: 14px; }
+  .gif-img { width: 100%; max-height: 300px; object-fit: contain; border-radius: 12px; background: #000; display: block; }
+  .gif-actions { display: flex; gap: 10px; margin-top: 10px; }
+  .gif-actions .btn { flex: none; padding: 0 14px; height: 38px; font-size: 13.5px; }
   .fact-body { font-size: 15.5px; line-height: 1.6; }
   .fact-source { margin-top: 12px; color: var(--dim); font-size: 12.5px; }
   .meta-row { margin-top: 12px; display: flex; align-items: center; gap: 8px; color: var(--dim); font-size: 12.5px; }
@@ -156,6 +160,7 @@
   .sheet h2 { font-size: 17px; font-weight: 750; margin-bottom: 4px; }
   .sheet p { color: var(--dim); font-size: 13.5px; line-height: 1.6; margin-bottom: 16px; }
   .sheet p a { color: var(--accent); }
+  .field-hint a { color: var(--accent); }
   .sheet label { display: block; font-size: 12.5px; font-weight: 650; color: var(--dim); margin-bottom: 7px; text-transform: uppercase; letter-spacing: 1.2px; }
   .sheet input {
     width: 100%; height: 50px; border-radius: 14px; border: 1px solid var(--line);
@@ -216,6 +221,14 @@
     <div class="card-label">Your post</div>
     <div class="post-hook" id="postHook"></div>
     <div class="post-body" id="postBody"></div>
+    <div class="gif-box hidden" id="gifBox">
+      <div class="mini-label">Matching GIF</div>
+      <img id="gifImg" class="gif-img" alt="Matching GIF" loading="lazy">
+      <div class="gif-actions">
+        <button class="btn ghost" id="gifCopyBtn">Copy GIF link</button>
+        <button class="btn ghost" id="gifNewBtn">Another GIF</button>
+      </div>
+    </div>
     <div class="post-credit" id="postCredit">
       <div class="mini-label">Credit — paste as reply</div>
       <div id="postCreditText"></div>
@@ -283,7 +296,7 @@
 <div class="backdrop" id="backdrop"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Settings">
   <h2>Settings</h2>
-  <p>Optional: add your <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq</a> and <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek</a> keys for AI-written posts. AI posts come in three beats — a scroll-stopping hook, the story in plain words, and a closer that invites replies. <b>Team-up</b>: Groq drafts, DeepSeek improves. <b>Consensus</b>: both act as editors and must agree the post will actually get read — otherwise they swap notes and rewrite until they do. Without keys, InkDrop uses its own writing style. Keys never leave this device.</p>
+  <p>Optional: add your <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq</a> and <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek</a> keys for AI-written posts, and a free <a href="https://developers.giphy.com/" target="_blank" rel="noopener">Giphy</a> key so every post gets a matching GIF. AI posts come in three beats — a scroll-stopping hook, the story in plain words, and a closer that invites replies. <b>Team-up</b>: Groq drafts, DeepSeek improves. <b>Consensus</b>: both act as editors and must agree the post will actually get read — otherwise they swap notes and rewrite until they do. Without keys, InkDrop uses its own writing style. Keys never leave this device.</p>
   <div class="field">
     <label for="keyInput">Groq API key</label>
     <input type="password" id="keyInput" placeholder="gsk_…" autocomplete="off" spellcheck="false">
@@ -296,6 +309,11 @@
     <label for="dsModelInput">DeepSeek model (optional)</label>
     <input type="text" id="dsModelInput" placeholder="deepseek-flash" autocomplete="off" spellcheck="false">
     <div class="field-hint">deepseek-flash (fast, cheap) · deepseek-v4-pro (strongest)</div>
+  </div>
+  <div class="field">
+    <label for="giphyKeyInput">Giphy API key (free)</label>
+    <input type="password" id="giphyKeyInput" placeholder="beta key from developers.giphy.com" autocomplete="off" spellcheck="false">
+    <div class="field-hint">Adds a matching GIF to every post — <a href="https://developers.giphy.com/" target="_blank" rel="noopener">get one free</a></div>
   </div>
   <div class="field">
     <label for="voiceInput">Your best posts — voice reference (optional)</label>
@@ -351,10 +369,11 @@
   function keyStatusText() {
     const g = !!load("inkdrop_groq_key");
     const d = !!load("inkdrop_deepseek_key");
+    const giphy = !!load("inkdrop_giphy_key");
     const mode = MODES[load("inkdrop_mode") || "auto"] || "Auto";
     const el = $("keyStatus");
-    el.textContent = "Groq: " + (g ? "on" : "off") + " · DeepSeek: " + (d ? "on" : "off") + " · mode: " + mode;
-    el.className = "status" + (g || d ? " on" : "");
+    el.textContent = "Groq: " + (g ? "on" : "off") + " · DeepSeek: " + (d ? "on" : "off") + " · Giphy: " + (giphy ? "on" : "off") + " · mode: " + mode;
+    el.className = "status" + (g || d || giphy ? " on" : "");
   }
   function paintModes() {
     const active = load("inkdrop_mode") || "auto";
@@ -375,6 +394,7 @@
     $("keyInput").value = load("inkdrop_groq_key") || "";
     $("dsKeyInput").value = load("inkdrop_deepseek_key") || "";
     $("dsModelInput").value = load("inkdrop_ds_model") || "";
+    $("giphyKeyInput").value = load("inkdrop_giphy_key") || "";
     $("voiceInput").value = load("inkdrop_voice") || "";
     paintModes();
     $("backdrop").classList.add("open"); $("sheet").classList.add("open");
@@ -387,6 +407,7 @@
     save("inkdrop_groq_key", $("keyInput").value.trim());
     save("inkdrop_deepseek_key", $("dsKeyInput").value.trim());
     save("inkdrop_ds_model", $("dsModelInput").value.trim());
+    save("inkdrop_giphy_key", $("giphyKeyInput").value.trim());
     save("inkdrop_voice", $("voiceInput").value.trim());
     toast("Saved on this device");
     keyStatusText(); closeSheet();
@@ -394,7 +415,8 @@
   $("clearKey").addEventListener("click", () => {
     save("inkdrop_groq_key", "");
     save("inkdrop_deepseek_key", "");
-    $("keyInput").value = ""; $("dsKeyInput").value = "";
+    save("inkdrop_giphy_key", "");
+    $("keyInput").value = ""; $("dsKeyInput").value = ""; $("giphyKeyInput").value = "";
     keyStatusText(); toast("Keys removed — built-in styles on");
   });
   keyStatusText();
@@ -912,6 +934,75 @@
     return line + "\n" + (story.link || "");
   }
 
+  /* ---------- matching GIF (Giphy) ---------- */
+  const GIPHY_URL = "https://api.giphy.com/v1/gifs/search";
+  const giphyKey = () => (load("inkdrop_giphy_key") || "").trim();
+  let lastGif = null;      // gif currently shown
+  let lastGifStory = null; // story it belongs to, for "Another GIF"
+  let gifBatch = null;     // fetched results for the current post
+  let gifCursor = 0;
+
+  const GIF_STOPWORDS = new Set(("a an the and or but for with from that this these those says said after over " +
+    "under into onto about their have has had was were will would not out off what who why how when where its " +
+    "his her new today live via more than now just can could should get got been being on at in of to is are as " +
+    "by if it he she they we you your our").split(" "));
+
+  // the trend term is what people are already searching, so it's the best match;
+  // otherwise take the headline's most significant words
+  function gifQuery(story) {
+    if (story.trend) return story.trend;
+    const words = (story.title || "").toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/)
+      .filter((w) => w.length > 2 && !GIF_STOPWORDS.has(w)).slice(0, 4);
+    return words.join(" ");
+  }
+
+  async function giphySearch(q) {
+    const key = giphyKey();
+    if (!key || !q) return null;
+    const url = GIPHY_URL + "?api_key=" + encodeURIComponent(key) + "&q=" + encodeURIComponent(q) +
+      "&limit=20&offset=0&rating=pg&lang=en";
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const data = await res.json();
+      const gifs = (data.data || []).filter((g) => g.images && g.images.original && g.images.fixed_width);
+      return gifs.length ? gifs : null;
+    } catch (e) { console.warn("giphy:", e); return null; }
+  }
+
+  // no GIF on serious stories — a reaction GIF next to a death or crime story is worse than none
+  const SERIOUS_RE = /\bwar\b|sexual|rape|\babuse\b|assault|\bkilled\b|\bdies\b|\bdied\b|\bdead\b|\bdeath\b|murder|suicide|shoot|\bshot\b|fatal|victim|\bfuneral\b|\bcrash\b|disaster|\bbomb\b|massacre/i;
+
+  // progressively shorten the query until something matches; a wrong GIF is
+  // worse than no GIF, so bail out if even the short form misses
+  async function fetchGif(story) {
+    if (SERIOUS_RE.test(((story.title || "") + " " + (story.summary || "")))) return null;
+    const base = gifQuery(story).split(/\s+/).filter(Boolean);
+    for (let n = Math.min(base.length, 4); n >= 1; n--) {
+      const q = base.slice(0, n).join(" ");
+      if (n === 1 && q.length < 4) break; // a lone 2-3 letter word matches junk
+      const gifs = await giphySearch(q);
+      if (gifs) { gifBatch = { query: q, gifs }; gifCursor = 0; return pickGif(); }
+    }
+    gifBatch = null;
+    return null;
+  }
+
+  function pickGif() {
+    if (!gifBatch || !gifBatch.gifs.length) return null;
+    const pool = gifBatch.gifs.slice(0, 10); // stick to the most relevant results
+    return pool[gifCursor++ % pool.length];
+  }
+
+  function renderGif(gif, story) {
+    if (story) lastGifStory = story;
+    if (!gif) { lastGif = null; $("gifBox").classList.add("hidden"); return; }
+    lastGif = gif;
+    $("gifImg").src = gif.images.fixed_width.url;
+    $("gifImg").alt = gif.title || "Matching GIF";
+    $("gifBox").classList.remove("hidden");
+  }
+
   /* ---------- true facts ---------- */
   // Last-resort facts: widely documented, verifiable statements.
   const SAFE_FACTS = [
@@ -1052,13 +1143,16 @@
       setStage("Writing your post…");
       const result = await writePost(story, setStage);
 
-      setStage("Finding a true fact…");
-      const fact = await fetchFact();
+      setStage("Adding a fact and a GIF…");
+      const [fact, gif] = await Promise.all([fetchFact(), fetchGif(story)]);
 
       renderPost(story, result.text, result.votes, picked.fromLastHour);
       renderFact(fact);
+      renderGif(gif, story);
       if (result.mode === "template") {
         toast("Built-in style — no AI key on this device. Add one in ⚙ for hook + closer posts");
+      } else if (!gif && !giphyKey()) {
+        toast("No Giphy key — matching GIFs are off. Grab a free key in ⚙");
       } else if (!picked.fromLastHour) {
         toast(activeCat === "trending"
           ? "Variety pick — the freshest trending stories are all sports right now"
@@ -1113,6 +1207,18 @@
       try { await navigator.share({ text: lastPost.body }); return; } catch (e) { /* cancelled */ }
     }
     (await copyText(lastPost.body)) ? toast("Share not supported here — copied instead") : toast("Copy failed", true);
+  });
+
+  $("gifCopyBtn").addEventListener("click", async () => {
+    if (!lastGif) return;
+    // paste the .gif URL into the X composer and it attaches the GIF
+    (await copyText(lastGif.images.original.url)) ? toast("GIF link copied — paste it in the X composer") : toast("Copy failed", true);
+  });
+
+  $("gifNewBtn").addEventListener("click", async () => {
+    if (!lastGifStory) return;
+    const gif = pickGif() || await fetchGif(lastGifStory);
+    renderGif(gif, lastGifStory);
   });
 
   /* ---------- events ---------- */
