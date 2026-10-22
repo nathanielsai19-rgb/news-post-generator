@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0d0e12">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="description" content="InkDrop — tap once, get a ready-to-post text from today's headlines with source credits, plus a true random fact.">
+<meta name="description" content="InkDrop — tap once, get a scroll-stopping post from today's hottest headlines: hook, story, closer.">
 <title>InkDrop</title>
 <style>
   :root {
@@ -210,7 +210,7 @@
     <svg viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11L9.5 22 19 10h-6.5L13 2z"/></svg>
     <span id="genLabel">Generate a post</span>
   </button>
-  <div class="hint" id="hint">Prefers stories from the last hour</div>
+  <div class="hint" id="hint">Trending first · prefers stories from the last hour</div>
 
   <section class="card hidden" id="postCard" aria-live="polite">
     <div class="card-label">Your post</div>
@@ -282,7 +282,7 @@
 <div class="backdrop" id="backdrop"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Settings">
   <h2>Settings</h2>
-  <p>Optional: add your <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq</a> and <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek</a> keys for AI-written posts. <b>Team-up</b>: Groq drafts, DeepSeek improves. <b>Consensus</b>: both act as editors and must agree the post is one clean factual news sentence — otherwise they swap notes and rewrite until they do. Without keys, InkDrop uses its own writing style. Keys never leave this device.</p>
+  <p>Optional: add your <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq</a> and <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek</a> keys for AI-written posts. AI posts come in three beats — a scroll-stopping hook, the story in plain words, and a closer that invites replies. <b>Team-up</b>: Groq drafts, DeepSeek improves. <b>Consensus</b>: both act as editors and must agree the post will actually get read — otherwise they swap notes and rewrite until they do. Without keys, InkDrop uses its own writing style. Keys never leave this device.</p>
   <div class="field">
     <label for="keyInput">Groq API key</label>
     <input type="password" id="keyInput" placeholder="gsk_…" autocomplete="off" spellcheck="false">
@@ -326,7 +326,7 @@
     trending: { label: "Trending" },
   };
   let news = { updated: null, items: [] };
-  let activeCat = "mixed";
+  let activeCat = "trending";
   let busy = false;
   let lastPost = null;
 
@@ -511,12 +511,15 @@
   /* ---------- importance weighting: big stories over filler ---------- */
   const IMPORTANT_RE = /trump|musk|putin|zelensky|biden|president|minister|election|\bwar\b|attack|missile|\bstrike\b|\bkilled\b|\bdead\b|\bdies\b|\bdied\b|death|\brecord\b|billion|million|\bdeal\b|resign|fired|arrest|charged|convicted|\bwins?\b|champion|\bfinal\b|super bowl|world cup|playoff|nvidia|apple|microsoft|google|openai|\bai\b|bitcoin|crypto|nasa|spacex|tesla|ronaldo|messi|netflix|disney|taylor swift|premiere|released\b/i;
   const FILLER_RE = /forecast|weather|first alert|traffic|commute|lottery|jackpot|horoscope|schedule|live blog|what to know|what we know|explainer|weekend outlook|sunshine|temperatures/i;
+  // shock value: the details readers repeat to other people
+  const ENTERTAIN_RE = /\b(first|youngest|oldest|largest|biggest|rarest)\b|\bshock(ed|ing|s)?\b|\bstunn(ed|ing)\b|\boutrage\b|\bbacklash\b|\brefus(ed|es|ing)\b|\bbann(ed|ing)\b|\bcheat(ed|ing)?\b|\bstole\b|\bstolen\b|\bscam\b|\bwalked off\b|\bquit on the spot\b|\bsmashed\b|\bshattered\b|\bbillion\b|\bmillion\b|\btrillion\b|\bbreakthrough\b|\breveal(s|ed|ing)?\b|\bleaked\b|\bhack(ed|ing)?\b|\bbizarre\b/i;
   function storyScore(i) {
     const text = ((i.trend || "") + " " + (i.title || "") + " " + (i.summary || "")).toLowerCase();
     let s = 0;
-    if (i.trend) s += 3;                 // people are already searching this
-    if (IMPORTANT_RE.test(text)) s += 2; // big names, big events
-    if (FILLER_RE.test(text)) s -= 3;    // routine weather/traffic/housekeeping
+    if (i.trend) s += 3;                  // people are already searching this
+    if (IMPORTANT_RE.test(text)) s += 2;  // big names, big events
+    if (ENTERTAIN_RE.test(text)) s += 2;  // wild numbers, firsts, shock — worth a read
+    if (FILLER_RE.test(text)) s -= 3;     // routine weather/traffic/housekeeping
     return s;
   }
 
@@ -544,31 +547,43 @@
 
   /* ---------- AI writing (Groq + DeepSeek, optional) ---------- */
   const SYSTEM_PROMPT =
-    "You write one-line news briefings for people scrolling a social feed. A reader who knows nothing about the topic " +
-    "must be able to read the sentence once, instantly understand what happened and who was involved, and move on. " +
-    "From the item, pick out: WHO (person, team or company — with a plain-word description of what they are when the " +
-    "item says), WHAT HAPPENED (the one thing), and the context the item gives that makes it land (like \"nearly two " +
-    "years after a devastating knee injury\"). Then write exactly ONE declarative sentence in plain spoken English. " +
-    "Translate headlinese into normal speech: \"Texans WR Tank Dell to return vs. Giants\" becomes \"Texans receiver " +
-    "Tank Dell returns to play the Giants\"; \"heads to IR\" becomes \"goes on injured reserve\". Expand every " +
-    "abbreviation the item makes clear, use normal articles and tense, and never copy the headline's formatting, feed " +
-    "labels or punctuation quirks. Use simple everyday words — sports, business or tech terms must still read clearly " +
-    "to someone outside that world. If the item names a trending topic, the sentence must be self-explanatory: a " +
-    "reader who has never heard of the topic still understands who did what, and the topic appears naturally in the " +
-    "sentence. Rules: one sentence ending with a period; plain facts from the item only — no opinion, no commentary, " +
-    "no questions, no hooks, no bait; never invent details, numbers, quotes or names beyond the item; no emojis, no " +
-    "hashtags, no clichés. If a voice reference is given, borrow only its wording and rhythm — never its opinions. " +
-    "Return only that one sentence.";
+    "You write short news posts for a social feed — posts people actually stop to read. You get one news item. " +
+    "Your job: someone who knows nothing about the topic should want to read the whole post, understand the story " +
+    "in one read, and come away with something worth repeating to a friend.\n\n" +
+    "Write three parts separated by empty lines — do not label them, just write them:\n\n" +
+    "1. HOOK: one short line, 3 to 9 words. The single most striking thing in the item — the wildest number, the " +
+    "sharpest contrast, or the detail that makes a scroller stop. Factual, from the item only. Never clickbait " +
+    "phrasing and never a label like BREAKING.\n\n" +
+    "2. BODY: one to three short sentences in plain spoken English. Who or what, what happened, and the one detail " +
+    "or number that makes it interesting. A reader with zero background must understand it in one read. Translate " +
+    "all headlinese into normal speech (\"WR\" becomes \"receiver\", \"to IR\" becomes \"goes on injured reserve\", " +
+    "\"vs.\" becomes \"against\"), expand abbreviations the item makes clear, strip feed labels. If the item names " +
+    "a trending topic, the post must still be self-explanatory to someone who has never heard of that topic.\n\n" +
+    "3. CLOSER: one line, specific to this story — a real point of view or a real question aimed at the reader that " +
+    "invites replies. It must only make sense for THIS story, so it names a detail from the item. Never generic " +
+    "(\"what do you think\", \"thoughts?\", \"let that sink in\").\n\n" +
+    "Hard rules: facts from the item only — never invent numbers, quotes or names; the closer may have attitude " +
+    "but never adds new facts, and on serious stories (death, violence, crime, disaster) it is respectful with " +
+    "zero jokes or flippancy; no emojis; no hashtags; no em-dashes or semicolons; no clichés or AI-sounding " +
+    "formulas (\"not just X but Y\", \"in a world where\", \"here's the thing\", \"game-changer\", \"unhinged\", " +
+    "\"honestly\"); uneven sentence lengths; a text-a-friend register, not a headline register. If a voice " +
+    "reference is given, borrow its wording, energy and rhythm — never its opinions or facts. " +
+    "Return only those three parts, nothing else.";
 
   const IMPROVER_PROMPT =
-    "You are the final writer on a two-writer team. Your teammate drafted a post about the news " +
-    "item below. Improve the draft: exactly ONE declarative news sentence (speaker + says/declares/warns + what they said, " +
-    "or who/what + verb + what happened). Plain facts only — no opinion, no commentary, no questions, no hooks. " +
-    "The reader must understand it in one read with no background: translate any headlinese into normal spoken English " +
-    "(expand abbreviations the item makes clear, normal articles and tense), strip feed labels and alert-style prefixes, " +
-    "and use simple everyday words. " +
-    "No clichés, no emojis, no hashtags, no bot or PR phrasing. Keep every fact from the item and fix anything in the draft " +
-    "that drifts from it. Never invent details. Return only the improved one-sentence post.";
+    "You are the final writer on a two-writer team. Your teammate drafted a post about the news item below. " +
+    "Improve the draft into three parts separated by empty lines, with no labels:\n" +
+    "HOOK — one short factual line with the single most striking thing in the item (wildest number, sharpest " +
+    "contrast, hardest-to-believe detail).\n" +
+    "BODY — one to three short sentences in plain spoken English that a reader with zero background understands " +
+    "in one read. Keep every fact from the item, translate any headlinese into normal speech, expand abbreviations " +
+    "the item makes clear.\n" +
+    "CLOSER — one line specific to this story: a real point of view or a real question aimed at the reader, tied " +
+    "to a detail from the item. Never generic (\"what do you think\", \"thoughts?\"). On serious stories (death, " +
+    "violence, crime, disaster) it stays respectful — no jokes.\n" +
+    "Fix anything that drifts from the item, is vague, or reads like a bot: no clichés, no em-dashes or " +
+    "semicolons, no emojis or hashtags, no AI formulas (\"not just X but Y\", \"here's the thing\", \"honestly\"). " +
+    "Never invent details. Return only the improved post.";
 
   function voiceBlock() {
     const v = (load("inkdrop_voice") || "").trim();
@@ -599,69 +614,108 @@
     return text;
   }
 
+  /* deterministic anti-AI-tell check — prompt rules alone don't catch these */
+  const BANNED_TELLS = [
+    /\bnot just\b[^.!?\n]{0,60}\bbut\b/i,
+    /let that sink in/i,
+    /\bin a world where\b/i,
+    /here'?s the thing/i,
+    /\bgame-?changer\b/i,
+    /\bunhinged\b/i,
+    /\bhonestly\b/i,
+    /\bsay what you want\b/i,
+    /\byou won'?t believe\b/i,
+    /\bcouldn'?t make this up\b/i,
+    /\bwait for it\b/i,
+    /\bbuckle up\b/i,
+    /\bhold my beer\b/i,
+    /\bmic drop\b/i,
+    /\bcrazy, right\?/i,
+    /\bthoughts\?\s*$/i,
+    /\bwhat do you think\?/i,
+    /^(this|wild)\.\s*$/im,
+  ];
+
   const GROQ_MODELS = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
   const GROQ_URL = "https://api.groq.com/openai/v1";
   const DEEPSEEK_URL = "https://api.deepseek.com";
   const dsModel = () => load("inkdrop_ds_model") || "deepseek-flash";
 
-  async function draftWithGroq(story) {
+  async function draftWithGroq(story, note) {
     const key = load("inkdrop_groq_key");
     if (!key) return null;
     for (const model of GROQ_MODELS) {
       try {
         return await chat(GROQ_URL, key, model, [
           { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: storyToUser(story, "Write the post:") },
-        ], 0.85, 260);
+          { role: "user", content: storyToUser(story, "Write the post:" + (note ? "\n" + note : "")) },
+        ], 0.9, 380);
       } catch (e) { console.warn("groq draft:", e); }
     }
     return null;
   }
 
-  async function draftWithDeepSeek(story) {
+  async function draftWithDeepSeek(story, note) {
     const key = load("inkdrop_deepseek_key");
     if (!key) return null;
     try {
       return await chat(DEEPSEEK_URL, key, dsModel(), [
         { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: storyToUser(story, "Write the post:") },
-      ], 0.9, 300);
+        { role: "user", content: storyToUser(story, "Write the post:" + (note ? "\n" + note : "")) },
+      ], 0.9, 420);
     } catch (e) { console.warn("deepseek draft:", e); return null; }
   }
 
-  async function improveWithDeepSeek(story, draft) {
+  async function improveWithDeepSeek(story, draft, note) {
     const key = load("inkdrop_deepseek_key");
     if (!key) return null;
     try {
       return await chat(DEEPSEEK_URL, key, dsModel(), [
         { role: "system", content: IMPROVER_PROMPT },
-        { role: "user", content: storyToUser(story, "Teammate's draft:\n\n" + draft + "\n\nImprove it:") },
-      ], 0.8, 300);
+        { role: "user", content: storyToUser(story, "Teammate's draft:\n\n" + draft + "\n\nImprove it:" + (note ? "\n" + note : "")) },
+      ], 0.8, 420);
     } catch (e) { console.warn("deepseek improve:", e); return null; }
+  }
+
+  /* draft, then regenerate (up to 2 extra tries) if it trips a banned phrase */
+  async function draftClean(story, note, draftFn) {
+    let fallback = null, lastBad = "";
+    for (let attempt = 0; attempt < 3; attempt++) {
+      let t = null;
+      try {
+        t = await draftFn(story, note + (lastBad ? " Don't use the formulaic phrase \"" + lastBad + "\"." : ""));
+      } catch (e) { console.warn("draft attempt:", e); }
+      if (!t) return fallback;
+      const re = BANNED_TELLS.find((r) => r.test(t));
+      if (!re) return t;
+      if (!fallback) fallback = t;
+      lastBad = (t.match(re) || [""])[0];
+    }
+    return fallback;
   }
 
   /* ---------- consensus editing: both models must agree ---------- */
   const REVIEWER_PROMPT =
     "You are a tough social media editor deciding whether a draft post is worth publishing. " +
-    "You are shown the original news item and the draft. Judge: is it exactly ONE declarative news sentence, " +
-    "pure facts from the item (speaker + says/declares/warns form, or who/what + verb + what happened), with " +
-    "no opinion, no commentary, no questions, no hooks, no emojis/hashtags, no clichés, and accurate to the item? " +
-    "Is it plain spoken English — would a reader with no background in the topic understand in one read what happened " +
-    "and who was involved (no headlinese, no unexplained abbreviations or jargon)? " +
-    "If the item names a trending topic, is the sentence self-explanatory — would a reader who has never heard of " +
-    "the topic understand who did what? " +
-    "Anything else — an added take or angle, a question, multiple sentences — is a reject. " +
+    "You are shown the original news item and the draft. Judge: does the HOOK stop a scroller using the story's " +
+    "most striking real detail, with no clickbait phrasing? Is the BODY one to three short sentences of plain " +
+    "spoken English that a reader with zero background understands in one read — accurate to the item, headlinese " +
+    "translated? Is the CLOSER specific to this story — a real take or a real question worth answering — and " +
+    "never generic (\"what do you think\", \"thoughts?\")? On serious stories (death, violence, crime, disaster), " +
+    "is the CLOSER respectful with zero jokes? Are there no emojis, hashtags, em-dashes, clichés, or " +
+    "AI formulas (\"not just X but Y\", \"here's the thing\", \"honestly\", \"unhinged\")? " +
+    "Anything that reads like a bot, invents facts, or is vague or boring is a reject. " +
     "Reply ONLY with JSON: {\"score\": <integer 1-10>, \"verdict\": \"post\" or \"fix\", " +
     "\"reason\": \"one short sentence\"}. Use \"post\" when score is 7 or higher, otherwise \"fix\".";
 
   const REVISER_PROMPT =
     "You are the final writer on an editorial team. The editors rejected your draft and left notes. " +
-    "Rewrite the post as exactly ONE declarative news sentence (speaker + says/declares/warns + what they said, " +
-    "or who/what + verb + what happened), pure facts with no opinion, no commentary, no questions. " +
-    "Write it in plain spoken English that a reader with no background understands in one read — translate any " +
-    "headlinese, expand abbreviations the item makes clear, simple everyday words. " +
-    "No clichés, no emojis, no hashtags, keep every fact from the item, and address the editors' " +
-    "notes. Return only the new one-sentence post.";
+    "Rewrite the post as three parts separated by empty lines, with no labels: HOOK (one short factual line with " +
+    "the story's most striking detail), BODY (one to three short plain-English sentences, zero-background readable, " +
+    "keep every fact from the item, translate headlinese), CLOSER (one line specific to this story — a real take " +
+    "or a real question aimed at the reader; respectful with zero jokes if the story is about death, violence, " +
+    "crime or disaster). Address the editors' notes. No clichés, no emojis or hashtags, no " +
+    "em-dashes or semicolons. Never invent details. Return only the new post.";
 
   function parseVerdict(text) {
     try {
@@ -711,10 +765,10 @@
     } catch (e) { console.warn("deepseek revise:", e); return null; }
   }
 
-  async function consensusPost(story, onStage) {
-    let candidate = (await draftWithGroq(story)) || (await draftWithDeepSeek(story));
+  async function consensusPost(story, onStage, angle) {
+    let candidate = (await draftClean(story, angle, draftWithGroq)) || (await draftClean(story, angle, draftWithDeepSeek));
     if (!candidate) return { text: templatePost(story), votes: null, forced: false };
-    candidate = (await improveWithDeepSeek(story, candidate)) || candidate;
+    candidate = (await improveWithDeepSeek(story, candidate, angle)) || candidate;
 
     const MAX_REVIEWS = 3;
     let best = { text: candidate, votes: null, avg: -1 };
@@ -742,25 +796,34 @@
     return { text: best.text, votes: best.votes, forced: true };
   }
 
+  // varied lead angles so no two posts open the same way
+  const HOOK_ANGLES = [
+    "Lead with the wildest number or stat in the item.",
+    "Lead with the sharpest contrast in the story.",
+    "Lead with the most surprising detail in the item.",
+    "Lead with the specific moment from the story that is hardest to believe but true.",
+  ];
+
   async function writePost(story, onStage) {
     const g = !!load("inkdrop_groq_key");
     const d = !!load("inkdrop_deepseek_key");
     let mode = load("inkdrop_mode") || "auto";
     if (mode === "auto") mode = (g && d) ? "team" : g ? "groq" : d ? "deepseek" : "template";
     if (mode === "consensus" && !(g && d)) mode = g ? "groq" : d ? "deepseek" : "template";
+    const angle = pick(HOOK_ANGLES);
 
-    if (mode === "groq") return { text: (await draftWithGroq(story)) || templatePost(story), votes: null, forced: false };
-    if (mode === "deepseek") return { text: (await draftWithDeepSeek(story)) || templatePost(story), votes: null, forced: false };
+    if (mode === "groq") return { text: (await draftClean(story, angle, draftWithGroq)) || templatePost(story), votes: null, forced: false };
+    if (mode === "deepseek") return { text: (await draftClean(story, angle, draftWithDeepSeek)) || templatePost(story), votes: null, forced: false };
     if (mode === "team") {
-      const draft = (await draftWithGroq(story)) || (await draftWithDeepSeek(story));
+      const draft = (await draftClean(story, angle, draftWithGroq)) || (await draftClean(story, angle, draftWithDeepSeek));
       if (!draft) return { text: templatePost(story), votes: null, forced: false };
-      return { text: (await improveWithDeepSeek(story, draft)) || draft, votes: null, forced: false };
+      return { text: (await improveWithDeepSeek(story, draft, angle)) || draft, votes: null, forced: false };
     }
-    if (mode === "consensus") return consensusPost(story, onStage || function () {});
+    if (mode === "consensus") return consensusPost(story, onStage || function () {}, angle);
     return { text: templatePost(story), votes: null, forced: false };
   }
 
-  /* ---------- built-in writing style: one plain declarative news sentence ---------- */
+  /* ---------- built-in writing style (offline fallback) ---------- */
   const TITLE_STARTERS = ["BREAKING: ", "EXCLUSIVE: ", "LIVE: ", "WATCH: ", "UPDATE: "];
   const CUT_SHIELDS = [/vs\./gi, /v\./g, /U\.S\./g, /St\./g, /Dr\./g, /Mr\./g, /Mrs\./g,
                       /No\./g, /Jr\./g, /Sr\./g, /Co\./g, /Inc\./g, /Ltd\./g, /Rep\./g, /Sen\./g];
@@ -833,7 +896,10 @@
   }
 
   function templatePost(story) {
-    return plainify(titleSentence(story));
+    const sentence = plainify(titleSentence(story));
+    // offline mode can't invent hooks or closers, but it can say why this matters
+    if (story.trend) return "People are searching \"" + story.trend + "\" right now.\n\n" + sentence;
+    return sentence;
   }
 
   /* ---------- credit ---------- */
