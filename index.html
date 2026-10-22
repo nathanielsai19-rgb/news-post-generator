@@ -222,6 +222,7 @@
     </div>
     <div class="meta-row">
       <span class="chip" id="postCat"></span>
+      <span class="chip hidden" id="postTrend"></span>
       <span id="postAge"></span>
       <span id="postVotes" class="hidden"></span>
       <span id="postFreshNote" class="hidden">freshest available</span>
@@ -498,6 +499,8 @@
     /waiver wire/i,
     /tells us everything/i,
     /&/,
+    // explainer forms after a colon: "Airbnb's new rules: what hosts can and can't ask"
+    /^[^:]{2,60}:\s*(what|why|how|when|who)\b/i,
   ];
   function junkTitle(t) {
     t = (t || "").trim();
@@ -767,7 +770,7 @@
 
   async function consensusPost(story, onStage, angle) {
     let candidate = (await draftClean(story, angle, draftWithGroq)) || (await draftClean(story, angle, draftWithDeepSeek));
-    if (!candidate) return { text: templatePost(story), votes: null, forced: false };
+    if (!candidate) return { text: templatePost(story), votes: null, forced: false, mode: "template" };
     candidate = (await improveWithDeepSeek(story, candidate, angle)) || candidate;
 
     const MAX_REVIEWS = 3;
@@ -778,13 +781,13 @@
       reviewsDone++;
       onStage("Editors reviewing · " + reviewsDone + "/" + MAX_REVIEWS);
       const reviews = await reviewPost(story, candidate);
-      if (!reviews.length) return { text: candidate, votes: null, forced: false };
+      if (!reviews.length) return { text: candidate, votes: null, forced: false, mode: "consensus" };
 
       const avg = reviews.reduce((s, r) => s + r.score, 0) / reviews.length;
       if (avg > best.avg) best = { text: candidate, votes: reviews, avg };
 
       const approvals = reviews.filter((r) => r.verdict === "post" && r.score >= 7).length;
-      if (approvals === reviews.length) return { text: candidate, votes: reviews, forced: false };
+      if (approvals === reviews.length) return { text: candidate, votes: reviews, forced: false, mode: "consensus" };
 
       if (reviewsDone === MAX_REVIEWS) break;
       onStage("Editors want a rewrite · " + reviewsDone + "/2");
@@ -793,7 +796,7 @@
       if (!revised) break;
       candidate = revised;
     }
-    return { text: best.text, votes: best.votes, forced: true };
+    return { text: best.text, votes: best.votes, forced: true, mode: "consensus" };
   }
 
   // varied lead angles so no two posts open the same way
@@ -812,15 +815,15 @@
     if (mode === "consensus" && !(g && d)) mode = g ? "groq" : d ? "deepseek" : "template";
     const angle = pick(HOOK_ANGLES);
 
-    if (mode === "groq") return { text: (await draftClean(story, angle, draftWithGroq)) || templatePost(story), votes: null, forced: false };
-    if (mode === "deepseek") return { text: (await draftClean(story, angle, draftWithDeepSeek)) || templatePost(story), votes: null, forced: false };
+    if (mode === "groq") return { text: (await draftClean(story, angle, draftWithGroq)) || templatePost(story), votes: null, forced: false, mode: "groq" };
+    if (mode === "deepseek") return { text: (await draftClean(story, angle, draftWithDeepSeek)) || templatePost(story), votes: null, forced: false, mode: "deepseek" };
     if (mode === "team") {
       const draft = (await draftClean(story, angle, draftWithGroq)) || (await draftClean(story, angle, draftWithDeepSeek));
-      if (!draft) return { text: templatePost(story), votes: null, forced: false };
-      return { text: (await improveWithDeepSeek(story, draft, angle)) || draft, votes: null, forced: false };
+      if (!draft) return { text: templatePost(story), votes: null, forced: false, mode: "template" };
+      return { text: (await improveWithDeepSeek(story, draft, angle)) || draft, votes: null, forced: false, mode: "team" };
     }
     if (mode === "consensus") return consensusPost(story, onStage || function () {}, angle);
-    return { text: templatePost(story), votes: null, forced: false };
+    return { text: templatePost(story), votes: null, forced: false, mode: "template" };
   }
 
   /* ---------- built-in writing style (offline fallback) ---------- */
@@ -896,10 +899,9 @@
   }
 
   function templatePost(story) {
-    const sentence = plainify(titleSentence(story));
-    // offline mode can't invent hooks or closers, but it can say why this matters
-    if (story.trend) return "People are searching \"" + story.trend + "\" right now.\n\n" + sentence;
-    return sentence;
+    // offline fallback: clean plain sentence, nothing invented. The trend goes
+    // in the meta row as a chip instead of polluting the post text.
+    return plainify(titleSentence(story));
   }
 
   /* ---------- credit ---------- */
@@ -1004,6 +1006,13 @@
       creditBox.appendChild(a);
     }
     $("postCat").textContent = (CATS[story.category] || {}).label || story.category;
+    const trendEl = $("postTrend");
+    if (story.trend) {
+      trendEl.textContent = "trending: " + story.trend;
+      trendEl.classList.remove("hidden");
+    } else {
+      trendEl.classList.add("hidden");
+    }
     $("postAge").textContent = ageLabel(story.published);
     const votesEl = $("postVotes");
     if (votes && votes.length) {
@@ -1048,7 +1057,9 @@
 
       renderPost(story, result.text, result.votes, picked.fromLastHour);
       renderFact(fact);
-      if (!picked.fromLastHour) {
+      if (result.mode === "template") {
+        toast("Built-in style — no AI key on this device. Add one in ⚙ for hook + closer posts");
+      } else if (!picked.fromLastHour) {
         toast(activeCat === "trending"
           ? "Variety pick — the freshest trending stories are all sports right now"
           : "No story from the last hour in " + CATS[activeCat].label + " — showing the freshest one");
