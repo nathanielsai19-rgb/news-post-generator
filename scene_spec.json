@@ -1,8 +1,8 @@
 {
  "pack": {
-  "style": "desert_noon",
-  "logline": "Tom Skerritt, actor known for 'Top Gun,' 'River Runs Through It' and 'Picket Fences,' dies at 93 - ABC7 Los Angeles. One quiet moment that captures why it matters.",
-  "scene": "Tom Skerritt, actor known for 'Top Gun,' 'River Runs Through It' and 'Picket Fences,' dies at 93 - ABC7 Los Angeles. Trending: tom skerritt. The scene opens on a figure mid-thought.",
+  "style": "rainy_night",
+  "logline": "Puka Nacua Exits Thursday's practice with calf injury. One quiet moment that captures why it matters.",
+  "scene": "Puka Nacua Exits Thursday's practice with calf injury. Trending: puka nacua. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -18,19 +18,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "clear",
-   "atmosphere": "desert noon mood - calm and unhurried"
+   "weather": "rain",
+   "atmosphere": "rainy night mood - calm and unhurried"
   },
   "shot": {
-   "camera": "orbit_left",
+   "camera": "crane_up",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#9fd0e8",
-    "ground": "#d9b382",
-    "accent": "#e2574c"
+    "sky": "#1b2735",
+    "ground": "#232830",
+    "accent": "#6fd3c7"
    },
    "duration": 5,
    "characters": [
@@ -105,7 +105,7 @@
     }
    ],
    "camera": {
-    "move": "orbit_left",
+    "move": "crane_up",
     "start": {
      "pos": [
       4.8,
@@ -146,10 +146,10 @@
   }
  },
  "story": {
-  "title": "Tom Skerritt, actor known for 'Top Gun,' 'River Runs Through It' and 'Picket Fences,' dies at 93 - ABC7 Los Angeles",
-  "outlet": "ABC7 Los Angeles",
-  "link": "https://news.google.com/rss/articles/CBMingFBVV95cUxNX1BLZnpLQ2JtR3NKWVBwTkRjdXN2blBOWlppd3JTdWNMSFpabjNoWXA3ZzNmOUFHZTZ2bGxWck5nVFNSWnYwZktnb1h6ZmY2cVIwZDkwWHFXZ25MRTdoWWFldlEzeFpobzZ4cm5oX3NQWmRtaTByZWRkdkVKT1NIRWpldEVHNzBNa21aTWtHS2tKODN5SVdzcGdvR1d5Z9IBowFBVV95cUxQeFVUTGMydDAxMTZMMEhXV3J0ZHVJYmJ4eHJLZTdUT1hCdVNmRDJlaE5CQkdQbnZ0cndLU1VCblQ2bWl2OW1ZMjlZU05xeUZKSVZNQVVBWGlxQ2ZGOGlpakk5QmxJcHZnUU1wTXBVelJ1STlWcjBoWlR4cnYyMXk3dXIzYjh2Q0xXelcxQjNtRUxtY1VYM2Fpc1FXbmFZc1VsMjlV?oc=5",
-  "trend": "tom skerritt"
+  "title": "Puka Nacua Exits Thursday's practice with calf injury",
+  "outlet": "Fantasy Footballers Podcast",
+  "link": "https://news.google.com/rss/articles/CBMipgFBVV95cUxPNXFEQjZmNVp2cDNERndpVS1LWkZhT1hZMnZzanF1SGJEcnNhVVpWRGRpMFJ5anlLd2dyb0xDaXBSMjNqY3l0Q0ZVZ1E5TWQ3Qk5Ia3cwOFFZN21HTEUwUWszZ0VJYy1KZGxSUVhhZHpSbnJKWjllVXpMb1NVRXRnUW9malR4R1RZaV9fdFJYUVIwZzF6MlRQNlI2RlY0eVRqaE05ZFRB?oc=5",
+  "trend": "puka nacua"
  },
- "generated_at": "2026-10-22T20:13:13Z"
+ "generated_at": "2026-10-22T23:28:11Z"
 }
