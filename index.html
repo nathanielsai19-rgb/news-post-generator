@@ -579,8 +579,10 @@
     "1. HOOK: one short line, 3 to 9 words. The single most striking thing in the item — the wildest number, the " +
     "sharpest contrast, or the detail that makes a scroller stop. Factual, from the item only. Never clickbait " +
     "phrasing and never a label like BREAKING.\n\n" +
-    "2. BODY: one to three short sentences in plain spoken English. Who or what, what happened, and the one detail " +
-    "or number that makes it interesting. A reader with zero background must understand it in one read. Translate " +
+    "2. BODY: one to three short sentences in plain spoken English. Say WHO with a plain-word description of what " +
+    "they are (\"Cavs star Donovan Mitchell\", never just \"Mitchell\"), WHAT happened, and the context or detail " +
+    "that makes it land (\"nearly two years after a devastating knee injury\"). A reader with zero background must " +
+    "understand it in one read: every name, team, company and term is introduced in plain words. Translate " +
     "all headlinese into normal speech (\"WR\" becomes \"receiver\", \"to IR\" becomes \"goes on injured reserve\", " +
     "\"vs.\" becomes \"against\"), expand abbreviations the item makes clear, strip feed labels. If the item names " +
     "a trending topic, the post must still be self-explanatory to someone who has never heard of that topic.\n\n" +
@@ -601,7 +603,9 @@
     "HOOK — one short factual line with the single most striking thing in the item (wildest number, sharpest " +
     "contrast, hardest-to-believe detail).\n" +
     "BODY — one to three short sentences in plain spoken English that a reader with zero background understands " +
-    "in one read. Keep every fact from the item, translate any headlinese into normal speech, expand abbreviations " +
+    "in one read: every name, team, company or term introduced in plain words (\"Cavs star Donovan Mitchell\", " +
+    "never just \"Mitchell\"), who did what, and the context that makes it land. Keep every fact from the item, " +
+    "translate any headlinese into normal speech, expand abbreviations " +
     "the item makes clear.\n" +
     "CLOSER — one line specific to this story: a real point of view or a real question aimed at the reader, tied " +
     "to a detail from the item. Never generic (\"what do you think\", \"thoughts?\"). On serious stories (death, " +
@@ -725,7 +729,9 @@
     "You are shown the original news item and the draft. Judge: does the HOOK stop a scroller using the story's " +
     "most striking real detail, with no clickbait phrasing? Is the BODY one to three short sentences of plain " +
     "spoken English that a reader with zero background understands in one read — accurate to the item, headlinese " +
-    "translated? Is the CLOSER specific to this story — a real take or a real question worth answering — and " +
+    "translated, and every name, team, company or term introduced in plain words (a reader knows who everyone is " +
+    "without prior knowledge)? Is the CLOSER specific to this story — a real take or a real question worth " +
+    "answering — and " +
     "never generic (\"what do you think\", \"thoughts?\")? On serious stories (death, violence, crime, disaster), " +
     "is the CLOSER respectful with zero jokes? Are there no emojis, hashtags, em-dashes, clichés, or " +
     "AI formulas (\"not just X but Y\", \"here's the thing\", \"honestly\", \"unhinged\")? " +
@@ -736,7 +742,8 @@
   const REVISER_PROMPT =
     "You are the final writer on an editorial team. The editors rejected your draft and left notes. " +
     "Rewrite the post as three parts separated by empty lines, with no labels: HOOK (one short factual line with " +
-    "the story's most striking detail), BODY (one to three short plain-English sentences, zero-background readable, " +
+    "the story's most striking detail), BODY (one to three short plain-English sentences, zero-background readable " +
+    "with every name, team, company or term introduced in plain words, " +
     "keep every fact from the item, translate headlinese), CLOSER (one line specific to this story — a real take " +
     "or a real question aimed at the reader; respectful with zero jokes if the story is about death, violence, " +
     "crime or disaster). Address the editors' notes. No clichés, no emojis or hashtags, no " +
@@ -920,10 +927,24 @@
     return t.charAt(0).toUpperCase() + t.slice(1);
   }
 
+  // summary -> first two clean sentences, for offline posts that carry real context
+  function cleanSummary(s) {
+    if (!s) return "";
+    s = String(s).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    const m = s.match(/^([^.!?]+[.!?])(\s+[^.!?]+[.!?])?/);
+    return (m ? m[0].trim() : s).slice(0, 280);
+  }
+
   function templatePost(story) {
-    // offline fallback: clean plain sentence, nothing invented. The trend goes
-    // in the meta row as a chip instead of polluting the post text.
-    return plainify(titleSentence(story));
+    // offline fallback: nothing invented. The plainified headline is the bold
+    // hook and the outlet's summary is the body, so the post explains itself.
+    // (The trend goes in the meta row as a chip instead of polluting the text.)
+    const sentence = plainify(titleSentence(story));
+    const sum = cleanSummary(story.summary);
+    if (sum && !sentence.toLowerCase().includes(sum.slice(0, 40).toLowerCase())) {
+      return sentence + "\n\n" + sum;
+    }
+    return sentence;
   }
 
   /* ---------- credit ---------- */
@@ -947,13 +968,31 @@
     "his her new today live via more than now just can could should get got been being on at in of to is are as " +
     "by if it he she they we you your our").split(" "));
 
-  // the trend term is what people are already searching, so it's the best match;
-  // otherwise take the headline's most significant words
-  function gifQuery(story) {
-    if (story.trend) return story.trend;
-    const words = (story.title || "").toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/)
+  // candidate queries best-first: the trend term is what people are already searching;
+  // capitalized title words are usually the entities ("Red Bull", "Matthew Lamb");
+  // plain keywords are the last resort
+  function gifQueries(story) {
+    const cands = [];
+    const t = story.title || "";
+    if (story.trend) {
+      const tw = story.trend.toLowerCase().split(/\s+/).filter(Boolean);
+      if (tw.length) {
+        cands.push(tw.join(" "));
+        if (tw.length >= 2) cands.push(tw.slice(0, 2).join(" "));
+        if (tw.length >= 3) for (let i = 0; i < tw.length - 1; i++) cands.push(tw[i] + " " + tw[i + 1]);
+      }
+    }
+    const capWords = t.replace(/[^A-Za-z0-9\s]/g, " ").split(/\s+/)
+      .filter((w) => /^[A-Z]/.test(w) && w.length > 2 && !GIF_STOPWORDS.has(w.toLowerCase()))
+      .slice(0, 4);
+    if (capWords.length >= 2) {
+      cands.push(capWords.join(" "));
+      for (let i = 0; i < capWords.length - 1; i++) cands.push(capWords[i] + " " + capWords[i + 1]);
+    }
+    const kws = t.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/)
       .filter((w) => w.length > 2 && !GIF_STOPWORDS.has(w)).slice(0, 4);
-    return words.join(" ");
+    if (kws.length) cands.push(kws.join(" "));
+    return [...new Set(cands)].filter((c) => c.trim().length > 1);
   }
 
   async function giphySearch(q) {
@@ -973,16 +1012,19 @@
   // no GIF on serious stories — a reaction GIF next to a death or crime story is worse than none
   const SERIOUS_RE = /\bwar\b|sexual|rape|\babuse\b|assault|\bkilled\b|\bdies\b|\bdied\b|\bdead\b|\bdeath\b|murder|suicide|shoot|\bshot\b|fatal|victim|\bfuneral\b|\bcrash\b|disaster|\bbomb\b|massacre/i;
 
-  // progressively shorten the query until something matches; a wrong GIF is
-  // worse than no GIF, so bail out if even the short form misses
+  // try each candidate query, progressively shortened, until something matches;
+  // a wrong GIF is worse than no GIF, so bail out if even the short forms miss
   async function fetchGif(story) {
     if (SERIOUS_RE.test(((story.title || "") + " " + (story.summary || "")))) return null;
-    const base = gifQuery(story).split(/\s+/).filter(Boolean);
-    for (let n = Math.min(base.length, 4); n >= 1; n--) {
-      const q = base.slice(0, n).join(" ");
-      if (n === 1 && q.length < 4) break; // a lone 2-3 letter word matches junk
-      const gifs = await giphySearch(q);
-      if (gifs) { gifBatch = { query: q, gifs }; gifCursor = 0; return pickGif(); }
+    let attempts = 0;
+    for (const cand of gifQueries(story)) {
+      const words = cand.split(/\s+/);
+      for (let n = words.length; n >= 1; n--) {
+        if (n === 1 && words[0].length < 5) break; // a lone short word matches junk
+        if (++attempts > 6) return null;           // cap API spend per post
+        const gifs = await giphySearch(words.slice(0, n).join(" "));
+        if (gifs) { gifBatch = { query: cand, gifs }; gifCursor = 0; return pickGif(); }
+      }
     }
     gifBatch = null;
     return null;
