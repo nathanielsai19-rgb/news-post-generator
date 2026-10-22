@@ -215,7 +215,7 @@
     <svg viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11L9.5 22 19 10h-6.5L13 2z"/></svg>
     <span id="genLabel">Generate a post</span>
   </button>
-  <div class="hint" id="hint">Trending first · prefers stories from the last hour</div>
+  <div class="hint" id="hint">No politics, no sports · prefers stories from the last hour</div>
 
   <section class="card hidden" id="postCard" aria-live="polite">
     <div class="card-label">Your post</div>
@@ -339,7 +339,6 @@
     mixed: { label: "Mixed" },
     world: { label: "World" },
     tech: { label: "Tech" },
-    sports: { label: "Sports" },
     business: { label: "Business" },
     science: { label: "Science" },
     trending: { label: "Trending" },
@@ -450,10 +449,10 @@
   let recentTopics = []; // avoid repeating the same topic (sports sports sports...)
 
   const TOPIC_RULES = [
-    ["sports", /mlb|nfl|nba|nhl|soccer|football|rugby|basketball|baseball|hockey|playoff|world series|league|cup|derby|tournament|mariners|dodgers|yankees|brewers|arsenal|chelsea|manchester|liverpool|madrid|barcelona|juventus|warriors|glasgow|medvedev|tennis|nascar|f1\b|formula|golf|boxing|ufc|wwe|fifa|uefa|olympics|coach|manager|fc\b|\bcity\b/i],
+    ["sports", /mlb|nfl|nba|nhl|soccer|football|rugby|basketball|baseball|hockey|playoff|world series|league|cup|derby|tournament|mariners|dodgers|yankees|brewers|arsenal|chelsea|manchester|liverpool|madrid|barcelona|juventus|warriors|glasgow|medvedev|tennis|nascar|f1\b|formula|golf|boxing|ufc|wwe|fifa|uefa|olympics|coach|manager|fc\b|\b(leicester|stoke|york|cardiff|norwich|bristol|swansea|coventry|birmingham) city\b/i],
     ["entertainment", /movie|film|actor|actress|singer|song|album|show|series|netflix|hbo|network|music|trailer|celebrity|star trek|white lotus/i],
+    ["politics", /trump|biden|president|senate|congress|election|government|minister|parliament|policy|white house|\bwar\b|missile|military|troops|army|navy|ukraine|russia|iran|israel|gaza|hamas|putin|zelensky|nato|sanctions|tariffs?|ceasefire|invasion|regime/i],
     ["business", /stock|market|economy|bank|invest|crypto|bitcoin|trade|inflation|earnings|cathie wood/i],
-    ["politics", /trump|biden|president|senate|congress|election|government|minister|parliament|policy|white house/i],
     ["tech", /\bai\b|apple|google|microsoft|nvidia|software|\bchip\b|phone|startup|cyber/i],
     ["science", /space|nasa|study|research|disease|vaccine|climate|quantum|galaxy|stars/i],
   ];
@@ -464,6 +463,32 @@
       if (re.test(text)) return topic;
     }
     return "other";
+  }
+
+  // user rule: never generate politics or sports posts
+  const BLOCKED_TOPICS = new Set(["politics", "sports"]);
+
+  function pickStory(cat) {
+    const all = itemsFor(cat).filter((i) =>
+      !BLOCKED_TOPICS.has(topicOf(i)) && i.category !== "sports");
+    const ok = all.filter((i) => !junkTitle(i.title));
+    const list = (ok.length ? ok : all).slice().sort((a, b) => new Date(b.published) - new Date(a.published));
+    if (!list.length) return null;
+    const now = Date.now();
+    const fresh = list.filter((i) => now - new Date(i.published).getTime() <= FRESH_WINDOW_MS);
+    const basePool = fresh.length ? fresh : list;
+    if (cat === "trending") return pickTrending(list.slice(0, 60));
+    // weighted pick: important stories are far more likely, filler still possible but rare
+    const pool = basePool.slice(0, 20);
+    const weights = pool.map((i) => Math.pow(2, storyScore(i)));
+    const total = weights.reduce((s, w) => s + w, 0);
+    let r = Math.random() * total;
+    let story = pool[pool.length - 1];
+    for (let k = 0; k < pool.length; k++) { r -= weights[k]; if (r <= 0) { story = pool[k]; break; } }
+    return {
+      story,
+      fromLastHour: fresh.length > 0,
+    };
   }
 
   function pickTrending(list) {
@@ -549,7 +574,8 @@
   }
 
   function pickStory(cat) {
-    const all = itemsFor(cat);
+    const all = itemsFor(cat).filter((i) =>
+      !BLOCKED_TOPICS.has(topicOf(i)) && i.category !== "sports");
     const ok = all.filter((i) => !junkTitle(i.title));
     const list = (ok.length ? ok : all).slice().sort((a, b) => new Date(b.published) - new Date(a.published));
     if (!list.length) return null;
@@ -1179,7 +1205,7 @@
         freshness();
       }
       const picked = pickStory(activeCat);
-      if (!picked) { toast("No fresh stories in this category yet", true); return; }
+      if (!picked) { toast("No stories here — politics and sports are always skipped", true); return; }
       const story = picked.story;
 
       setStage("Writing your post…");
@@ -1197,7 +1223,7 @@
         toast("No Giphy key — matching GIFs are off. Grab a free key in ⚙");
       } else if (!picked.fromLastHour) {
         toast(activeCat === "trending"
-          ? "Variety pick — the freshest trending stories are all sports right now"
+          ? "Variety pick — the freshest trending stories are all politics or sports right now"
           : "No story from the last hour in " + CATS[activeCat].label + " — showing the freshest one");
       } else if (result.forced) {
         toast("Editors couldn't fully agree — showing their best version");
