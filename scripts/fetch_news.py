@@ -139,7 +139,9 @@ SPORTS_TITLE_RE = re.compile(
     r"chiefs|bengals|ravens|broncos|colts|jaguars|bills\b|"
     r"patriots|chargers|raiders|commanders|falcons|panthers|saints\b|"
     r"rams|cardinals|49ers|vikings|texans|browns\b|buccaneers|"
-    r"talladega|ric flair|tony stewart|leading receiver",
+    r"talladega|ric flair|tony stewart|leading receiver|"
+    r"\bv\.\s|\bvs\.\s|ipswich|nottingham forest|\bboro\b|glasner|delap|mcatee|"
+    r"ndoye|milenkovic|lankshear|diop|mcgree|middlesbrough|nffc|itfc|sundowns",
     re.I,
 )
 
@@ -176,6 +178,8 @@ TREND_BLOCK_RE = re.compile(
     r"dodgers|yankees|brewers|warriors|maxey|harden|hearts of oak|kotoko|"
     r"man utd|man united|red devils|bwfc|bolton|wanderers|\bbulls\b|"
     r"ric flair|cleetus|talladega|jesse legree|skye blakely|\bskye\b|"
+    r"ipswich|nottingham forest|\bboro\b|glasner|delap|mcatee|ndoye|milenkovic|"
+    r"lankshear|diop|mcgree|middlesbrough|nffc|itfc|sundowns|"
     r"trump|biden|president|senate|congress|"
     r"election|government|minister|parliament|policy|white house|\bwar\b|"
     r"missile|military|troops|ukraine|russia|iran|israel|gaza|hamas|putin|"
