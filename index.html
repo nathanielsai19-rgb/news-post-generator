@@ -896,18 +896,22 @@
     // strip feed-label prefixes: "Fantasy Football Injury Alert: ", "Coventry latest: "
     const label = t.match(/^[^:]{2,40} (?:alert|latest|recap):\s*/i);
     if (label) t = t.slice(label[0].length);
-    // strip publisher suffixes: "… | ITV News", "… - BBC News", plus short
-    // " | X" tails (≤3 words, no digits) that are feed decorations
+    // strip publisher suffixes: "… - The Athletic - The New York Times", "… | ITV News"
     const outlet = (story.outlet || "").trim();
-    for (const sep of [" - ", " | ", " – ", " — "]) {
-      if (!t.toLowerCase().includes(sep)) continue;
-      const tail = t.slice(t.toLowerCase().lastIndexOf(sep) + sep.length).trim();
-      const tailWords = tail.split(/\s+/).length;
-      const shortClean = tailWords <= 3 && !/\d/.test(tail);
-      if (t.toLowerCase().endsWith(sep + outlet.toLowerCase()) ||
-          (outlet && (sep === " | " || sep === " – ") && shortClean)) {
-        t = t.slice(0, -(sep.length + tail.length)).trim();
-        break;
+    let stripped = true;
+    while (stripped) {
+      stripped = false;
+      for (const sep of [" - ", " | ", " – ", " — "]) {
+        if (!t.toLowerCase().includes(sep)) continue;
+        const tail = t.slice(t.toLowerCase().lastIndexOf(sep) + sep.length).trim();
+        const tailWords = tail.split(/\s+/).length;
+        const shortClean = tailWords <= 3 && !/\d/.test(tail);
+        if (t.toLowerCase().endsWith(sep + outlet.toLowerCase()) ||
+            (outlet && shortClean)) {
+          t = t.slice(0, -(sep.length + tail.length)).trim();
+          stripped = true;
+          break;
+        }
       }
     }
     // strip feed-style suffixes: "… - live", "… – follow updates"
