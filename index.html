@@ -971,18 +971,31 @@
   }
 
   /* ---------- background context: who/what this story is about ---------- */
-  const WIKI_DISAMBIG_RE = /may refer to|most commonly refers to/i;
+  const WIKI_DISAMBIG_RE = /may refer to|most commonly refers to|^this is a list/i;
+  // common nouns capitalized by sentence position — never treat these as entities
+  const COMMON_NOUNS = new Set(("hundred hundreds thousand thousands million millions woman man men women people person " +
+    "teacher police school city country world year years day days week weeks month months report reports study studies " +
+    "company companies home house court hospital market stock stocks share shares price prices oil gas water fire storm " +
+    "flights flight typhoon hurricane cyclone earthquake virus vaccine weather temperature east west north south asia " +
+    "africa europe america americas").split(" "));
 
   async function wikiFirstSentence(title) {
     if (!title) return "";
     const url = "https://en.wikipedia.org/w/api.php?action=query&titles=" + encodeURIComponent(title) +
       "&prop=extracts&exintro=1&explaintext=1&format=json&origin=*&redirects=1";
     try {
-      const res = await fetch(url);
+      let res = await fetch(url);
+      if (res.status === 429 || res.status === 503) { // retry once on rate limit
+        await new Promise((r) => setTimeout(r, 600));
+        res = await fetch(url);
+      }
       if (!res.ok) return "";
       const data = await res.json();
       const page = Object.values(data.query.pages)[0];
       if (!page || page.missing || !page.extract) return "";
+      // the resolved page must share a real word with what we asked for,
+      // so redirects like "Champi" -> "Shampoo" can't leak in
+      if (titleOverlap(page.title, title.split(/\s+/).filter((w) => w.length >= 3).map((w) => w.toLowerCase())) < 1) return "";
       const ex = page.extract.trim();
       if (WIKI_DISAMBIG_RE.test(ex.slice(0, 120))) return "";
       const m = ex.match(/^([^.!?]+[.!?])/);
@@ -990,7 +1003,44 @@
     } catch (e) { console.warn("wiki entity:", e); return ""; }
   }
 
-  // entity guesses best-first: the trend term, then the title's proper nouns
+  // search Wikipedia with the story's own words; accept a hit only when its
+  // title shares at least two significant query words, so fuzzy matches
+  // (murderers for "scared heating cost") can't leak in
+  function titleOverlap(title, qWords) {
+    const tw = title.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+    let n = 0;
+    for (const w of qWords) {
+      if (tw.indexOf(w) !== -1) n++;
+    }
+    return n;
+  }
+
+  async function wikiSearchContext(q) {
+    if (!q) return "";
+    const qWords = q.split(/\s+/).filter((w) => w.length >= 3);
+    const url = "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=" +
+      encodeURIComponent(q) + "&srlimit=5&format=json&origin=*";
+    try {
+      let res = await fetch(url);
+      if (res.status === 429 || res.status === 503) { // retry once on rate limit
+        await new Promise((r) => setTimeout(r, 600));
+        res = await fetch(url);
+      }
+      if (!res.ok) return "";
+      const data = await res.json();
+      const hits = (data.query && data.query.search) || [];
+      for (const hit of hits) {
+        if (!hit.title || hit.title.split(/\s+/).length > 6) continue;
+        if (titleOverlap(hit.title, qWords) < 2) continue;
+        const s = await wikiFirstSentence(hit.title);
+        if (s && s.length >= 30) return s;
+      }
+      return "";
+    } catch (e) { console.warn("wiki search:", e); return ""; }
+  }
+
+  // entity guesses best-first, pairs and singles interleaved so a run of
+  // missing pairs can't starve the strong single ("Boeing FAA", "Boeing", ...)
   function entityCandidates(story) {
     const out = [];
     if (story.trend) {
@@ -999,22 +1049,33 @@
       if (tw.length >= 3) out.push(tw.slice(0, 3).join(" "));
     }
     const caps = (story.title || "").replace(/[^A-Za-z0-9\s]/g, " ").split(/\s+/)
-      .filter((w) => /^[A-Z]/.test(w) && w.length > 2 && !GIF_STOPWORDS.has(w.toLowerCase()))
+      .filter((w) => /^[A-Z]/.test(w) && w.length > 2 &&
+        !GIF_STOPWORDS.has(w.toLowerCase()) && !COMMON_NOUNS.has(w.toLowerCase()))
       .slice(0, 4);
-    if (caps.length >= 2) out.push(caps.slice(0, 2).join(" "));
-    if (caps.length >= 3) out.push(caps.slice(0, 3).join(" "));
-    if (caps.length) out.push(caps[0]);
+    for (let i = 0; i < caps.length; i++) {
+      if (i < caps.length - 1) out.push(caps[i] + " " + caps[i + 1]);
+      if (caps[i].length >= 4) out.push(caps[i]);
+    }
     return [...new Set(out)];
   }
 
   // outlet summary when the feed has one; otherwise Wikipedia's own first
-  // sentence about the entity, so the post explains what it's talking about
+  // sentence about the story's actual subject, so the post explains itself
   async function contextFor(story) {
     const sum = cleanSummary(story.summary);
     if (sum && sum.length >= 40) return sum;
+    const q = ((story.trend || "") + " " + (story.title || "")).toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ").split(/\s+/)
+      .filter((w) => w.length > 2 && !GIF_STOPWORDS.has(w) && !COMMON_NOUNS.has(w))
+      .slice(0, 6).join(" ");
+    const s = await wikiSearchContext(q);
+    if (s) return s;
+    let tried = 0;
     for (const e of entityCandidates(story)) {
-      const s = await wikiFirstSentence(e);
-      if (s && s.length >= 30) return s;
+      if (++tried > 5) break; // cap wiki calls per post
+      const s2 = await wikiFirstSentence(e);
+      if (s2 && s2.length >= 30) return s2;
+      await new Promise((r) => setTimeout(r, 200)); // stay clear of rate limits
     }
     return "";
   }
