@@ -652,6 +652,7 @@
       "Headline: " + story.title + "\n" +
       (story.trend ? "Trending topic: \"" + story.trend + "\" — people are searching this right now\n" : "") +
       (story.summary ? "Summary: " + story.summary + "\n" : "") +
+      (story.ctx ? "Background: " + story.ctx + "\n" : "") +
       voiceBlock() +
       "\n" + tail;
   }
@@ -869,6 +870,8 @@
     if (mode === "auto") mode = (g && d) ? "team" : g ? "groq" : d ? "deepseek" : "template";
     if (mode === "consensus" && !(g && d)) mode = g ? "groq" : d ? "deepseek" : "template";
     const angle = pick(HOOK_ANGLES);
+    // feeds without summaries get Wikipedia background so writers know who/what this is
+    if (!story.summary) story.ctx = await contextFor(story);
 
     if (mode === "groq") return { text: (await draftClean(story, angle, draftWithGroq)) || templatePost(story), votes: null, forced: false, mode: "groq" };
     if (mode === "deepseek") return { text: (await draftClean(story, angle, draftWithDeepSeek)) || templatePost(story), votes: null, forced: false, mode: "deepseek" };
@@ -909,6 +912,14 @@
     }
     // strip feed-style suffixes: "… - live", "… – follow updates"
     t = t.replace(/\s*[-–|]\s*(live|follow updates|updates)\s*$/i, "");
+    // normalize "..." and cut off truncated tails ("...And Here Are Numbers T...",
+    // "...shares fall on advertising and re...") so titles never read as cut off
+    t = t.replace(/\.\.\.+/g, "…").trim();
+    if (t.endsWith("…")) {
+      let cut = t.replace(/([.!?])\s+[^.!?]*…\s*$/, "$1");
+      if (cut === t) cut = t.replace(/,\s*[^,!?]*…\s*$/, "");
+      t = cut.trim();
+    }
     // shield abbreviations from the sentence-end cut ("vs.", "U.S.", "No. 1", …)
     for (const r of CUT_SHIELDS) t = t.replace(r, (m) => m.slice(0, -1) + "\u0000");
     // cut at the first real sentence end (12+ chars in, so short abbreviations don't
@@ -917,9 +928,7 @@
     if (m) t = m[1];
     t = t.replace(/\u0000/g, ".");
     if (t.endsWith(";")) t = t.slice(0, -1);
-    const words = t.split(/\s+/);
-    if (words.length > 26) t = words.slice(0, 26).join(" ") + "…";
-    if (!/[.!?]$/.test(t)) t += ".";
+    if (!/[.!?…]$/.test(t)) t += ".";
     return t;
   }
 
@@ -958,17 +967,66 @@
     if (!s) return "";
     s = String(s).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
     const m = s.match(/^([^.!?]+[.!?])(\s+[^.!?]+[.!?])?/);
-    return (m ? m[0].trim() : s).slice(0, 280);
+    return (m ? m[0].trim() : s).slice(0, 360);
+  }
+
+  /* ---------- background context: who/what this story is about ---------- */
+  const WIKI_DISAMBIG_RE = /may refer to|most commonly refers to/i;
+
+  async function wikiFirstSentence(title) {
+    if (!title) return "";
+    const url = "https://en.wikipedia.org/w/api.php?action=query&titles=" + encodeURIComponent(title) +
+      "&prop=extracts&exintro=1&explaintext=1&format=json&origin=*&redirects=1";
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return "";
+      const data = await res.json();
+      const page = Object.values(data.query.pages)[0];
+      if (!page || page.missing || !page.extract) return "";
+      const ex = page.extract.trim();
+      if (WIKI_DISAMBIG_RE.test(ex.slice(0, 120))) return "";
+      const m = ex.match(/^([^.!?]+[.!?])/);
+      return m ? m[1] : "";
+    } catch (e) { console.warn("wiki entity:", e); return ""; }
+  }
+
+  // entity guesses best-first: the trend term, then the title's proper nouns
+  function entityCandidates(story) {
+    const out = [];
+    if (story.trend) {
+      const tw = story.trend.split(/\s+/).filter(Boolean);
+      if (tw.length >= 2) out.push(tw.slice(0, 2).join(" "));
+      if (tw.length >= 3) out.push(tw.slice(0, 3).join(" "));
+    }
+    const caps = (story.title || "").replace(/[^A-Za-z0-9\s]/g, " ").split(/\s+/)
+      .filter((w) => /^[A-Z]/.test(w) && w.length > 2 && !GIF_STOPWORDS.has(w.toLowerCase()))
+      .slice(0, 4);
+    if (caps.length >= 2) out.push(caps.slice(0, 2).join(" "));
+    if (caps.length >= 3) out.push(caps.slice(0, 3).join(" "));
+    if (caps.length) out.push(caps[0]);
+    return [...new Set(out)];
+  }
+
+  // outlet summary when the feed has one; otherwise Wikipedia's own first
+  // sentence about the entity, so the post explains what it's talking about
+  async function contextFor(story) {
+    const sum = cleanSummary(story.summary);
+    if (sum && sum.length >= 40) return sum;
+    for (const e of entityCandidates(story)) {
+      const s = await wikiFirstSentence(e);
+      if (s && s.length >= 30) return s;
+    }
+    return "";
   }
 
   function templatePost(story) {
     // offline fallback: nothing invented. The plainified headline is the bold
-    // hook and the outlet's summary is the body, so the post explains itself.
-    // (The trend goes in the meta row as a chip instead of polluting the text.)
+    // hook and the outlet summary (or Wikipedia background when the feed gives
+    // no summary) is the body, so the post explains itself.
     const sentence = plainify(titleSentence(story));
-    const sum = cleanSummary(story.summary);
-    if (sum && !sentence.toLowerCase().includes(sum.slice(0, 40).toLowerCase())) {
-      return sentence + "\n\n" + sum;
+    const ctx = cleanSummary(story.summary) || (story.ctx || "");
+    if (ctx && !sentence.toLowerCase().includes(ctx.slice(0, 40).toLowerCase())) {
+      return sentence + "\n\n" + ctx;
     }
     return sentence;
   }
@@ -996,29 +1054,33 @@
 
   // candidate queries best-first: the trend term is what people are already searching;
   // capitalized title words are usually the entities ("Red Bull", "Matthew Lamb");
-  // plain keywords are the last resort
+  // plain keywords are the last resort. `single` = a lone-word form is allowed
+  // (proper nouns yes, bare keywords no — they match junk).
   function gifQueries(story) {
     const cands = [];
+    const add = (q, single) => { if (q && q.trim().length > 1) cands.push({ q, single }); };
     const t = story.title || "";
     if (story.trend) {
       const tw = story.trend.toLowerCase().split(/\s+/).filter(Boolean);
       if (tw.length) {
-        cands.push(tw.join(" "));
-        if (tw.length >= 2) cands.push(tw.slice(0, 2).join(" "));
-        if (tw.length >= 3) for (let i = 0; i < tw.length - 1; i++) cands.push(tw[i] + " " + tw[i + 1]);
+        add(tw.join(" "), tw.length <= 2);
+        if (tw.length >= 2) add(tw.slice(0, 2).join(" "), true);
+        if (tw.length >= 3) for (let i = 0; i < tw.length - 1; i++) add(tw[i] + " " + tw[i + 1], false);
       }
     }
     const capWords = t.replace(/[^A-Za-z0-9\s]/g, " ").split(/\s+/)
       .filter((w) => /^[A-Z]/.test(w) && w.length > 2 && !GIF_STOPWORDS.has(w.toLowerCase()))
       .slice(0, 4);
     if (capWords.length >= 2) {
-      cands.push(capWords.join(" "));
-      for (let i = 0; i < capWords.length - 1; i++) cands.push(capWords[i] + " " + capWords[i + 1]);
+      add(capWords.join(" "), false);
+      for (let i = 0; i < capWords.length - 1; i++) add(capWords[i] + " " + capWords[i + 1], false);
+    } else if (capWords.length === 1) {
+      add(capWords[0], true);
     }
     const kws = t.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/)
       .filter((w) => w.length > 2 && !GIF_STOPWORDS.has(w)).slice(0, 4);
-    if (kws.length) cands.push(kws.join(" "));
-    return [...new Set(cands)].filter((c) => c.trim().length > 1);
+    if (kws.length) add(kws.join(" "), false);
+    return cands;
   }
 
   async function giphySearch(q) {
@@ -1038,19 +1100,41 @@
   // no GIF on serious stories — a reaction GIF next to a death or crime story is worse than none
   const SERIOUS_RE = /\bwar\b|sexual|rape|\babuse\b|assault|\bkilled\b|\bdies\b|\bdied\b|\bdead\b|\bdeath\b|murder|suicide|shoot|\bshot\b|fatal|victim|\bfuneral\b|\bcrash\b|disaster|\bbomb\b|massacre/i;
 
+  // curated mood queries: when literal searches fail, match how the story FEELS.
+  // These queries always have plenty of good GIFs, so the fallback never lands on junk.
+  const GIF_MOODS = [
+    [/sue|sues|lawsuit|arrest|\bfined\b|backlash|outrage|protest|quit|fired|layoff|scam|fraud/i, ["facepalm", "shaking my head"]],
+    [/\bbillion\b|\bmillion\b|\bdeal\b|funding|profit|stock|earnings|salary|wages|price/i, ["money rain", "rich money"]],
+    [/\bwins?\b|champion|\brecord\b|approval|approved|\bbeat\b|soar|surge|milestone|victory|first ever/i, ["celebration dance", "party"]],
+    [/shock|stun|surprise|reveal|breakthrough|discovery|bizarre|rare/i, ["mind blown", "shocked reaction"]],
+    [/delay|postponed|shortage|crisis|\bcut\b|warning|risk|concern/i, ["facepalm", "worried"]],
+  ];
+
   // try each candidate query, progressively shortened, until something matches;
-  // a wrong GIF is worse than no GIF, so bail out if even the short forms miss
+  // if nothing literal matches, fall back to the story's mood. A wrong GIF is
+  // worse than no GIF.
   async function fetchGif(story) {
     if (SERIOUS_RE.test(((story.title || "") + " " + (story.summary || "")))) return null;
     let attempts = 0;
-    for (const cand of gifQueries(story)) {
-      const words = cand.split(/\s+/);
+    outer:
+    for (const { q, single } of gifQueries(story)) {
+      const words = q.split(/\s+/);
       for (let n = words.length; n >= 1; n--) {
-        if (n === 1 && words[0].length < 5) break; // a lone short word matches junk
-        if (++attempts > 6) return null;           // cap API spend per post
+        if (n === 1 && !single) break;          // lone keyword words match junk
+        if (n === 1 && words[0].length < 5) break;
+        if (++attempts > 6) break outer;        // cap API spend per post
         const gifs = await giphySearch(words.slice(0, n).join(" "));
-        if (gifs) { gifBatch = { query: cand, gifs }; gifCursor = 0; return pickGif(); }
+        if (gifs) { gifBatch = { query: q, gifs }; gifCursor = 0; return pickGif(); }
       }
+    }
+    const text = ((story.trend || "") + " " + (story.title || "") + " " + (story.summary || "")).toLowerCase();
+    for (const [re, queries] of GIF_MOODS) {
+      if (!re.test(text)) continue;
+      for (const q of queries) {
+        const gifs = await giphySearch(q);
+        if (gifs) { gifBatch = { query: q, gifs }; gifCursor = 0; return pickGif(); }
+      }
+      return null;
     }
     gifBatch = null;
     return null;
