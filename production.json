@@ -1,17 +1,17 @@
 {
- "generated_at": "2026-10-22T23:28:11Z",
+ "generated_at": "2026-10-23T05:04:06Z",
  "writer": "template",
- "style": "rainy_night",
+ "style": "sunset",
  "story": {
-  "title": "Puka Nacua Exits Thursday's practice with calf injury",
-  "outlet": "Fantasy Footballers Podcast",
-  "link": "https://news.google.com/rss/articles/CBMipgFBVV95cUxPNXFEQjZmNVp2cDNERndpVS1LWkZhT1hZMnZzanF1SGJEcnNhVVpWRGRpMFJ5anlLd2dyb0xDaXBSMjNqY3l0Q0ZVZ1E5TWQ3Qk5Ia3cwOFFZN21HTEUwUWszZ0VJYy1KZGxSUVhhZHpSbnJKWjllVXpMb1NVRXRnUW9malR4R1RZaV9fdFJYUVIwZzF6MlRQNlI2RlY0eVRqaE05ZFRB?oc=5",
-  "trend": "puka nacua"
+  "title": "Asha Sharma expands Xbox Labs for AI and gaming experiments — Powerupgaming.co.uk",
+  "outlet": "شبكة تواصل الإخبارية",
+  "link": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE5YRXlnUzdZak5tZmpCdEpqMHQxT0pWZmx1M1lFaGU2YTJOZEpkUlV6WXpWTEJiXzFxVUdzYjdKM09zclVYMUE0bVZWU2RTWW9NT0RV?oc=5",
+  "trend": "powerupgaming.co.uk"
  },
  "pack": {
-  "style": "rainy_night",
-  "logline": "Puka Nacua Exits Thursday's practice with calf injury. One quiet moment that captures why it matters.",
-  "scene": "Puka Nacua Exits Thursday's practice with calf injury. Trending: puka nacua. The scene opens on a figure mid-thought.",
+  "style": "sunset",
+  "logline": "Asha Sharma expands Xbox Labs for AI and gaming experiments — Powerupgaming. One quiet moment that captures why it matters.",
+  "scene": "Asha Sharma expands Xbox Labs for AI and gaming experiments — Powerupgaming.co.uk. Trending: powerupgaming.co.uk. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -27,19 +27,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "rain",
-   "atmosphere": "rainy night mood - calm and unhurried"
+   "weather": "sunset",
+   "atmosphere": "sunset mood - calm and unhurried"
   },
   "shot": {
-   "camera": "crane_up",
+   "camera": "pan_right",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#1b2735",
-    "ground": "#232830",
-    "accent": "#6fd3c7"
+    "sky": "#d98d5f",
+    "ground": "#3f3a52",
+    "accent": "#ffd166"
    },
    "duration": 5,
    "characters": [
@@ -114,7 +114,7 @@
     }
    ],
    "camera": {
-    "move": "crane_up",
+    "move": "pan_right",
     "start": {
      "pos": [
       4.8,
@@ -154,8 +154,8 @@
    }
   }
  },
- "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Puka Nacua Exits Thursday's practice with calf injury. Trending: puka nacua. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, rain. moody night rain, neon reflections on wet ground, cinematic noir, key light from the sun with gentle fill, rainy night mood - calm and unhurried. medium shot on the figure, window behind, camera crane_up, 50mm equivalent. --ar 16:9",
- "mj_motion": "Camera crane_up, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
+ "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Asha Sharma expands Xbox Labs for AI and gaming experiments — Powerupgaming.co.uk. Trending: powerupgaming.co.uk. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, sunset. golden hour, warm rim light, long shadows, cinematic haze, key light from the sun with gentle fill, sunset mood - calm and unhurried. medium shot on the figure, window behind, camera pan_right, 50mm equivalent. --ar 16:9",
+ "mj_motion": "Camera pan_right, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
  "qa": {
   "checks": 72,
   "passed": 72,
