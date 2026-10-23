@@ -1,8 +1,8 @@
 {
  "pack": {
   "style": "neon_city",
-  "logline": "Inside Robert Downey Jr. One quiet moment that captures why it matters.",
-  "scene": "Inside Robert Downey Jr.’s MCU Return for ‘Avengers: Endgame’. Trending: avengers doomsday. The scene opens on a figure mid-thought.",
+  "logline": "CONGRATULATIONS! Chief Sealth IHS success at Metro League 2A cross country championships. One quiet moment that captures why it matters.",
+  "scene": "CONGRATULATIONS! Chief Sealth IHS success at Metro League 2A cross country championships. Trending: Congratulations Chief. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -22,7 +22,7 @@
    "atmosphere": "neon city mood - calm and unhurried"
   },
   "shot": {
-   "camera": "orbit_left",
+   "camera": "crane_up",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
@@ -105,7 +105,7 @@
     }
    ],
    "camera": {
-    "move": "orbit_left",
+    "move": "crane_up",
     "start": {
      "pos": [
       4.8,
@@ -146,10 +146,10 @@
   }
  },
  "story": {
-  "title": "Inside Robert Downey Jr.’s MCU Return for ‘Avengers: Endgame’",
-  "outlet": "Yahoo",
-  "link": "https://news.google.com/rss/articles/CBMimgFBVV95cUxOWk5mQk9zSjM1eW1UcHBoVThhTU9JRGdEMUF1MHIwZG5wbW1XaHUwQUtlRGQ2NEpRQTA3QzUyTk9PeFEyT0kxOWZvN2dmUHdDczV4MjM4RUpXc1N4Vjc5SlRQSTktUC01bUVxSHpFM3lVVXNCaWhLbVZZLVc2eEFrZmRUMEdQTGpZblJjdndqVm9qUHFtOUVUQl9B?oc=5",
-  "trend": "avengers doomsday"
+  "title": "CONGRATULATIONS! Chief Sealth IHS success at Metro League 2A cross country championships",
+  "outlet": "West Seattle Blog...",
+  "link": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxOSDBnRFB2MmpvemRfbjJrMkxFZW1mM2FhbHMydHFtMWlOQUV6N0lfOGhwNmNDcUduNmNEUzlEQTlqbUVMNng2YXVEVTNVNXpCRHB4SkFMcHZHejJKaEQwN2VQNzFXSnlkUFE1T3RZLVRBLXBUQzlScnZadjc0allFOVRjTkpsN2ZfTHI5RDlpMWlBeHFFNEpPRThPbkQ3V1lCMmRqSUxTR0d6QzEwY3cxZm9COUtnUGNJMEp3QnVtV0Q5QQ?oc=5",
+  "trend": "Congratulations Chief"
  },
- "generated_at": "2026-10-23T13:36:38Z"
+ "generated_at": "2026-10-23T19:59:57Z"
 }
