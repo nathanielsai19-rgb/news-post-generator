@@ -1,8 +1,8 @@
 {
  "pack": {
-  "style": "neon_city",
-  "logline": "CONGRATULATIONS! Chief Sealth IHS success at Metro League 2A cross country championships. One quiet moment that captures why it matters.",
-  "scene": "CONGRATULATIONS! Chief Sealth IHS success at Metro League 2A cross country championships. Trending: Congratulations Chief. The scene opens on a figure mid-thought.",
+  "style": "noon_clear",
+  "logline": "'We'll Share More as Plans are Finalized' — Xbox's First-Ever Chief Operating Officer Leaves Role Just Three Months After It Was Created as Company's Massive Restructuring Continues. One quiet moment that captures why it matters.",
+  "scene": "'We'll Share More as Plans are Finalized' — Xbox's First-Ever Chief Operating Officer Leaves Role Just Three Months After It Was Created as Company's Massive Restructuring Continues. Trending: helen chiang xbox coo departure. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -18,8 +18,8 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "night",
-   "atmosphere": "neon city mood - calm and unhurried"
+   "weather": "clear",
+   "atmosphere": "noon clear mood - calm and unhurried"
   },
   "shot": {
    "camera": "crane_up",
@@ -28,9 +28,9 @@
   },
   "build": {
    "palette": {
-    "sky": "#1a1433",
-    "ground": "#241d3d",
-    "accent": "#ff4d9d"
+    "sky": "#8fb8d8",
+    "ground": "#4a5d3a",
+    "accent": "#e8c04a"
    },
    "duration": 5,
    "characters": [
@@ -146,10 +146,10 @@
   }
  },
  "story": {
-  "title": "CONGRATULATIONS! Chief Sealth IHS success at Metro League 2A cross country championships",
-  "outlet": "West Seattle Blog...",
-  "link": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxOSDBnRFB2MmpvemRfbjJrMkxFZW1mM2FhbHMydHFtMWlOQUV6N0lfOGhwNmNDcUduNmNEUzlEQTlqbUVMNng2YXVEVTNVNXpCRHB4SkFMcHZHejJKaEQwN2VQNzFXSnlkUFE1T3RZLVRBLXBUQzlScnZadjc0allFOVRjTkpsN2ZfTHI5RDlpMWlBeHFFNEpPRThPbkQ3V1lCMmRqSUxTR0d6QzEwY3cxZm9COUtnUGNJMEp3QnVtV0Q5QQ?oc=5",
-  "trend": "Congratulations Chief"
+  "title": "'We'll Share More as Plans are Finalized' — Xbox's First-Ever Chief Operating Officer Leaves Role Just Three Months After It Was Created as Company's Massive Restructuring Continues",
+  "outlet": "IGN",
+  "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxOR3pHMmJoZTg1LTB2REg1Y0VhUmltaTdZWUpjbDdiM29pbnBIUWRyN2VRVXF5ckg4M05nNmRsejZ6d2NFTHpMMlNRU2tCdXF1bzhiM3dsRUZNa2lOZmZZNHpib1Q3eWdLRVFvbW9oWDEyeXBiLW9Ta015ZHdWemEtak1RRF95NkNlY2VZMlVQSEhQb040bWU1Z3g1Y1d5cnVMVkV2a1o3NzN0Z3NtUFd1UkdWUjMzN1NHaTd5Mw?oc=5",
+  "trend": "helen chiang xbox coo departure"
  },
- "generated_at": "2026-10-23T19:59:57Z"
+ "generated_at": "2026-10-23T23:14:56Z"
 }
