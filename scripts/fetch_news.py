@@ -127,7 +127,7 @@ SPORTS_OUTLET_RE = re.compile(
 SPORTS_TITLE_RE = re.compile(
     r"nfl|nba|nhl|mlb|soccer|football|rugby|basketball|baseball|hockey|playoff|"
     r"world series|league|\bcup\b|derby|tournament|tennis|nascar|\bf1\b|formula|"
-    r"golf|boxing|ufc|wwe|fifa|uefa|olympics|wrestler|wrestling|quarterback|"
+    r"golf|boxing|ufc|wwe|fifa|uefa|olympics|wrestler|wrestling|gymnast|gymnastics|quarterback|"
     r"shutout|goalie|goaltender|touchdown|\bpoints\b|\bcoach\b|"
     r"cavs|cavaliers|knicks|lakers|celtics|mavericks|pelicans|grizzlies|hornets|"
     r"pacers|pistons|nuggets|clippers|timberwolves|\bbucks\b|\bbulls\b|raptors|"
@@ -175,7 +175,7 @@ TREND_BLOCK_RE = re.compile(
     r"manchester|arsenal|chelsea|liverpool|madrid|barcelona|juventus|bayern|"
     r"dodgers|yankees|brewers|warriors|maxey|harden|hearts of oak|kotoko|"
     r"man utd|man united|red devils|bwfc|bolton|wanderers|\bbulls\b|"
-    r"ric flair|cleetus|talladega|jesse legree|"
+    r"ric flair|cleetus|talladega|jesse legree|skye blakely|\bskye\b|"
     r"trump|biden|president|senate|congress|"
     r"election|government|minister|parliament|policy|white house|\bwar\b|"
     r"missile|military|troops|ukraine|russia|iran|israel|gaza|hamas|putin|"
