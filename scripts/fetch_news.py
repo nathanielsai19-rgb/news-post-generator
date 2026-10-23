@@ -67,12 +67,12 @@ MAX_TREND_AGE_HOURS = 24
 TRENDING_CAP = 60
 
 # X (Twitter) trending topics from the public trends24.in mirror — no account,
-# no API keys. English-speaking regions only: Ghana (the user's country), US,
-# and UK. (Worldwide mixes in too many non-English trends.)
+# no API keys. What's popular on X: worldwide + US + UK. (Ghana local topics
+# removed at the user's request; the language guard keeps worldwide English.)
 X_TREND_REGIONS = [
-    ("ghana", "https://trends24.in/ghana/"),
     ("united-states", "https://trends24.in/united-states/"),
     ("united-kingdom", "https://trends24.in/united-kingdom/"),
+    ("worldwide", "https://trends24.in/"),
 ]
 MAX_X_TRENDS_PER_REGION = 8
 X_TREND_LINK_RE = re.compile(r"class=trend-link>([^<]+)</a>")
@@ -122,6 +122,27 @@ SPORTS_OUTLET_RE = re.compile(
     re.I,
 )
 
+# Stories whose titles carry sports keywords are sports no matter the term
+# (US trends are sports-heavy: Bulls, Indiana Fever, Ric Flair, ...).
+SPORTS_TITLE_RE = re.compile(
+    r"nfl|nba|nhl|mlb|soccer|football|rugby|basketball|baseball|hockey|playoff|"
+    r"world series|league|\bcup\b|derby|tournament|tennis|nascar|\bf1\b|formula|"
+    r"golf|boxing|ufc|wwe|fifa|uefa|olympics|wrestler|wrestling|quarterback|"
+    r"shutout|goalie|goaltender|touchdown|\bpoints\b|\bcoach\b|"
+    r"cavs|cavaliers|knicks|lakers|celtics|mavericks|pelicans|grizzlies|hornets|"
+    r"pacers|pistons|nuggets|clippers|timberwolves|\bbucks\b|\bbulls\b|raptors|"
+    r"76ers|sixers|devils|jets|winnipeg|indiana fever|hearts of oak|kotoko|"
+    r"bournemouth|everton|fulham|brentford|newcastle|west ham|aston villa|"
+    r"burnley|southampton|brighton|bayern|man utd|man united|red devils|arsenal|"
+    r"chelsea|liverpool|madrid|barcelona|juventus|dodgers|yankees|brewers|"
+    r"warriors|glasgow|medvedev|mariners|seahawks|steelers|packers|eagles|"
+    r"chiefs|bengals|ravens|broncos|colts|jaguars|bills\b|"
+    r"patriots|chargers|raiders|commanders|falcons|panthers|saints\b|"
+    r"rams|cardinals|49ers|vikings|texans|browns\b|buccaneers|"
+    r"talladega|ric flair|tony stewart|leading receiver",
+    re.I,
+)
+
 # Posts must be English. Non-Latin scripts are dropped outright; Latin-script
 # non-English text is caught by its function words (two or more hits).
 NON_LATIN_RE = re.compile(
@@ -153,7 +174,8 @@ TREND_BLOCK_RE = re.compile(
     r"brentford|newcastle|west ham|aston villa|burnley|southampton|brighton|"
     r"manchester|arsenal|chelsea|liverpool|madrid|barcelona|juventus|bayern|"
     r"dodgers|yankees|brewers|warriors|maxey|harden|hearts of oak|kotoko|"
-    r"man utd|man united|red devils|bwfc|bolton|wanderers|"
+    r"man utd|man united|red devils|bwfc|bolton|wanderers|\bbulls\b|"
+    r"ric flair|cleetus|talladega|jesse legree|"
     r"trump|biden|president|senate|congress|"
     r"election|government|minister|parliament|policy|white house|\bwar\b|"
     r"missile|military|troops|ukraine|russia|iran|israel|gaza|hamas|putin|"
@@ -285,6 +307,8 @@ def trend_stories(term: str, src: str) -> list[dict]:
         if not title or not link:
             continue
         if len(title.split()) < TREND_MIN_TITLE_WORDS or gn_title_is_junk(title):
+            continue
+        if SPORTS_TITLE_RE.search(title):
             continue
         if is_non_english(title):
             continue
