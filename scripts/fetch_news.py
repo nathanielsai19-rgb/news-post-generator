@@ -67,10 +67,10 @@ MAX_TREND_AGE_HOURS = 24
 TRENDING_CAP = 60
 
 # X (Twitter) trending topics from the public trends24.in mirror — no account,
-# no API keys. What's popular on X: worldwide + US + UK. (Ghana local topics
-# removed at the user's request; the language guard keeps worldwide English.)
+# no API keys. What's popular on X: worldwide + UK. (US trends are ~70% sports
+# in season and leak new athlete names every cycle; worldwide carries the same
+# big tech/entertainment stories. Ghana dropped at the user's request.)
 X_TREND_REGIONS = [
-    ("united-states", "https://trends24.in/united-states/"),
     ("united-kingdom", "https://trends24.in/united-kingdom/"),
     ("worldwide", "https://trends24.in/"),
 ]
@@ -128,7 +128,7 @@ SPORTS_TITLE_RE = re.compile(
     r"nfl|nba|nhl|mlb|soccer|football|rugby|basketball|baseball|hockey|playoff|"
     r"world series|league|\bcup\b|derby|tournament|tennis|nascar|\bf1\b|formula|"
     r"golf|boxing|ufc|wwe|fifa|uefa|olympics|wrestler|wrestling|gymnast|gymnastics|quarterback|"
-    r"shutout|goalie|goaltender|touchdown|\bpoints\b|\bcoach\b|"
+    r"shutout|goalie|goaltender|touchdown|\bpoints\b|\bcoach\b|\btransfer\b|"
     r"cavs|cavaliers|knicks|lakers|celtics|mavericks|pelicans|grizzlies|hornets|"
     r"pacers|pistons|nuggets|clippers|timberwolves|\bbucks\b|\bbulls\b|raptors|"
     r"76ers|sixers|devils|jets|winnipeg|indiana fever|hearts of oak|kotoko|"
