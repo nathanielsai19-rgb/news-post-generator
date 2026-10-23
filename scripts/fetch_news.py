@@ -67,11 +67,12 @@ MAX_TREND_AGE_HOURS = 24
 TRENDING_CAP = 60
 
 # X (Twitter) trending topics from the public trends24.in mirror — no account,
-# no API keys. Ghana (the user's country), US, and worldwide.
+# no API keys. English-speaking regions only: Ghana (the user's country), US,
+# and UK. (Worldwide mixes in too many non-English trends.)
 X_TREND_REGIONS = [
     ("ghana", "https://trends24.in/ghana/"),
     ("united-states", "https://trends24.in/united-states/"),
-    ("worldwide", "https://trends24.in/"),
+    ("united-kingdom", "https://trends24.in/united-kingdom/"),
 ]
 MAX_X_TRENDS_PER_REGION = 8
 X_TREND_LINK_RE = re.compile(r"class=trend-link>([^<]+)</a>")
@@ -121,6 +122,26 @@ SPORTS_OUTLET_RE = re.compile(
     re.I,
 )
 
+# Posts must be English. Non-Latin scripts are dropped outright; Latin-script
+# non-English text is caught by its function words (two or more hits).
+NON_LATIN_RE = re.compile(
+    r"[Ͱ-ϿЀ-ӿԀ-ԯ֐-׿؀-ۿ܀-ݏ"
+    r"ऀ-ॿ฀-๿ᄀ-ᇿ぀-ヿ㐀-鿿가-힯]"
+)
+NON_ENGLISH_WORD_RE = re.compile(
+    r"\b(?:el|los|las|del|dos|das|una|para|como|não|nao|voce|você|hoy|mañana|les|des|"
+    r"une|pour|avec|dans|sont|mais|que|qui|der|das|und|für|fur|mit|von|sich|nicht|"
+    r"ist|sind|wird|werden|nach|über|uber|gli|della|delle|questa|questo|quando)\b",
+    re.I,
+)
+
+
+def is_non_english(text: str) -> bool:
+    if NON_LATIN_RE.search(text):
+        return True
+    hits = set(m.group(0).lower() for m in NON_ENGLISH_WORD_RE.finditer(text))
+    return len(hits) >= 2
+
 # Trending terms that are sports or politics are never chased (user rule:
 # no politics, no sports posts).
 TREND_BLOCK_RE = re.compile(
@@ -132,7 +153,7 @@ TREND_BLOCK_RE = re.compile(
     r"brentford|newcastle|west ham|aston villa|burnley|southampton|brighton|"
     r"manchester|arsenal|chelsea|liverpool|madrid|barcelona|juventus|bayern|"
     r"dodgers|yankees|brewers|warriors|maxey|harden|hearts of oak|kotoko|"
-    r"man utd|man united|red devils|"
+    r"man utd|man united|red devils|bwfc|bolton|wanderers|"
     r"trump|biden|president|senate|congress|"
     r"election|government|minister|parliament|policy|white house|\bwar\b|"
     r"missile|military|troops|ukraine|russia|iran|israel|gaza|hamas|putin|"
@@ -265,6 +286,8 @@ def trend_stories(term: str, src: str) -> list[dict]:
             continue
         if len(title.split()) < TREND_MIN_TITLE_WORDS or gn_title_is_junk(title):
             continue
+        if is_non_english(title):
+            continue
         if not trend_overlaps(term, title):
             continue
         outlet = gn_item_outlet(entry, "Google News")
@@ -306,7 +329,7 @@ def fetch_trending() -> list[dict]:
             continue
         for entry in parsed.entries:
             term = clean_text(entry.get("title"))
-            if not term or TREND_BLOCK_RE.search(term):
+            if not term or TREND_BLOCK_RE.search(term) or is_non_english(term):
                 continue
             if term.lower() in {t.lower() for t in terms}:
                 continue
@@ -337,7 +360,7 @@ def fetch_x_trends() -> list[dict]:
             continue
         for m in X_TREND_LINK_RE.findall(page):
             term = clean_text(m).lstrip("#").strip()
-            if len(term) < 3 or TREND_BLOCK_RE.search(term):
+            if len(term) < 3 or TREND_BLOCK_RE.search(term) or is_non_english(term):
                 continue
             if term.lower() in {t.lower() for t in terms}:
                 continue
