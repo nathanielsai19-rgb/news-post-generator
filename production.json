@@ -1,17 +1,17 @@
 {
- "generated_at": "2026-10-23T05:04:06Z",
+ "generated_at": "2026-10-23T13:36:38Z",
  "writer": "template",
- "style": "sunset",
+ "style": "neon_city",
  "story": {
-  "title": "Asha Sharma expands Xbox Labs for AI and gaming experiments — Powerupgaming.co.uk",
-  "outlet": "شبكة تواصل الإخبارية",
-  "link": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE5YRXlnUzdZak5tZmpCdEpqMHQxT0pWZmx1M1lFaGU2YTJOZEpkUlV6WXpWTEJiXzFxVUdzYjdKM09zclVYMUE0bVZWU2RTWW9NT0RV?oc=5",
-  "trend": "powerupgaming.co.uk"
+  "title": "Inside Robert Downey Jr.’s MCU Return for ‘Avengers: Endgame’",
+  "outlet": "Yahoo",
+  "link": "https://news.google.com/rss/articles/CBMimgFBVV95cUxOWk5mQk9zSjM1eW1UcHBoVThhTU9JRGdEMUF1MHIwZG5wbW1XaHUwQUtlRGQ2NEpRQTA3QzUyTk9PeFEyT0kxOWZvN2dmUHdDczV4MjM4RUpXc1N4Vjc5SlRQSTktUC01bUVxSHpFM3lVVXNCaWhLbVZZLVc2eEFrZmRUMEdQTGpZblJjdndqVm9qUHFtOUVUQl9B?oc=5",
+  "trend": "avengers doomsday"
  },
  "pack": {
-  "style": "sunset",
-  "logline": "Asha Sharma expands Xbox Labs for AI and gaming experiments — Powerupgaming. One quiet moment that captures why it matters.",
-  "scene": "Asha Sharma expands Xbox Labs for AI and gaming experiments — Powerupgaming.co.uk. Trending: powerupgaming.co.uk. The scene opens on a figure mid-thought.",
+  "style": "neon_city",
+  "logline": "Inside Robert Downey Jr. One quiet moment that captures why it matters.",
+  "scene": "Inside Robert Downey Jr.’s MCU Return for ‘Avengers: Endgame’. Trending: avengers doomsday. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -27,19 +27,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "sunset",
-   "atmosphere": "sunset mood - calm and unhurried"
+   "weather": "night",
+   "atmosphere": "neon city mood - calm and unhurried"
   },
   "shot": {
-   "camera": "pan_right",
+   "camera": "orbit_left",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#d98d5f",
-    "ground": "#3f3a52",
-    "accent": "#ffd166"
+    "sky": "#1a1433",
+    "ground": "#241d3d",
+    "accent": "#ff4d9d"
    },
    "duration": 5,
    "characters": [
@@ -114,7 +114,7 @@
     }
    ],
    "camera": {
-    "move": "pan_right",
+    "move": "orbit_left",
     "start": {
      "pos": [
       4.8,
@@ -154,8 +154,8 @@
    }
   }
  },
- "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Asha Sharma expands Xbox Labs for AI and gaming experiments — Powerupgaming.co.uk. Trending: powerupgaming.co.uk. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, sunset. golden hour, warm rim light, long shadows, cinematic haze, key light from the sun with gentle fill, sunset mood - calm and unhurried. medium shot on the figure, window behind, camera pan_right, 50mm equivalent. --ar 16:9",
- "mj_motion": "Camera pan_right, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
+ "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Inside Robert Downey Jr.’s MCU Return for ‘Avengers: Endgame’. Trending: avengers doomsday. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, night. neon-lit city night, cyberpunk palette, volumetric glow, key light from the sun with gentle fill, neon city mood - calm and unhurried. medium shot on the figure, window behind, camera orbit_left, 50mm equivalent. --ar 16:9",
+ "mj_motion": "Camera orbit_left, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
  "qa": {
   "checks": 72,
   "passed": 72,
