@@ -33,6 +33,16 @@ A mobile-first page that turns today's hottest headlines into ready-to-paste soc
 | `scene-packs/*.zip` | scene packs: narration doc with Midjourney prompts, reference images, `scene.blend`, spec |
 | `.env` | local secrets (gitignored): `OPENAI_API_KEY`, optional `GROQ_API_KEY` / `DEEPSEEK_API_KEY` |
 
+## Live mode (fresh trends on every click)
+
+The GitHub Action refreshes `news.json` every 30 minutes. For fresher posts, run the local live server on the PC:
+
+```bash
+python scripts/live_server.py   # or double-click start-live.bat
+```
+
+It rebuilds the trending dataset (X trends + Google Trends, all filters, topic cards) every 3 minutes in the background and serves it on `http://127.0.0.1:8765/trends`. The page tries it on every Generate (1.8s timeout) and shows **"live ·"** in the footer when connected; when the server isn't running it silently falls back to the GitHub snapshot. Live mode works in the browser on the PC (localhost is exempt from mixed-content rules); phones keep using the snapshot.
+
 ## Video pipeline (OpenAI writer + local Blender render)
 
 The cloud workflow (`generate-video.yml`, every 4 h) only **writes** the
