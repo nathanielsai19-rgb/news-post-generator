@@ -895,6 +895,30 @@
     "Lead with the specific moment from the story that is hardest to believe but true.",
   ];
 
+  // AI writing via the local live server (it holds the Groq key, so no
+  // signup is needed on this PC — falls back to the built-in style when the
+  // server is off or has no key)
+  async function aiWriteLive(story, angle) {
+    try {
+      const ctl = new AbortController();
+      const timer = setTimeout(() => ctl.abort(), 60000);
+      const res = await fetch("http://127.0.0.1:8765/aiwrite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: story.title, outlet: story.outlet, trend: story.trend,
+          summary: story.summary, ctx: story.ctx,
+          voice: load("inkdrop_voice") || "", angle,
+        }),
+        signal: ctl.signal,
+      });
+      clearTimeout(timer);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return (data && data.text) ? data.text : null;
+    } catch (e) { return null; }
+  }
+
   async function writePost(story, onStage) {
     const g = !!load("inkdrop_groq_key");
     const d = !!load("inkdrop_deepseek_key");
@@ -913,6 +937,9 @@
       return { text: (await improveWithDeepSeek(story, draft, angle)) || draft, votes: null, forced: false, mode: "team" };
     }
     if (mode === "consensus") return consensusPost(story, onStage || function () {}, angle);
+    // no keys on this device — try the live server's AI before the template
+    const live = await aiWriteLive(story, angle);
+    if (live) return { text: live, votes: null, forced: false, mode: "ai" };
     return { text: templatePost(story), votes: null, forced: false, mode: "template" };
   }
 
