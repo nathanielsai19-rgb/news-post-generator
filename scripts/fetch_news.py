@@ -145,7 +145,7 @@ SPORTS_TITLE_RE = re.compile(
     r"\bv\.\s|\bvs\.\s|ipswich|nottingham forest|\bboro\b|glasner|delap|mcatee|"
     r"ndoye|milenkovic|lankshear|diop|mcgree|middlesbrough|nffc|itfc|sundowns|"
     r"smackdown|manchester united|manchester city|tatum|jaylen brown|pitino|"
-    r"louisville|eddie howe",
+    r"louisville|eddie howe|burroughs|caliendo|hat trick|\bspurs\b",
     re.I,
 )
 
@@ -288,6 +288,7 @@ TREND_BLOCK_RE = re.compile(
     r"ipswich|nottingham forest|\bboro\b|glasner|delap|mcatee|ndoye|milenkovic|"
     r"lankshear|diop|mcgree|middlesbrough|nffc|itfc|sundowns|"
     r"blake monroe|hebron|netanyahu|tatum|jaylen brown|pitino|eddie howe|"
+    r"burroughs|caliendo|hat trick|"
     r"trump|biden|president|senate|congress|"
     r"election|government|minister|parliament|policy|white house|\bwar\b|"
     r"missile|military|troops|ukraine|russia|iran|israel|gaza|hamas|putin|"

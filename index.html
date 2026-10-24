@@ -422,7 +422,21 @@
   buildModes();
 
   /* ---------- news ---------- */
+  // Live mode: a local server (scripts/live_server.py) serves trends fetched
+  // minutes ago. The page tries it first, then falls back to the GitHub snapshot.
+  const LIVE_URL = "http://127.0.0.1:8765/trends";
+
   async function loadNews() {
+    try {
+      const ctl = new AbortController();
+      const timer = setTimeout(() => ctl.abort(), 1800);
+      const res = await fetch(LIVE_URL + "?v=" + Date.now(), { cache: "no-store", signal: ctl.signal });
+      clearTimeout(timer);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.items) && data.items.length) { news = data; return; }
+      }
+    } catch (e) { /* no live server — use the snapshot */ }
     const url = "news.json?v=" + Date.now();
     let res = await fetch(url, { cache: "no-store" });
     if (!res.ok) throw new Error("news-fetch-failed");
@@ -436,7 +450,7 @@
     if (!news.updated) { el.textContent = "news: warming up…"; el.className = "fresh stale"; return; }
     const mins = Math.max(1, Math.round((Date.now() - new Date(news.updated).getTime()) / 60000));
     const label = mins < 60 ? mins + " min ago" : Math.round(mins / 60) + "h ago";
-    el.textContent = "news updated " + label;
+    el.textContent = (news.live ? "live · " : "") + "news updated " + label;
     el.className = "fresh" + (mins > 1500 ? " stale" : "");
   }
 
@@ -449,7 +463,7 @@
   let recentTopics = []; // avoid repeating the same topic (sports sports sports...)
 
   const TOPIC_RULES = [
-    ["sports", /mlb|nfl|nba|nhl|soccer|football|rugby|basketball|baseball|hockey|playoff|world series|league|cup|derby|tournament|mariners|dodgers|yankees|brewers|arsenal|chelsea|manchester|liverpool|madrid|barcelona|juventus|warriors|glasgow|medvedev|tennis|nascar|f1\b|formula|golf|boxing|ufc|wwe|fifa|uefa|olympics|coach|manager|fc\b|devils|jets|winnipeg|shutout|goalie|goaltender|puck\b|touchdown|quarterback|cavs|cavaliers|knicks|lakers|celtics|mavericks|pelicans|grizzlies|hornets|pacers|pistons|nuggets|clippers|timberwolves|\bbucks\b|raptors|76ers|sixers|bournemouth|everton|fulham|brentford|newcastle|west ham|aston villa|burnley|southampton|brighton|bayern|maxey|harden|hearts of oak|kotoko|man utd|man united|red devils|ipswich|nottingham forest|\bboro\b|glasner|delap|nffc|itfc|smackdown|manchester united|tatum|pitino|louisville|\bv\.\s|\bvs\.\s|\b(leicester|stoke|york|cardiff|norwich|bristol|swansea|coventry|birmingham) city\b/i],
+    ["sports", /mlb|nfl|nba|nhl|soccer|football|rugby|basketball|baseball|hockey|playoff|world series|league|cup|derby|tournament|mariners|dodgers|yankees|brewers|arsenal|chelsea|manchester|liverpool|madrid|barcelona|juventus|warriors|glasgow|medvedev|tennis|nascar|f1\b|formula|golf|boxing|ufc|wwe|fifa|uefa|olympics|coach|manager|fc\b|devils|jets|winnipeg|shutout|goalie|goaltender|puck\b|touchdown|quarterback|cavs|cavaliers|knicks|lakers|celtics|mavericks|pelicans|grizzlies|hornets|pacers|pistons|nuggets|clippers|timberwolves|\bbucks\b|raptors|76ers|sixers|bournemouth|everton|fulham|brentford|newcastle|west ham|aston villa|burnley|southampton|brighton|bayern|maxey|harden|hearts of oak|kotoko|man utd|man united|red devils|ipswich|nottingham forest|\bboro\b|glasner|delap|nffc|itfc|smackdown|manchester united|tatum|pitino|louisville|\bspurs\b|\bv\.\s|\bvs\.\s|\b(leicester|stoke|york|cardiff|norwich|bristol|swansea|coventry|birmingham) city\b/i],
     ["entertainment", /movie|film|actor|actress|singer|song|album|show|series|netflix|hbo|network|music|trailer|celebrity|star trek|white lotus/i],
     ["politics", /trump|biden|president|senate|congress|election|government|minister|parliament|policy|white house|republican|democrat|senator|congressman|governor|netanyahu|hebron|\bwar\b|missile|military|troops|army|navy|ukraine|russia|iran|israel|gaza|hamas|putin|zelensky|nato|sanctions|tariffs?|ceasefire|invasion|regime/i],
     ["business", /stock|market|economy|bank|invest|crypto|bitcoin|trade|inflation|earnings|cathie wood/i],
