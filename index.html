@@ -244,6 +244,7 @@
       <button class="btn" id="copyBtn">Copy</button>
       <button class="btn" id="creditBtn">Credit</button>
       <button class="btn" id="shareBtn">Share</button>
+      <button class="btn" id="tgBtn">Telegram</button>
       <button class="btn ghost" id="againBtn" aria-label="Generate another">↻</button>
     </div>
   </section>
@@ -316,6 +317,15 @@
     <div class="field-hint">Adds a matching GIF to every post — <a href="https://developers.giphy.com/" target="_blank" rel="noopener">get one free</a></div>
   </div>
   <div class="field">
+    <label for="tgTokenInput">Telegram bot token (X Wallpaper bot)</label>
+    <input type="password" id="tgTokenInput" placeholder="123456789:AA…" autocomplete="off" spellcheck="false">
+  </div>
+  <div class="field">
+    <label for="tgChatInput">Telegram chat id</label>
+    <input type="text" id="tgChatInput" placeholder="your chat id with the bot" autocomplete="off" spellcheck="false">
+    <div class="field-hint">Every generated post is sent to your Telegram so you can post it from anywhere. Keys never leave this device.</div>
+  </div>
+  <div class="field">
     <label for="voiceInput">Your best posts — voice reference (optional)</label>
     <textarea id="voiceInput" rows="3" placeholder="Paste 2-4 of your best-performing posts, one per line. Writers will imitate this voice."></textarea>
   </div>
@@ -369,10 +379,11 @@
     const g = !!load("inkdrop_groq_key");
     const d = !!load("inkdrop_deepseek_key");
     const giphy = !!load("inkdrop_giphy_key");
+    const tg = !!load("inkdrop_tg_token");
     const mode = MODES[load("inkdrop_mode") || "auto"] || "Auto";
     const el = $("keyStatus");
-    el.textContent = "Groq: " + (g ? "on" : "off") + " · DeepSeek: " + (d ? "on" : "off") + " · Giphy: " + (giphy ? "on" : "off") + " · mode: " + mode;
-    el.className = "status" + (g || d || giphy ? " on" : "");
+    el.textContent = "Groq: " + (g ? "on" : "off") + " · DeepSeek: " + (d ? "on" : "off") + " · Giphy: " + (giphy ? "on" : "off") + " · Telegram: " + (tg ? "on" : "off") + " · mode: " + mode;
+    el.className = "status" + (g || d || giphy || tg ? " on" : "");
   }
   function paintModes() {
     const active = load("inkdrop_mode") || "auto";
@@ -394,6 +405,8 @@
     $("dsKeyInput").value = load("inkdrop_deepseek_key") || "";
     $("dsModelInput").value = load("inkdrop_ds_model") || "";
     $("giphyKeyInput").value = load("inkdrop_giphy_key") || "";
+    $("tgTokenInput").value = load("inkdrop_tg_token") || "";
+    $("tgChatInput").value = load("inkdrop_tg_chat") || "";
     $("voiceInput").value = load("inkdrop_voice") || "";
     paintModes();
     $("backdrop").classList.add("open"); $("sheet").classList.add("open");
@@ -407,6 +420,8 @@
     save("inkdrop_deepseek_key", $("dsKeyInput").value.trim());
     save("inkdrop_ds_model", $("dsModelInput").value.trim());
     save("inkdrop_giphy_key", $("giphyKeyInput").value.trim());
+    save("inkdrop_tg_token", $("tgTokenInput").value.trim());
+    save("inkdrop_tg_chat", $("tgChatInput").value.trim());
     save("inkdrop_voice", $("voiceInput").value.trim());
     toast("Saved on this device");
     keyStatusText(); closeSheet();
@@ -415,7 +430,10 @@
     save("inkdrop_groq_key", "");
     save("inkdrop_deepseek_key", "");
     save("inkdrop_giphy_key", "");
+    save("inkdrop_tg_token", "");
+    save("inkdrop_tg_chat", "");
     $("keyInput").value = ""; $("dsKeyInput").value = ""; $("giphyKeyInput").value = "";
+    $("tgTokenInput").value = ""; $("tgChatInput").value = "";
     keyStatusText(); toast("Keys removed — built-in styles on");
   });
   keyStatusText();
@@ -1380,6 +1398,7 @@
       renderPost(story, result.text, result.votes, picked.fromLastHour);
       renderFact(fact);
       renderGif(gif, story);
+      pushToTelegram(true); // silent auto-send: the post lands in Telegram too
       if (result.mode === "template") {
         toast("Built-in style — no AI key on this device. Add one in ⚙ for hook + closer posts");
       } else if (!gif && !giphyKey()) {
@@ -1451,6 +1470,50 @@
     const gif = pickGif() || await fetchGif(lastGifStory);
     renderGif(gif, lastGifStory);
   });
+
+  /* ---------- Telegram (send the generated post to the user's bot) ---------- */
+  async function sendTelegram(text, credit, gifUrl) {
+    const token = (load("inkdrop_tg_token") || "").trim();
+    const chat = (load("inkdrop_tg_chat") || "").trim();
+    if (!token || !chat) return { ok: false, detail: "not-configured" };
+    const msg = text + (credit ? "\n\n" + credit : "");
+    try {
+      const res = await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: chat, text: msg, disable_web_page_preview: true }),
+      });
+      const data = await res.json();
+      if (data && data.ok && gifUrl) {
+        // the GIF animates inline in Telegram when sent separately
+        try {
+          await fetch("https://api.telegram.org/bot" + token + "/sendAnimation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: chat, animation: gifUrl }),
+          });
+        } catch (e) { /* text already arrived — fine */ }
+      }
+      return { ok: !!(data && data.ok), detail: (data && data.description) || "" };
+    } catch (e) { return { ok: false, detail: "network" }; }
+  }
+
+  async function pushToTelegram(silent) {
+    if (!lastPost) return;
+    const sent = await sendTelegram(
+      lastPost.body, lastPost.reply,
+      lastGif ? lastGif.images.original.url : null
+    );
+    if (sent.ok) {
+      toast("Sent to Telegram");
+    } else if (sent.detail === "not-configured") {
+      if (!silent) toast("Add the Telegram bot token + chat id in ⚙ first");
+    } else {
+      toast("Telegram send failed" + (sent.detail && sent.detail !== "network" ? ": " + sent.detail : ""), true);
+    }
+  }
+
+  $("tgBtn").addEventListener("click", () => pushToTelegram(false));
 
   /* ---------- events ---------- */
   function buildPills() {
