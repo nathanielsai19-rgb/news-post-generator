@@ -1,17 +1,17 @@
 {
- "generated_at": "2026-10-24T12:47:18Z",
+ "generated_at": "2026-10-24T18:51:43Z",
  "writer": "template",
- "style": "desert_noon",
+ "style": "neon_city",
  "story": {
-  "title": "Trending on X: A villa is a type of house that was originally an ancient Roman upper class country house that provided an escape from urban life.",
+  "title": "Trending on X: Welbeck is a village and former civil parish (now in the parish of Norton, Cuckney, Holbeck and Welbeck) within the Welbeck local voting ward of Bassetlaw District Council, in Nottinghamshire, England.",
   "outlet": "Wikipedia",
-  "link": "https://en.wikipedia.org/wiki/Villa",
-  "trend": "Villa"
+  "link": "https://en.wikipedia.org/wiki/Welbeck",
+  "trend": "Welbeck"
  },
  "pack": {
-  "style": "desert_noon",
-  "logline": "Trending on X: A villa is a type of house that was originally an ancient Roman upper class country house that provided an escape from urban life. One quiet moment that captures why it matters.",
-  "scene": "Trending on X: A villa is a type of house that was originally an ancient Roman upper class country house that provided an escape from urban life.. Trending: Villa. The scene opens on a figure mid-thought.",
+  "style": "neon_city",
+  "logline": "Trending on X: Welbeck is a village and former civil parish (now in the parish of Norton, Cuckney, Holbeck and Welbeck) within the Welbeck local voting ward of Bassetlaw District Council, in Nottinghamshire, England. One quiet moment that captures why it matters.",
+  "scene": "Trending on X: Welbeck is a village and former civil parish (now in the parish of Norton, Cuckney, Holbeck and Welbeck) within the Welbeck local voting ward of Bassetlaw District Council, in Nottinghamshire, England.. Trending: Welbeck. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -27,8 +27,8 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "clear",
-   "atmosphere": "desert noon mood - calm and unhurried"
+   "weather": "night",
+   "atmosphere": "neon city mood - calm and unhurried"
   },
   "shot": {
    "camera": "orbit_left",
@@ -37,9 +37,9 @@
   },
   "build": {
    "palette": {
-    "sky": "#9fd0e8",
-    "ground": "#d9b382",
-    "accent": "#e2574c"
+    "sky": "#1a1433",
+    "ground": "#241d3d",
+    "accent": "#ff4d9d"
    },
    "duration": 5,
    "characters": [
@@ -154,7 +154,7 @@
    }
   }
  },
- "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Trending on X: A villa is a type of house that was originally an ancient Roman upper class country house that provided an escape from urban life.. Trending: Villa. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, clear. harsh desert noon sun, heat haze, bleached warm colors, key light from the sun with gentle fill, desert noon mood - calm and unhurried. medium shot on the figure, window behind, camera orbit_left, 50mm equivalent. --ar 16:9",
+ "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Trending on X: Welbeck is a village and former civil parish (now in the parish of Norton, Cuckney, Holbeck and Welbeck) within the Welbeck local voting ward of Bassetlaw District Council, in Nottinghamshire, England.. Trending: Welbeck. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, night. neon-lit city night, cyberpunk palette, volumetric glow, key light from the sun with gentle fill, neon city mood - calm and unhurried. medium shot on the figure, window behind, camera orbit_left, 50mm equivalent. --ar 16:9",
  "mj_motion": "Camera orbit_left, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
  "qa": {
   "checks": 72,

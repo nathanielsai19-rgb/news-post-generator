@@ -1,8 +1,8 @@
 {
  "pack": {
-  "style": "desert_noon",
-  "logline": "Trending on X: A villa is a type of house that was originally an ancient Roman upper class country house that provided an escape from urban life. One quiet moment that captures why it matters.",
-  "scene": "Trending on X: A villa is a type of house that was originally an ancient Roman upper class country house that provided an escape from urban life.. Trending: Villa. The scene opens on a figure mid-thought.",
+  "style": "neon_city",
+  "logline": "Trending on X: Welbeck is a village and former civil parish (now in the parish of Norton, Cuckney, Holbeck and Welbeck) within the Welbeck local voting ward of Bassetlaw District Council, in Nottinghamshire, England. One quiet moment that captures why it matters.",
+  "scene": "Trending on X: Welbeck is a village and former civil parish (now in the parish of Norton, Cuckney, Holbeck and Welbeck) within the Welbeck local voting ward of Bassetlaw District Council, in Nottinghamshire, England.. Trending: Welbeck. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -18,8 +18,8 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "clear",
-   "atmosphere": "desert noon mood - calm and unhurried"
+   "weather": "night",
+   "atmosphere": "neon city mood - calm and unhurried"
   },
   "shot": {
    "camera": "orbit_left",
@@ -28,9 +28,9 @@
   },
   "build": {
    "palette": {
-    "sky": "#9fd0e8",
-    "ground": "#d9b382",
-    "accent": "#e2574c"
+    "sky": "#1a1433",
+    "ground": "#241d3d",
+    "accent": "#ff4d9d"
    },
    "duration": 5,
    "characters": [
@@ -146,10 +146,10 @@
   }
  },
  "story": {
-  "title": "Trending on X: A villa is a type of house that was originally an ancient Roman upper class country house that provided an escape from urban life.",
+  "title": "Trending on X: Welbeck is a village and former civil parish (now in the parish of Norton, Cuckney, Holbeck and Welbeck) within the Welbeck local voting ward of Bassetlaw District Council, in Nottinghamshire, England.",
   "outlet": "Wikipedia",
-  "link": "https://en.wikipedia.org/wiki/Villa",
-  "trend": "Villa"
+  "link": "https://en.wikipedia.org/wiki/Welbeck",
+  "trend": "Welbeck"
  },
- "generated_at": "2026-10-24T12:47:18Z"
+ "generated_at": "2026-10-24T18:51:43Z"
 }
