@@ -1,17 +1,17 @@
 {
- "generated_at": "2026-10-24T18:51:43Z",
+ "generated_at": "2026-10-24T22:35:02Z",
  "writer": "template",
- "style": "neon_city",
+ "style": "sunset",
  "story": {
-  "title": "Trending on X: Welbeck is a village and former civil parish (now in the parish of Norton, Cuckney, Holbeck and Welbeck) within the Welbeck local voting ward of Bassetlaw District Council, in Nottinghamshire, England.",
+  "title": "Trending on X: Alberto Puello Calderón (born 22 July 1994) is a Dominican professional boxer.",
   "outlet": "Wikipedia",
-  "link": "https://en.wikipedia.org/wiki/Welbeck",
-  "trend": "Welbeck"
+  "link": "https://en.wikipedia.org/wiki/Smith_Puello",
+  "trend": "SmithPuello"
  },
  "pack": {
-  "style": "neon_city",
-  "logline": "Trending on X: Welbeck is a village and former civil parish (now in the parish of Norton, Cuckney, Holbeck and Welbeck) within the Welbeck local voting ward of Bassetlaw District Council, in Nottinghamshire, England. One quiet moment that captures why it matters.",
-  "scene": "Trending on X: Welbeck is a village and former civil parish (now in the parish of Norton, Cuckney, Holbeck and Welbeck) within the Welbeck local voting ward of Bassetlaw District Council, in Nottinghamshire, England.. Trending: Welbeck. The scene opens on a figure mid-thought.",
+  "style": "sunset",
+  "logline": "Trending on X: Alberto Puello Calderón (born 22 July 1994) is a Dominican professional boxer. One quiet moment that captures why it matters.",
+  "scene": "Trending on X: Alberto Puello Calderón (born 22 July 1994) is a Dominican professional boxer.. Trending: SmithPuello. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -27,19 +27,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "night",
-   "atmosphere": "neon city mood - calm and unhurried"
+   "weather": "sunset",
+   "atmosphere": "sunset mood - calm and unhurried"
   },
   "shot": {
-   "camera": "orbit_left",
+   "camera": "pan_right",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#1a1433",
-    "ground": "#241d3d",
-    "accent": "#ff4d9d"
+    "sky": "#d98d5f",
+    "ground": "#3f3a52",
+    "accent": "#ffd166"
    },
    "duration": 5,
    "characters": [
@@ -114,7 +114,7 @@
     }
    ],
    "camera": {
-    "move": "orbit_left",
+    "move": "pan_right",
     "start": {
      "pos": [
       4.8,
@@ -154,8 +154,8 @@
    }
   }
  },
- "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Trending on X: Welbeck is a village and former civil parish (now in the parish of Norton, Cuckney, Holbeck and Welbeck) within the Welbeck local voting ward of Bassetlaw District Council, in Nottinghamshire, England.. Trending: Welbeck. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, night. neon-lit city night, cyberpunk palette, volumetric glow, key light from the sun with gentle fill, neon city mood - calm and unhurried. medium shot on the figure, window behind, camera orbit_left, 50mm equivalent. --ar 16:9",
- "mj_motion": "Camera orbit_left, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
+ "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Trending on X: Alberto Puello Calderón (born 22 July 1994) is a Dominican professional boxer.. Trending: SmithPuello. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, sunset. golden hour, warm rim light, long shadows, cinematic haze, key light from the sun with gentle fill, sunset mood - calm and unhurried. medium shot on the figure, window behind, camera pan_right, 50mm equivalent. --ar 16:9",
+ "mj_motion": "Camera pan_right, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
  "qa": {
   "checks": 72,
   "passed": 72,
