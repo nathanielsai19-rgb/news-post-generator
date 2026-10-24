@@ -67,11 +67,13 @@ MAX_TREND_AGE_HOURS = 24
 TRENDING_CAP = 60
 
 # X (Twitter) trending topics from the public trends24.in mirror — no account,
-# no API keys. What's popular on X: worldwide + UK. (US trends are ~70% sports
-# in season and leak new athlete names every cycle; worldwide carries the same
-# big tech/entertainment stories. Ghana dropped at the user's request.)
+# no API keys. What's popular on X: worldwide + English-speaking regions. (US
+# trends are ~70% sports in season and leak new athlete names every cycle;
+# Ghana dropped at the user's request.)
 X_TREND_REGIONS = [
     ("united-kingdom", "https://trends24.in/united-kingdom/"),
+    ("canada", "https://trends24.in/canada/"),
+    ("australia", "https://trends24.in/australia/"),
     ("worldwide", "https://trends24.in/"),
 ]
 MAX_X_TRENDS_PER_REGION = 8
@@ -141,7 +143,9 @@ SPORTS_TITLE_RE = re.compile(
     r"rams|cardinals|49ers|vikings|texans|browns\b|buccaneers|"
     r"talladega|ric flair|tony stewart|leading receiver|"
     r"\bv\.\s|\bvs\.\s|ipswich|nottingham forest|\bboro\b|glasner|delap|mcatee|"
-    r"ndoye|milenkovic|lankshear|diop|mcgree|middlesbrough|nffc|itfc|sundowns",
+    r"ndoye|milenkovic|lankshear|diop|mcgree|middlesbrough|nffc|itfc|sundowns|"
+    r"smackdown|manchester united|manchester city|tatum|jaylen brown|pitino|"
+    r"louisville|eddie howe",
     re.I,
 )
 
@@ -165,6 +169,109 @@ def is_non_english(text: str) -> bool:
     hits = set(m.group(0).lower() for m in NON_ENGLISH_WORD_RE.finditer(text))
     return len(hits) >= 2
 
+
+# ---------- trending topics without news: Wikipedia topic cards ----------
+# Some trends (shows, memes, people, products) have no news stories but DO
+# have a real subject. Those become topic-card posts from Wikipedia.
+WIKI_TITLE_URL = ("https://en.wikipedia.org/w/api.php?action=query&titles={}"
+                  "&prop=extracts&exintro=1&explaintext=1&format=json&redirects=1")
+WIKI_SEARCH_URL = ("https://en.wikipedia.org/w/api.php?action=query&list=search"
+                   "&srsearch={}&srlimit=3&format=json")
+MAX_WIKI_TREND_ITEMS = 8
+
+
+def _words_overlap(text: str, words: list[str], need: int) -> bool:
+    tl = text.lower()
+    hits = sum(1 for w in words
+               if re.search(r"(?<![a-z0-9])" + re.escape(w) + r"(?![a-z0-9])", tl))
+    return hits >= need
+
+
+def _wiki_fetch(url: str):
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        return json.loads(resp.read().decode("utf-8", "ignore"))
+
+
+def wiki_intro_for_title(title: str) -> str | None:
+    """First sentence of a known Wikipedia article title, or None."""
+    try:
+        data = _wiki_fetch(WIKI_TITLE_URL.format(urllib.parse.quote(title)))
+    except Exception:
+        return None
+    try:
+        page = next(iter(data.get("query", {}).get("pages", {}).values()))
+    except StopIteration:
+        return None
+    if page.get("missing") or not page.get("extract"):
+        return None
+    # the resolved page must share a word with what we asked for
+    # ("Champi" -> "Shampoo" redirects must not leak in)
+    asked = [w for w in re.findall(r"\w+", title.lower()) if len(w) >= 3]
+    if asked and not _words_overlap(page.get("title", ""), asked, 1):
+        return None
+    ex = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", page["extract"])).strip()
+    if re.search(r"may refer to|most commonly refers to|^this is a list", ex[:120], re.I):
+        return None
+    m = re.match(r"^([^.!?]+[.!?])", ex)
+    if m and len(m.group(1)) >= 30:
+        return m.group(1)
+    return None
+
+
+def wiki_intro(term: str) -> str | None:
+    """First sentence of the Wikipedia article about a trend term, or None."""
+    # CamelCase hashtag terms ("CelebrityTraitors") split into real words
+    term = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", term).strip()
+    intro = wiki_intro_for_title(term)
+    if intro:
+        return intro
+    words = [w for w in re.findall(r"\w+", term.lower())
+             if len(w) >= 5 and w not in TREND_STOPWORDS]
+    if not words:
+        return None
+    try:
+        data = _wiki_fetch(WIKI_SEARCH_URL.format(urllib.parse.quote(term)))
+    except Exception:
+        return None
+    for hit in (data.get("query", {}).get("search") or [])[:3]:
+        title = hit.get("title", "")
+        if not title or len(title.split()) > 6:
+            continue
+        if not _words_overlap(title, words, 1):
+            continue
+        intro = wiki_intro_for_title(title)
+        if intro:
+            return intro
+    return None
+
+
+def wiki_trend_items(no_news_terms: list[str], src: str) -> list[dict]:
+    """Topic-card posts for trends that produced no news stories."""
+    now = datetime.datetime.now(datetime.timezone.utc)
+    prefix = "Trending on X: " if src == "x" else "Trending search: "
+    out = []
+    for term in no_news_terms:
+        if len(out) >= MAX_WIKI_TREND_ITEMS:
+            break
+        intro = wiki_intro(term)
+        if not intro:
+            continue
+        if is_non_english(intro) or SPORTS_TITLE_RE.search(intro) or TREND_BLOCK_RE.search(intro):
+            continue
+        out.append({
+            "title": prefix + intro,
+            "link": "https://en.wikipedia.org/wiki/" + urllib.parse.quote(
+                re.sub(r"\s+", "_", re.sub(r"(?<=[a-z])(?=[A-Z])", " ", term))),
+            "summary": "",
+            "author": "",
+            "outlet": "Wikipedia",
+            "trend": term,
+            "trend_src": src,
+            "published": now.isoformat(timespec="seconds").replace("+00:00", "Z"),
+        })
+    return out
+
 # Trending terms that are sports or politics are never chased (user rule:
 # no politics, no sports posts).
 TREND_BLOCK_RE = re.compile(
@@ -180,6 +287,7 @@ TREND_BLOCK_RE = re.compile(
     r"ric flair|cleetus|talladega|jesse legree|skye blakely|\bskye\b|"
     r"ipswich|nottingham forest|\bboro\b|glasner|delap|mcatee|ndoye|milenkovic|"
     r"lankshear|diop|mcgree|middlesbrough|nffc|itfc|sundowns|"
+    r"blake monroe|hebron|netanyahu|tatum|jaylen brown|pitino|eddie howe|"
     r"trump|biden|president|senate|congress|"
     r"election|government|minister|parliament|policy|white house|\bwar\b|"
     r"missile|military|troops|ukraine|russia|iran|israel|gaza|hamas|putin|"
@@ -370,9 +478,15 @@ def fetch_trending() -> list[dict]:
         return []
 
     items: list[dict] = []
+    no_news: list[str] = []
     with ThreadPoolExecutor(max_workers=6) as pool:
-        for future in as_completed([pool.submit(trend_stories, t, "google") for t in terms]):
-            items.extend(future.result())
+        futures = {pool.submit(trend_stories, t, "google"): t for t in terms}
+        for future in as_completed(futures):
+            found = future.result()
+            if not found:
+                no_news.append(futures[future])
+            items.extend(found)
+    items.extend(wiki_trend_items(no_news, "google"))
     return items
 
 
@@ -401,9 +515,15 @@ def fetch_x_trends() -> list[dict]:
         return []
 
     items: list[dict] = []
+    no_news: list[str] = []
     with ThreadPoolExecutor(max_workers=6) as pool:
-        for future in as_completed([pool.submit(trend_stories, t, "x") for t in terms]):
-            items.extend(future.result())
+        futures = {pool.submit(trend_stories, t, "x"): t for t in terms}
+        for future in as_completed(futures):
+            found = future.result()
+            if not found:
+                no_news.append(futures[future])
+            items.extend(found)
+    items.extend(wiki_trend_items(no_news, "x"))
     return items
 
 
