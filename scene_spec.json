@@ -22,7 +22,7 @@
    "atmosphere": "desert noon mood - calm and unhurried"
   },
   "shot": {
-   "camera": "crane_up",
+   "camera": "pan_right",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
@@ -105,7 +105,7 @@
     }
    ],
    "camera": {
-    "move": "crane_up",
+    "move": "pan_right",
     "start": {
      "pos": [
       4.8,
@@ -151,5 +151,5 @@
   "link": "https://en.wikipedia.org/wiki/Alonso",
   "trend": "Alonso"
  },
- "generated_at": "2026-10-25T04:57:27Z"
+ "generated_at": "2026-10-25T13:15:05Z"
 }
