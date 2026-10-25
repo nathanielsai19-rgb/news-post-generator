@@ -1,8 +1,8 @@
 {
  "pack": {
-  "style": "sunset",
-  "logline": "Trending on X: Aaronson is a Jewish patronymic surname, meaning \"son of Aaron\". One quiet moment that captures why it matters.",
-  "scene": "Trending on X: Aaronson is a Jewish patronymic surname, meaning \"son of Aaron\".. Trending: Aaronson. The scene opens on a figure mid-thought.",
+  "style": "desert_noon",
+  "logline": "Trending on X: Diomande or Diomandé is a surname. One quiet moment that captures why it matters.",
+  "scene": "Trending on X: Diomande or Diomandé is a surname.. Trending: Diomande. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -18,19 +18,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "sunset",
-   "atmosphere": "sunset mood - calm and unhurried"
+   "weather": "clear",
+   "atmosphere": "desert noon mood - calm and unhurried"
   },
   "shot": {
-   "camera": "orbit_left",
+   "camera": "crane_up",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#d98d5f",
-    "ground": "#3f3a52",
-    "accent": "#ffd166"
+    "sky": "#9fd0e8",
+    "ground": "#d9b382",
+    "accent": "#e2574c"
    },
    "duration": 5,
    "characters": [
@@ -105,7 +105,7 @@
     }
    ],
    "camera": {
-    "move": "orbit_left",
+    "move": "crane_up",
     "start": {
      "pos": [
       4.8,
@@ -146,10 +146,10 @@
   }
  },
  "story": {
-  "title": "Trending on X: Aaronson is a Jewish patronymic surname, meaning \"son of Aaron\".",
+  "title": "Trending on X: Diomande or Diomandé is a surname.",
   "outlet": "Wikipedia",
-  "link": "https://en.wikipedia.org/wiki/Aaronson",
-  "trend": "Aaronson"
+  "link": "https://en.wikipedia.org/wiki/Diomande",
+  "trend": "Diomande"
  },
- "generated_at": "2026-10-25T19:08:26Z"
+ "generated_at": "2026-10-25T22:40:17Z"
 }
