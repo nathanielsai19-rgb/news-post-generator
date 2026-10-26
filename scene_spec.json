@@ -1,8 +1,8 @@
 {
  "pack": {
-  "style": "sunset",
-  "logline": "Trending on X: BBC Politics Live (often known simply as Politics Live) is a weekday BBC News lunchtime political programme which launched on 3 September 2018. One quiet moment that captures why it matters.",
-  "scene": "Trending on X: BBC Politics Live (often known simply as Politics Live) is a weekday BBC News lunchtime political programme which launched on 3 September 2018.. Trending: PoliticsLive. The scene opens on a figure mid-thought.",
+  "style": "desert_noon",
+  "logline": "Trending on X: The Ballon d'Or (French pronunciation: [balɔ̃ dɔʁ] ; lit. One quiet moment that captures why it matters.",
+  "scene": "Trending on X: The Ballon d'Or (French pronunciation: [balɔ̃ dɔʁ] ; lit.. Trending: BallonDor. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -18,19 +18,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "sunset",
-   "atmosphere": "sunset mood - calm and unhurried"
+   "weather": "clear",
+   "atmosphere": "desert noon mood - calm and unhurried"
   },
   "shot": {
-   "camera": "orbit_left",
+   "camera": "pan_right",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#d98d5f",
-    "ground": "#3f3a52",
-    "accent": "#ffd166"
+    "sky": "#9fd0e8",
+    "ground": "#d9b382",
+    "accent": "#e2574c"
    },
    "duration": 5,
    "characters": [
@@ -105,7 +105,7 @@
     }
    ],
    "camera": {
-    "move": "orbit_left",
+    "move": "pan_right",
     "start": {
      "pos": [
       4.8,
@@ -146,10 +146,10 @@
   }
  },
  "story": {
-  "title": "Trending on X: BBC Politics Live (often known simply as Politics Live) is a weekday BBC News lunchtime political programme which launched on 3 September 2018.",
+  "title": "Trending on X: The Ballon d'Or (French pronunciation: [balɔ̃ dɔʁ] ; lit.",
   "outlet": "Wikipedia",
-  "link": "https://en.wikipedia.org/wiki/Politics_Live",
-  "trend": "PoliticsLive"
+  "link": "https://en.wikipedia.org/wiki/Ballon_Dor",
+  "trend": "BallonDor"
  },
- "generated_at": "2026-10-26T15:18:19Z"
+ "generated_at": "2026-10-26T21:06:19Z"
 }
