@@ -1,17 +1,17 @@
 {
- "generated_at": "2026-10-25T22:40:17Z",
+ "generated_at": "2026-10-26T05:00:25Z",
  "writer": "template",
  "style": "desert_noon",
  "story": {
-  "title": "Trending on X: Diomande or Diomandé is a surname.",
+  "title": "Trending on X: J D Wetherspoon plc (branded variously as Wetherspoon or Wetherspoons, and colloquially known as Spoons) is a British pub company that operates 827 pubs across the United Kingdom, the Isle of Man, the Republic of Ireland and, from January 2026, Spain.",
   "outlet": "Wikipedia",
-  "link": "https://en.wikipedia.org/wiki/Diomande",
-  "trend": "Diomande"
+  "link": "https://en.wikipedia.org/wiki/Wetherspoons",
+  "trend": "Wetherspoons"
  },
  "pack": {
   "style": "desert_noon",
-  "logline": "Trending on X: Diomande or Diomandé is a surname. One quiet moment that captures why it matters.",
-  "scene": "Trending on X: Diomande or Diomandé is a surname.. Trending: Diomande. The scene opens on a figure mid-thought.",
+  "logline": "Trending on X: J D Wetherspoon plc (branded variously as Wetherspoon or Wetherspoons, and colloquially known as Spoons) is a British pub company that operates 827 pubs across the United Kingdom, the Isle of Man, the Republic of Ireland and, from January 2026, Spain. One quiet moment that captures why it matters.",
+  "scene": "Trending on X: J D Wetherspoon plc (branded variously as Wetherspoon or Wetherspoons, and colloquially known as Spoons) is a British pub company that operates 827 pubs across the United Kingdom, the Isle of Man, the Republic of Ireland and, from January 2026, Spain.. Trending: Wetherspoons. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -154,12 +154,14 @@
    }
   }
  },
- "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Trending on X: Diomande or Diomandé is a surname.. Trending: Diomande. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, clear. harsh desert noon sun, heat haze, bleached warm colors, key light from the sun with gentle fill, desert noon mood - calm and unhurried. medium shot on the figure, window behind, camera crane_up, 50mm equivalent. --ar 16:9",
+ "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Trending on X: J D Wetherspoon plc (branded variously as Wetherspoon or Wetherspoons, and colloquially known as Spoons) is a British pub company that operates 827 pubs across the United Kingdom, the Isle of Man, the Republic of Ireland and, from January 2026, Spain.. Trending: Wetherspoons. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, clear. harsh desert noon sun, heat haze, bleached warm colors, key light from the sun with gentle fill, desert noon mood - calm and unhurried. medium shot on the figure, window behind, camera crane_up, 50mm equivalent. --ar 16:9",
  "mj_motion": "Camera crane_up, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
  "qa": {
   "checks": 72,
-  "passed": 72,
-  "failed": []
+  "passed": 71,
+  "failed": [
+   "logline length ok"
+  ]
  },
  "status": "standby"
 }
