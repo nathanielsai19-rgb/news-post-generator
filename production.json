@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-10-27T05:17:39Z",
+ "generated_at": "2026-10-27T14:41:12Z",
  "writer": "template",
- "style": "neon_city",
+ "style": "sunset",
  "story": {
   "title": "Trending on X: The Ballon d'Or (French pronunciation: [balɔ̃ dɔʁ] ; lit.",
   "outlet": "Wikipedia",
@@ -9,7 +9,7 @@
   "trend": "BallonDor"
  },
  "pack": {
-  "style": "neon_city",
+  "style": "sunset",
   "logline": "Trending on X: The Ballon d'Or (French pronunciation: [balɔ̃ dɔʁ] ; lit. One quiet moment that captures why it matters.",
   "scene": "Trending on X: The Ballon d'Or (French pronunciation: [balɔ̃ dɔʁ] ; lit.. Trending: BallonDor. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
@@ -27,19 +27,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "night",
-   "atmosphere": "neon city mood - calm and unhurried"
+   "weather": "sunset",
+   "atmosphere": "sunset mood - calm and unhurried"
   },
   "shot": {
-   "camera": "crane_up",
+   "camera": "pan_right",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#1a1433",
-    "ground": "#241d3d",
-    "accent": "#ff4d9d"
+    "sky": "#d98d5f",
+    "ground": "#3f3a52",
+    "accent": "#ffd166"
    },
    "duration": 5,
    "characters": [
@@ -114,7 +114,7 @@
     }
    ],
    "camera": {
-    "move": "crane_up",
+    "move": "pan_right",
     "start": {
      "pos": [
       4.8,
@@ -154,8 +154,8 @@
    }
   }
  },
- "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Trending on X: The Ballon d'Or (French pronunciation: [balɔ̃ dɔʁ] ; lit.. Trending: BallonDor. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, night. neon-lit city night, cyberpunk palette, volumetric glow, key light from the sun with gentle fill, neon city mood - calm and unhurried. medium shot on the figure, window behind, camera crane_up, 50mm equivalent. --ar 16:9",
- "mj_motion": "Camera crane_up, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
+ "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Trending on X: The Ballon d'Or (French pronunciation: [balɔ̃ dɔʁ] ; lit.. Trending: BallonDor. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, sunset. golden hour, warm rim light, long shadows, cinematic haze, key light from the sun with gentle fill, sunset mood - calm and unhurried. medium shot on the figure, window behind, camera pan_right, 50mm equivalent. --ar 16:9",
+ "mj_motion": "Camera pan_right, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
  "qa": {
   "checks": 72,
   "passed": 72,
