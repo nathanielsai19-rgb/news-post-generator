@@ -1,6 +1,6 @@
 {
  "pack": {
-  "style": "desert_noon",
+  "style": "neon_city",
   "logline": "Trending on X: The Ballon d'Or (French pronunciation: [balɔ̃ dɔʁ] ; lit. One quiet moment that captures why it matters.",
   "scene": "Trending on X: The Ballon d'Or (French pronunciation: [balɔ̃ dɔʁ] ; lit.. Trending: BallonDor. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
@@ -18,19 +18,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "clear",
-   "atmosphere": "desert noon mood - calm and unhurried"
+   "weather": "night",
+   "atmosphere": "neon city mood - calm and unhurried"
   },
   "shot": {
-   "camera": "pan_right",
+   "camera": "crane_up",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#9fd0e8",
-    "ground": "#d9b382",
-    "accent": "#e2574c"
+    "sky": "#1a1433",
+    "ground": "#241d3d",
+    "accent": "#ff4d9d"
    },
    "duration": 5,
    "characters": [
@@ -105,7 +105,7 @@
     }
    ],
    "camera": {
-    "move": "pan_right",
+    "move": "crane_up",
     "start": {
      "pos": [
       4.8,
@@ -151,5 +151,5 @@
   "link": "https://en.wikipedia.org/wiki/Ballon_Dor",
   "trend": "BallonDor"
  },
- "generated_at": "2026-10-26T21:06:19Z"
+ "generated_at": "2026-10-27T05:17:39Z"
 }
