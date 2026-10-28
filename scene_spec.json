@@ -1,8 +1,8 @@
 {
  "pack": {
-  "style": "rainy_night",
-  "logline": "Trending on X: The Ballon d'Or (French pronunciation: [balɔ̃ dɔʁ] ; lit. One quiet moment that captures why it matters.",
-  "scene": "Trending on X: The Ballon d'Or (French pronunciation: [balɔ̃ dɔʁ] ; lit.. Trending: BallonDor. The scene opens on a figure mid-thought.",
+  "style": "desert_noon",
+  "logline": "Trending on X: Fleetwood Mac were a British and American rock band formed in London in 1967. One quiet moment that captures why it matters.",
+  "scene": "Trending on X: Fleetwood Mac were a British and American rock band formed in London in 1967.. Trending: Fleetwood. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -18,8 +18,8 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "rain",
-   "atmosphere": "rainy night mood - calm and unhurried"
+   "weather": "clear",
+   "atmosphere": "desert noon mood - calm and unhurried"
   },
   "shot": {
    "camera": "orbit_left",
@@ -28,9 +28,9 @@
   },
   "build": {
    "palette": {
-    "sky": "#1b2735",
-    "ground": "#232830",
-    "accent": "#6fd3c7"
+    "sky": "#9fd0e8",
+    "ground": "#d9b382",
+    "accent": "#e2574c"
    },
    "duration": 5,
    "characters": [
@@ -146,10 +146,10 @@
   }
  },
  "story": {
-  "title": "Trending on X: The Ballon d'Or (French pronunciation: [balɔ̃ dɔʁ] ; lit.",
+  "title": "Trending on X: Fleetwood Mac were a British and American rock band formed in London in 1967.",
   "outlet": "Wikipedia",
-  "link": "https://en.wikipedia.org/wiki/Ballon_Dor",
-  "trend": "BallonDor"
+  "link": "https://en.wikipedia.org/wiki/Fleetwood",
+  "trend": "Fleetwood"
  },
- "generated_at": "2026-10-27T20:47:54Z"
+ "generated_at": "2026-10-28T05:56:33Z"
 }
