@@ -1,8 +1,8 @@
 {
  "pack": {
-  "style": "desert_noon",
-  "logline": "Trending on X: Fleetwood Mac were a British and American rock band formed in London in 1967. One quiet moment that captures why it matters.",
-  "scene": "Trending on X: Fleetwood Mac were a British and American rock band formed in London in 1967.. Trending: Fleetwood. The scene opens on a figure mid-thought.",
+  "style": "rainy_night",
+  "logline": "Trending on X: Council Tax is a local taxation system used in England, Scotland and Wales. One quiet moment that captures why it matters.",
+  "scene": "Trending on X: Council Tax is a local taxation system used in England, Scotland and Wales.. Trending: Council Tax. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -18,19 +18,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "clear",
-   "atmosphere": "desert noon mood - calm and unhurried"
+   "weather": "rain",
+   "atmosphere": "rainy night mood - calm and unhurried"
   },
   "shot": {
-   "camera": "orbit_left",
+   "camera": "pan_right",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#9fd0e8",
-    "ground": "#d9b382",
-    "accent": "#e2574c"
+    "sky": "#1b2735",
+    "ground": "#232830",
+    "accent": "#6fd3c7"
    },
    "duration": 5,
    "characters": [
@@ -105,7 +105,7 @@
     }
    ],
    "camera": {
-    "move": "orbit_left",
+    "move": "pan_right",
     "start": {
      "pos": [
       4.8,
@@ -146,10 +146,10 @@
   }
  },
  "story": {
-  "title": "Trending on X: Fleetwood Mac were a British and American rock band formed in London in 1967.",
+  "title": "Trending on X: Council Tax is a local taxation system used in England, Scotland and Wales.",
   "outlet": "Wikipedia",
-  "link": "https://en.wikipedia.org/wiki/Fleetwood",
-  "trend": "Fleetwood"
+  "link": "https://en.wikipedia.org/wiki/Council_Tax",
+  "trend": "Council Tax"
  },
- "generated_at": "2026-10-28T05:56:33Z"
+ "generated_at": "2026-10-28T15:13:55Z"
 }
