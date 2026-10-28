@@ -1,17 +1,17 @@
 {
- "generated_at": "2026-10-28T15:13:55Z",
+ "generated_at": "2026-10-28T21:11:27Z",
  "writer": "template",
- "style": "rainy_night",
+ "style": "neon_city",
  "story": {
-  "title": "Trending on X: Council Tax is a local taxation system used in England, Scotland and Wales.",
+  "title": "Trending on X: Celebrity Race Across the World is a spin-off series of Race Across the World, where pairs of competitors race across an area of the world to reach a destination using any means of transportation other than by air.",
   "outlet": "Wikipedia",
-  "link": "https://en.wikipedia.org/wiki/Council_Tax",
-  "trend": "Council Tax"
+  "link": "https://en.wikipedia.org/wiki/Celebrity_Race_Across_The_World",
+  "trend": "CelebrityRaceAcrossTheWorld"
  },
  "pack": {
-  "style": "rainy_night",
-  "logline": "Trending on X: Council Tax is a local taxation system used in England, Scotland and Wales. One quiet moment that captures why it matters.",
-  "scene": "Trending on X: Council Tax is a local taxation system used in England, Scotland and Wales.. Trending: Council Tax. The scene opens on a figure mid-thought.",
+  "style": "neon_city",
+  "logline": "Trending on X: Celebrity Race Across the World is a spin-off series of Race Across the World, where pairs of competitors race across an area of the world to reach a destination using any means of transportation other than by air. One quiet moment that captures why it matters.",
+  "scene": "Trending on X: Celebrity Race Across the World is a spin-off series of Race Across the World, where pairs of competitors race across an area of the world to reach a destination using any means of transportation other than by air.. Trending: CelebrityRaceAcrossTheWorld. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -27,19 +27,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "rain",
-   "atmosphere": "rainy night mood - calm and unhurried"
+   "weather": "night",
+   "atmosphere": "neon city mood - calm and unhurried"
   },
   "shot": {
-   "camera": "pan_right",
+   "camera": "orbit_left",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#1b2735",
-    "ground": "#232830",
-    "accent": "#6fd3c7"
+    "sky": "#1a1433",
+    "ground": "#241d3d",
+    "accent": "#ff4d9d"
    },
    "duration": 5,
    "characters": [
@@ -114,7 +114,7 @@
     }
    ],
    "camera": {
-    "move": "pan_right",
+    "move": "orbit_left",
     "start": {
      "pos": [
       4.8,
@@ -154,8 +154,8 @@
    }
   }
  },
- "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Trending on X: Council Tax is a local taxation system used in England, Scotland and Wales.. Trending: Council Tax. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, rain. moody night rain, neon reflections on wet ground, cinematic noir, key light from the sun with gentle fill, rainy night mood - calm and unhurried. medium shot on the figure, window behind, camera pan_right, 50mm equivalent. --ar 16:9",
- "mj_motion": "Camera pan_right, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
+ "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Trending on X: Celebrity Race Across the World is a spin-off series of Race Across the World, where pairs of competitors race across an area of the world to reach a destination using any means of transportation other than by air.. Trending: CelebrityRaceAcrossTheWorld. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, night. neon-lit city night, cyberpunk palette, volumetric glow, key light from the sun with gentle fill, neon city mood - calm and unhurried. medium shot on the figure, window behind, camera orbit_left, 50mm equivalent. --ar 16:9",
+ "mj_motion": "Camera orbit_left, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
  "qa": {
   "checks": 72,
   "passed": 72,
