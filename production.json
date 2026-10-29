@@ -1,17 +1,17 @@
 {
- "generated_at": "2026-10-28T21:11:27Z",
+ "generated_at": "2026-10-29T06:01:56Z",
  "writer": "template",
- "style": "neon_city",
+ "style": "noon_clear",
  "story": {
-  "title": "Trending on X: Celebrity Race Across the World is a spin-off series of Race Across the World, where pairs of competitors race across an area of the world to reach a destination using any means of transportation other than by air.",
+  "title": "Trending on X: Fleetwood is a coastal town in the Borough of Wyre in Lancashire, England, at the northwest corner of the Fylde.",
   "outlet": "Wikipedia",
-  "link": "https://en.wikipedia.org/wiki/Celebrity_Race_Across_The_World",
-  "trend": "CelebrityRaceAcrossTheWorld"
+  "link": "https://en.wikipedia.org/wiki/Fleetwood",
+  "trend": "Fleetwood"
  },
  "pack": {
-  "style": "neon_city",
-  "logline": "Trending on X: Celebrity Race Across the World is a spin-off series of Race Across the World, where pairs of competitors race across an area of the world to reach a destination using any means of transportation other than by air. One quiet moment that captures why it matters.",
-  "scene": "Trending on X: Celebrity Race Across the World is a spin-off series of Race Across the World, where pairs of competitors race across an area of the world to reach a destination using any means of transportation other than by air.. Trending: CelebrityRaceAcrossTheWorld. The scene opens on a figure mid-thought.",
+  "style": "noon_clear",
+  "logline": "Trending on X: Fleetwood is a coastal town in the Borough of Wyre in Lancashire, England, at the northwest corner of the Fylde. One quiet moment that captures why it matters.",
+  "scene": "Trending on X: Fleetwood is a coastal town in the Borough of Wyre in Lancashire, England, at the northwest corner of the Fylde.. Trending: Fleetwood. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -27,19 +27,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "night",
-   "atmosphere": "neon city mood - calm and unhurried"
+   "weather": "clear",
+   "atmosphere": "noon clear mood - calm and unhurried"
   },
   "shot": {
-   "camera": "orbit_left",
+   "camera": "crane_up",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#1a1433",
-    "ground": "#241d3d",
-    "accent": "#ff4d9d"
+    "sky": "#8fb8d8",
+    "ground": "#4a5d3a",
+    "accent": "#e8c04a"
    },
    "duration": 5,
    "characters": [
@@ -114,7 +114,7 @@
     }
    ],
    "camera": {
-    "move": "orbit_left",
+    "move": "crane_up",
     "start": {
      "pos": [
       4.8,
@@ -154,8 +154,8 @@
    }
   }
  },
- "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Trending on X: Celebrity Race Across the World is a spin-off series of Race Across the World, where pairs of competitors race across an area of the world to reach a destination using any means of transportation other than by air.. Trending: CelebrityRaceAcrossTheWorld. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, night. neon-lit city night, cyberpunk palette, volumetric glow, key light from the sun with gentle fill, neon city mood - calm and unhurried. medium shot on the figure, window behind, camera orbit_left, 50mm equivalent. --ar 16:9",
- "mj_motion": "Camera orbit_left, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
+ "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Trending on X: Fleetwood is a coastal town in the Borough of Wyre in Lancashire, England, at the northwest corner of the Fylde.. Trending: Fleetwood. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, clear. bright midday, crisp shadows, saturated natural colors, key light from the sun with gentle fill, noon clear mood - calm and unhurried. medium shot on the figure, window behind, camera crane_up, 50mm equivalent. --ar 16:9",
+ "mj_motion": "Camera crane_up, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
  "qa": {
   "checks": 72,
   "passed": 72,
