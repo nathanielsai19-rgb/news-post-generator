@@ -1,8 +1,8 @@
 {
  "pack": {
-  "style": "noon_clear",
-  "logline": "Trending on X: Fleetwood is a coastal town in the Borough of Wyre in Lancashire, England, at the northwest corner of the Fylde. One quiet moment that captures why it matters.",
-  "scene": "Trending on X: Fleetwood is a coastal town in the Borough of Wyre in Lancashire, England, at the northwest corner of the Fylde.. Trending: Fleetwood. The scene opens on a figure mid-thought.",
+  "style": "sunset",
+  "logline": "Trending on X: Grealish is a surname of Irish origin. One quiet moment that captures why it matters.",
+  "scene": "Trending on X: Grealish is a surname of Irish origin.. Trending: Grealish. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -18,19 +18,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "clear",
-   "atmosphere": "noon clear mood - calm and unhurried"
+   "weather": "sunset",
+   "atmosphere": "sunset mood - calm and unhurried"
   },
   "shot": {
-   "camera": "pan_right",
+   "camera": "crane_up",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#8fb8d8",
-    "ground": "#4a5d3a",
-    "accent": "#e8c04a"
+    "sky": "#d98d5f",
+    "ground": "#3f3a52",
+    "accent": "#ffd166"
    },
    "duration": 5,
    "characters": [
@@ -105,7 +105,7 @@
     }
    ],
    "camera": {
-    "move": "pan_right",
+    "move": "crane_up",
     "start": {
      "pos": [
       4.8,
@@ -146,10 +146,10 @@
   }
  },
  "story": {
-  "title": "Trending on X: Fleetwood is a coastal town in the Borough of Wyre in Lancashire, England, at the northwest corner of the Fylde.",
+  "title": "Trending on X: Grealish is a surname of Irish origin.",
   "outlet": "Wikipedia",
-  "link": "https://en.wikipedia.org/wiki/Fleetwood",
-  "trend": "Fleetwood"
+  "link": "https://en.wikipedia.org/wiki/Grealish",
+  "trend": "Grealish"
  },
- "generated_at": "2026-10-29T15:18:40Z"
+ "generated_at": "2026-10-29T21:14:58Z"
 }
