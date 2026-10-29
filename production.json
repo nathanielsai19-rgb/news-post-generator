@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-29T06:01:56Z",
+ "generated_at": "2026-10-29T15:18:40Z",
  "writer": "template",
  "style": "noon_clear",
  "story": {
@@ -31,7 +31,7 @@
    "atmosphere": "noon clear mood - calm and unhurried"
   },
   "shot": {
-   "camera": "crane_up",
+   "camera": "pan_right",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
@@ -114,7 +114,7 @@
     }
    ],
    "camera": {
-    "move": "crane_up",
+    "move": "pan_right",
     "start": {
      "pos": [
       4.8,
@@ -154,8 +154,8 @@
    }
   }
  },
- "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Trending on X: Fleetwood is a coastal town in the Borough of Wyre in Lancashire, England, at the northwest corner of the Fylde.. Trending: Fleetwood. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, clear. bright midday, crisp shadows, saturated natural colors, key light from the sun with gentle fill, noon clear mood - calm and unhurried. medium shot on the figure, window behind, camera crane_up, 50mm equivalent. --ar 16:9",
- "mj_motion": "Camera crane_up, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
+ "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Trending on X: Fleetwood is a coastal town in the Borough of Wyre in Lancashire, England, at the northwest corner of the Fylde.. Trending: Fleetwood. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, clear. bright midday, crisp shadows, saturated natural colors, key light from the sun with gentle fill, noon clear mood - calm and unhurried. medium shot on the figure, window behind, camera pan_right, 50mm equivalent. --ar 16:9",
+ "mj_motion": "Camera pan_right, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
  "qa": {
   "checks": 72,
   "passed": 72,
