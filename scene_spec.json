@@ -1,6 +1,6 @@
 {
  "pack": {
-  "style": "noon_clear",
+  "style": "sunset",
   "logline": "Trending on X: The Celebrity Traitors (also known as The Celebrity Traitors UK) is a spin-off of the British version of the reality television series The Traitors. One quiet moment that captures why it matters.",
   "scene": "Trending on X: The Celebrity Traitors (also known as The Celebrity Traitors UK) is a spin-off of the British version of the reality television series The Traitors.. Trending: CelebrityTraitors. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
@@ -18,19 +18,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "clear",
-   "atmosphere": "noon clear mood - calm and unhurried"
+   "weather": "sunset",
+   "atmosphere": "sunset mood - calm and unhurried"
   },
   "shot": {
-   "camera": "crane_up",
+   "camera": "pan_right",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#8fb8d8",
-    "ground": "#4a5d3a",
-    "accent": "#e8c04a"
+    "sky": "#d98d5f",
+    "ground": "#3f3a52",
+    "accent": "#ffd166"
    },
    "duration": 5,
    "characters": [
@@ -105,7 +105,7 @@
     }
    ],
    "camera": {
-    "move": "crane_up",
+    "move": "pan_right",
     "start": {
      "pos": [
       4.8,
@@ -151,5 +151,5 @@
   "link": "https://en.wikipedia.org/wiki/Celebrity_Traitors",
   "trend": "CelebrityTraitors"
  },
- "generated_at": "2026-10-30T06:02:34Z"
+ "generated_at": "2026-10-30T15:07:27Z"
 }
