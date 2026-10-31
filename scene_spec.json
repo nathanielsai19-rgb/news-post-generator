@@ -1,8 +1,8 @@
 {
  "pack": {
-  "style": "rainy_night",
-  "logline": "Trending on X: Luke Littler (born 21 January 2007) is an English professional darts player who competes in Professional Darts Corporation (PDC) events, where he is ranked world number one. One quiet moment that captures why it matters.",
-  "scene": "Trending on X: Luke Littler (born 21 January 2007) is an English professional darts player who competes in Professional Darts Corporation (PDC) events, where he is ranked world number one.. Trending: BeatLukeLittler. The scene opens on a figure mid-thought.",
+  "style": "sunset",
+  "logline": "Trending on X: William Penn Adair Rogers (November 4, 1879 – August 15, 1935) was a Cherokee-American vaudeville performer, actor, and humorist. One quiet moment that captures why it matters.",
+  "scene": "Trending on X: William Penn Adair Rogers (November 4, 1879 – August 15, 1935) was a Cherokee-American vaudeville performer, actor, and humorist.. Trending: Rogers. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -18,19 +18,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "rain",
-   "atmosphere": "rainy night mood - calm and unhurried"
+   "weather": "sunset",
+   "atmosphere": "sunset mood - calm and unhurried"
   },
   "shot": {
-   "camera": "crane_up",
+   "camera": "orbit_left",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#1b2735",
-    "ground": "#232830",
-    "accent": "#6fd3c7"
+    "sky": "#d98d5f",
+    "ground": "#3f3a52",
+    "accent": "#ffd166"
    },
    "duration": 5,
    "characters": [
@@ -105,7 +105,7 @@
     }
    ],
    "camera": {
-    "move": "crane_up",
+    "move": "orbit_left",
     "start": {
      "pos": [
       4.8,
@@ -146,10 +146,10 @@
   }
  },
  "story": {
-  "title": "Trending on X: Luke Littler (born 21 January 2007) is an English professional darts player who competes in Professional Darts Corporation (PDC) events, where he is ranked world number one.",
+  "title": "Trending on X: William Penn Adair Rogers (November 4, 1879 – August 15, 1935) was a Cherokee-American vaudeville performer, actor, and humorist.",
   "outlet": "Wikipedia",
-  "link": "https://en.wikipedia.org/wiki/Beat_Luke_Littler",
-  "trend": "BeatLukeLittler"
+  "link": "https://en.wikipedia.org/wiki/Rogers",
+  "trend": "Rogers"
  },
- "generated_at": "2026-10-31T05:57:59Z"
+ "generated_at": "2026-10-31T14:37:24Z"
 }
