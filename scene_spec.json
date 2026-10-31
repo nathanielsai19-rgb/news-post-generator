@@ -1,8 +1,8 @@
 {
  "pack": {
-  "style": "sunset",
-  "logline": "Trending on X: William Penn Adair Rogers (November 4, 1879 – August 15, 1935) was a Cherokee-American vaudeville performer, actor, and humorist. One quiet moment that captures why it matters.",
-  "scene": "Trending on X: William Penn Adair Rogers (November 4, 1879 – August 15, 1935) was a Cherokee-American vaudeville performer, actor, and humorist.. Trending: Rogers. The scene opens on a figure mid-thought.",
+  "style": "rainy_night",
+  "logline": "Trending on X: Van Hecke is a Dutch toponymic surname common in East Flanders, meaning \"from (the) fence\". One quiet moment that captures why it matters.",
+  "scene": "Trending on X: Van Hecke is a Dutch toponymic surname common in East Flanders, meaning \"from (the) fence\".. Trending: Van Hecke. The scene opens on a figure mid-thought.",
   "beat": "The figure turns toward the light as the moment settles - a decision made.",
   "characters": [
    {
@@ -18,19 +18,19 @@
    "location": "a quiet place implied by the story",
    "time": "the time of day the story suggests",
    "lighting": "key light from the sun with gentle fill",
-   "weather": "sunset",
-   "atmosphere": "sunset mood - calm and unhurried"
+   "weather": "rain",
+   "atmosphere": "rainy night mood - calm and unhurried"
   },
   "shot": {
-   "camera": "orbit_left",
+   "camera": "crane_up",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
   "build": {
    "palette": {
-    "sky": "#d98d5f",
-    "ground": "#3f3a52",
-    "accent": "#ffd166"
+    "sky": "#1b2735",
+    "ground": "#232830",
+    "accent": "#6fd3c7"
    },
    "duration": 5,
    "characters": [
@@ -105,7 +105,7 @@
     }
    ],
    "camera": {
-    "move": "orbit_left",
+    "move": "crane_up",
     "start": {
      "pos": [
       4.8,
@@ -146,10 +146,10 @@
   }
  },
  "story": {
-  "title": "Trending on X: William Penn Adair Rogers (November 4, 1879 – August 15, 1935) was a Cherokee-American vaudeville performer, actor, and humorist.",
+  "title": "Trending on X: Van Hecke is a Dutch toponymic surname common in East Flanders, meaning \"from (the) fence\".",
   "outlet": "Wikipedia",
-  "link": "https://en.wikipedia.org/wiki/Rogers",
-  "trend": "Rogers"
+  "link": "https://en.wikipedia.org/wiki/Van_Hecke",
+  "trend": "Van Hecke"
  },
- "generated_at": "2026-10-31T14:37:24Z"
+ "generated_at": "2026-10-31T20:06:43Z"
 }
