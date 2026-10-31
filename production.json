@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-30T20:54:18Z",
+ "generated_at": "2026-10-31T05:57:59Z",
  "writer": "template",
  "style": "rainy_night",
  "story": {
@@ -31,7 +31,7 @@
    "atmosphere": "rainy night mood - calm and unhurried"
   },
   "shot": {
-   "camera": "orbit_left",
+   "camera": "crane_up",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
@@ -114,7 +114,7 @@
     }
    ],
    "camera": {
-    "move": "orbit_left",
+    "move": "crane_up",
     "start": {
      "pos": [
       4.8,
@@ -154,8 +154,8 @@
    }
   }
  },
- "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Trending on X: Luke Littler (born 21 January 2007) is an English professional darts player who competes in Professional Darts Corporation (PDC) events, where he is ranked world number one.. Trending: BeatLukeLittler. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, rain. moody night rain, neon reflections on wet ground, cinematic noir, key light from the sun with gentle fill, rainy night mood - calm and unhurried. medium shot on the figure, window behind, camera orbit_left, 50mm equivalent. --ar 16:9",
- "mj_motion": "Camera orbit_left, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
+ "prompt": "The figure turns toward the light as the moment settles - a decision made. The figure - rounded low-poly figure: capsule body, sphere head, simple dark eyes, matte single-color body with a bright accent hat, still, head slightly raised - mid-thought. Scene: Trending on X: Luke Littler (born 21 January 2007) is an English professional darts player who competes in Professional Darts Corporation (PDC) events, where he is ranked world number one.. Trending: BeatLukeLittler. The scene opens on a figure mid-thought. a quiet place implied by the story, the time of day the story suggests, rain. moody night rain, neon reflections on wet ground, cinematic noir, key light from the sun with gentle fill, rainy night mood - calm and unhurried. medium shot on the figure, window behind, camera crane_up, 50mm equivalent. --ar 16:9",
+ "mj_motion": "Camera crane_up, The figure turns toward the light as the moment settles - a decision made. Consistent stylized 3D scene and characters, smooth natural motion, no morphing, no text overlays.",
  "qa": {
   "checks": 72,
   "passed": 72,

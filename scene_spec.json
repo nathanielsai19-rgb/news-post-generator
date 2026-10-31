@@ -22,7 +22,7 @@
    "atmosphere": "rainy night mood - calm and unhurried"
   },
   "shot": {
-   "camera": "orbit_left",
+   "camera": "crane_up",
    "framing": "medium shot on the figure, window behind",
    "lens": "50mm equivalent"
   },
@@ -105,7 +105,7 @@
     }
    ],
    "camera": {
-    "move": "orbit_left",
+    "move": "crane_up",
     "start": {
      "pos": [
       4.8,
@@ -151,5 +151,5 @@
   "link": "https://en.wikipedia.org/wiki/Beat_Luke_Littler",
   "trend": "BeatLukeLittler"
  },
- "generated_at": "2026-10-30T20:54:18Z"
+ "generated_at": "2026-10-31T05:57:59Z"
 }
